@@ -4,9 +4,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.python.pydev</groupId>
   <artifactId>plugins</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>2.2.4-SNAPSHOT</version>
   <packaging>pom</packaging>
   <modules>
+    <!-- Build output: p2 repository -->
+    <module>../builders/org.python.pydev.build</module>
+    <!-- Features -->
+    <module>../features/org.python.pydev.feature</module>
+    <!-- Plugins -->
     <module>com.python.pydev</module>
     <module>com.python.pydev.analysis</module>
     <module>com.python.pydev.codecompletion</module>

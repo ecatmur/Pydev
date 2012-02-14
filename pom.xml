@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.python.pydev</groupId>
+  <artifactId>plugins</artifactId>
+  <version>2.2.4-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <modules>
+    <!-- Build output: p2 repository -->
+    <module>builders/org.python.pydev.build</module>
+    <!-- Features -->
+    <module>features/org.python.pydev.feature</module>
+    <!-- Plugins -->
+    <module>plugins/com.python.pydev</module>
+    <module>plugins/com.python.pydev.analysis</module>
+    <module>plugins/com.python.pydev.codecompletion</module>
+    <module>plugins/com.python.pydev.debug</module>
+    <module>plugins/com.python.pydev.fastparser</module>
+    <module>plugins/com.python.pydev.refactoring</module>
+<!-- TODO: do we want this? Or just run the plugin specific tests? 
+    <module>plugins/com.python.pydev.runalltests</module> -->
+    <module>plugins/org.python.pydev</module>
+    <module>plugins/org.python.pydev.ast</module>
+    <module>plugins/org.python.pydev.core</module>
+    <module>plugins/org.python.pydev.customizations</module>
+    <module>plugins/org.python.pydev.debug</module>
+<!--    <module>plugins/org.python.pydev.django</module>
+    <module>plugins/org.python.pydev.django_templates</module> -->
+    <module>plugins/org.python.pydev.help</module>
+    <module>plugins/org.python.pydev.jython</module>
+<!--    <module>plugins/org.python.pydev.mylyn</module> -->
+    <module>plugins/org.python.pydev.parser</module>
+<!--    <module>plugins/org.python.pydev.red_core</module> -->
+    <module>plugins/org.python.pydev.refactoring</module>
+  </modules>
+  <repositories>
+    <repository>
+      <id>indigo</id>
+      <layout>p2</layout>
+      <url>http://dlonapahls62.maninvestments.com:8092/download.eclipse.org/releases/indigo</url>
+    </repository>
+  </repositories>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-maven-plugin</artifactId>
+        <version>0.14.0</version>
+        <extensions>true</extensions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

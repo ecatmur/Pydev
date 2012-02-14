@@ -2,14 +2,14 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Analysis Plug-in
 Bundle-SymbolicName: com.python.pydev.analysis; singleton:=true
-Bundle-Version: 0.9.7.1
+Bundle-Version: 2.2.4.qualifier
 Bundle-Activator: com.python.pydev.analysis.AnalysisPlugin
 Bundle-Vendor: Aptana
 Bundle-Localization: plugin
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.jface.text,
- org.python.pydev;bundle-version="0.9.7.1",
+ org.python.pydev,
  com.python.pydev,
  org.junit;bundle-version="[3.8.0,3.9.9]";resolution:=optional,
  org.python.pydev.core,
