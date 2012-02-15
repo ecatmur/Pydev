@@ -1,3 +1,6 @@
+See:
+http://ahlwiki.maninvestments.com/display/technologygroup/PythonPydevBuild
+
 Licensed under the terms of the Eclipse Public License (EPL).
 
 Please see the license.txt included with this distribution for details.
