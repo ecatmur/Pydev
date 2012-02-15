@@ -39,6 +39,8 @@ class InterpreterInterface(BaseInterpreterInterface):
     
         
     def getCompletions(self, text, act_tok):
+        if not text:
+            return []
         try:
             ipython_completion = text.startswith('%')
             if not ipython_completion:
