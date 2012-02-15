@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.Map;
 
+import org.eclipse.core.resources.IBuildConfiguration;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFilterMatcherDescriptor;
 import org.eclipse.core.resources.IMarker;
@@ -333,6 +334,19 @@ public class WorkspaceStub implements IWorkspace{
     
     public IPathVariableManager getPathVariableManager() {
         
+        return null;
+    }
+
+
+    public void build(IBuildConfiguration[] buildConfigs, int kind, boolean buildReferences, IProgressMonitor monitor)
+            throws CoreException {
+        // TODO Auto-generated method stub
+        
+    }
+
+
+    public IBuildConfiguration newBuildConfig(String projectName, String configName) {
+        // TODO Auto-generated method stub
         return null;
     }
 
