@@ -19,6 +19,12 @@ print 'sys.version:' + sys.version
 
 from org.eclipse.jface.action import Action #@UnresolvedImport
 from org.eclipse.jface.dialogs import MessageDialog #@UnresolvedImport
+from org.eclipse.jface.text import IDocumentListener #@UnresolvedImport
+from org.eclipse.core.runtime.jobs import Job #@UnresolvedImport
+from org.eclipse.ui.progress import UIJob #@UnresolvedImport
+from org.eclipse.core.runtime import Status
+
+
 from org.python.pydev.core.docutils import PySelection #@UnresolvedImport
 from string import rstrip
 
@@ -40,12 +46,41 @@ COMMAND_ID = "com.mi.ahl.eclipse.python.execLineInConsole"
 import re
 RE_COMMENT = re.compile('^\s*#')
 
+class ConsoleDocumentListener(IDocumentListener):
+    def __init__(self, execution_engine):
+        self.execution_engine = execution_engine
+        self.new_prompt = False
+    
+    def documentAboutToBeChanged(self,event):
+        pass 
+    
+    def documentChanged(self,event):
+        if (self.new_prompt and len(event.getText())== 0 and self.lines_to_process == 0) or self.lines_to_process < 0 :  
+            self.new_prompt = False        
+            self.execution_engine.complete_top_command()
+        else :
+            self.new_prompt = event.getText() == '>>> ' or event.getText() == '... '
+            if self.new_prompt :
+                self.lines_to_process = self.lines_to_process - 1
+      
+class DoTopCommandJob(UIJob):  
+    def __init__(self, executor) :
+        UIJob.__init__(self,'do top command')
+        self.executor=executor
+        self.setPriority(Job.SHORT)
+        
+    def runInUIThread(self, progress_monitor):
+        self.executor.do_top_command()
+        return Status.OK_STATUS
+
 # Code to execute a line
 class ExecuteLine(Action):
     def __init__(self, editor=None):
         Action.__init__(self)
         self.editor = editor
         self.console = None
+        self.console_listener = ConsoleDocumentListener(self)
+        self.commands=[]
         self.current_block_indent = None
         self.prev_line_indent = None
 
@@ -76,12 +111,15 @@ class ExecuteLine(Action):
 
                 for part in consoleParts:
                     if part.getConsole().getType() == PydevConsoleConstants.CONSOLE_TYPE:
-                        self.console = part.getConsole()
+                        self.set_console(part.getConsole())
 #                        part.display(self.console)
         return
 
     def create_console(self):
-        self.console = PydevConsoleFactory().createConsole()
+        self.set_console(PydevConsoleFactory().createConsole())
+        
+    def set_console(self,console):
+        self.console = console
 
     def get_newline(self):
         return PyAction.getDelimiter(self.editor.getDocument())
@@ -91,8 +129,24 @@ class ExecuteLine(Action):
 
     def send_to_console(self, text):
         if len(rstrip(text)):
-            document = self.console.getDocument()
-            document.replace(document.getLength(), 0, text)
+            self.commands.append( text ) 
+            if len(self.commands)==1:
+                job = DoTopCommandJob(self)
+                job.schedule()
+                
+    def do_top_command(self):
+        document = self.console.getDocument()
+        text = self.commands[0]
+        document.addDocumentListener(self.console_listener)
+        self.console_listener.lines_to_process = text.count('\n')
+        document.replace(document.getLength(), 0, text)
+    
+    def complete_top_command(self):
+        self.console.getDocument().removeDocumentListener(self.console_listener)
+        self.commands = self.commands[1:]
+        if len(self.commands) > 0 :
+            job = DoTopCommandJob(self)
+            job.schedule()
 
     def reset_line_state(self):
         self.current_block_indent = None
@@ -116,7 +170,11 @@ class ExecuteLine(Action):
         """ User has selected a block of text and hit F1
         """
         self.reset_line_state()
-        self.send_to_console(selection)
+        if selection[-1]=='\n' :
+            text = selection
+        else :
+            text = selection + '\n'
+        self.send_to_console(text)
 
     def run_line_mode(self):
         """ User is running through the code line by line
@@ -163,7 +221,6 @@ class ExecuteLine(Action):
 #        # if console has been closed then recreate
 #        if self.console.getViewer().getDocument() is None:
 #            self.create_console()
-
         self.showConsole()
 
         selection = self.get_selection()
@@ -174,6 +231,11 @@ class ExecuteLine(Action):
         else:
             # User has no selection, use line-by-line mode
             self.run_line_mode()
+            
+    def unhook(self):
+        if self.console:
+            self.console.getDocument().removeDocumentListener(self.console_listener)
+        
 
 def bindInInterface():
         # Cribbed from http://eclipse-pydev.sourcearchive.com/documentation/1.2.5/pyedit__next__problem_8py-source.html
@@ -189,6 +251,9 @@ def bindInInterface():
         try:
             #may happen because we're starting it in a thread, so, it may be closed before
             #we've the change to bind it
+            last_execute_line = editor.getAction(COMMAND_ID)
+            if last_execute_line :
+                last_execute_line.unhook()
             editor.setAction(COMMAND_ID, action)
         except:
             pass
