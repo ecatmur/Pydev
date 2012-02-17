@@ -32,7 +32,7 @@ public interface IPythonNature extends IProjectNature, IGrammarVersionProvider{
         public static final HashSet<String> ALL_IRONPYTHON_VERSIONS = new HashSet<String>();
         public static final HashSet<String> ALL_VERSIONS_ANY_FLAVOR = new HashSet<String>();
         public static final List<String> VERSION_NUMBERS = new ArrayList<String>();
-        public static final String LAST_VERSION_NUMBER = "2.7";
+        public static final String LAST_VERSION_NUMBER = "2.6";
         
         static{
             ALL_PYTHON_VERSIONS.add(PYTHON_VERSION_2_1);
