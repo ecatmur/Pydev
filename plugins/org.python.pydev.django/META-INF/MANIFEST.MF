@@ -28,3 +28,4 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.expressions
 Eclipse-LazyStart: true
 Bundle-ClassPath: pydev_django.jar
+Eclipse-BundleShape: dir

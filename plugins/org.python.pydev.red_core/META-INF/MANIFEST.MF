@@ -20,3 +20,4 @@ Require-Bundle: org.eclipse.ui,
 Eclipse-LazyStart: true
 Bundle-ClassPath: red-core.jar
 Export-Package: org.python.pydev.red_core
+Eclipse-BundleShape: dir
