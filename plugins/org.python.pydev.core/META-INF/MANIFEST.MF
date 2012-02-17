@@ -40,3 +40,4 @@ Export-Package: org.apache.commons.codec,
  org.python.pydev.core.tooltips,
  org.python.pydev.core.tooltips.presenter,
  org.python.pydev.core.uiutils
+Eclipse-BundleShape: dir
