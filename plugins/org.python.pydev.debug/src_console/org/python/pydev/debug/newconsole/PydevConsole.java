@@ -167,6 +167,9 @@ public class PydevConsole extends ScriptConsole  {
     public String getInitialCommands() {
         String str = PydevDebugPlugin.getDefault().getPreferenceStore().
             getString(PydevConsoleConstants.INITIAL_INTERPRETER_CMDS);
+        if (!str.endsWith("\n")) {
+            str += "\n";
+        }
         if(additionalInitialComands != null){
         	str+=additionalInitialComands;
         }
