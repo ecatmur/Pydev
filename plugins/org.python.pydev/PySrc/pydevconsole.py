@@ -5,6 +5,7 @@ except ImportError:
 
 import os
 import sys
+import thread, time
 
 try:
     False
@@ -343,6 +344,15 @@ def run(host, port, client_port):
 if __name__ == '__main__':
     # Uncomment this to make logging go
     # import ahl.logging
+
+    # http://jira.maninvestments.com/jira/browse/AHLRAP-1421
+    def exit_on_parent_death():
+        while True:
+            time.sleep(5)
+            # http://stackoverflow.com/questions/269494/how-can-i-cause-a-child-process-to-exit-when-the-parent-does
+            if os.getppid() == 1:
+                _DoExit()
+    thread.start_new_thread(exit_on_parent_death, ())
 
     port, client_port = sys.argv[1:3]
     import pydev_localhost
