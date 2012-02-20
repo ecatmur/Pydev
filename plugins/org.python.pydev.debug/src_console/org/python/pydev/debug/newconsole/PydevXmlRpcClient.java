@@ -45,6 +45,11 @@ public class PydevXmlRpcClient implements IPydevXmlRpcClient{
      * This is the thread that's reading the output stream from the process.
      */
     private ThreadStreamReader stdOutReader;
+    
+    /**
+     * Add a flag (and memory barrier) which indicates if the RPC command has completed
+     */
+    private volatile boolean commandCompleted;
 
 
     /**
@@ -79,22 +84,25 @@ public class PydevXmlRpcClient implements IPydevXmlRpcClient{
      */
     public Object execute(String command, Object[] args) throws XmlRpcException{
         final Object[] result = new Object[]{null};
+        commandCompleted = false;
         
         //make an async call so that we can keep track of not actually having an answer.
         this.impl.executeAsync(command, args, new AsyncCallback(){
-            
 
             public void handleError(XmlRpcRequest request, Throwable error) {
                 result[0] = new Object[]{error.getMessage()};
+                commandCompleted = true;
             }
-            
+
             public void handleResult(XmlRpcRequest request, Object receivedResult) {
                 result[0] = receivedResult; 
+                commandCompleted = true;
             }}
         );
-        
-        //busy loop waiting for the answer (or having the console die).
-        while(result[0] == null){
+
+        // loop waiting for the answer (or having the console die).
+        // The volatile variable gives us a memory barrier which makes this less insane
+        while(!commandCompleted){
             try {
                 if(process != null){
                     final String errStream = stdErrReader.getContents();
@@ -102,29 +110,26 @@ public class PydevXmlRpcClient implements IPydevXmlRpcClient{
                         result[0] = new Object[]{errStream};
                         break;
                     }
-                    
+
                     int exitValue = process.exitValue();
                     result[0] = new Object[]{
                             StringUtils.format("Console already exited with value: %s while waiting for an answer.\n" +
                             		"Error stream: "+errStream+"\n" +
                     				"Output stream: "+stdOutReader.getContents(), exitValue)};
-                    
+
                     //ok, we have an exit value!
                     break;
                 }
             } catch (IllegalThreadStateException e) {
                 //that's ok... let's sleep a bit
-                synchronized (this) {
-                    try {
-                        wait(10);
-                    } catch (InterruptedException e1) {
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e1) {
 //                        Log.log(e1);
-                    }
                 }
             }
         }
         return result[0];
     }
-        
 
 }
