@@ -12,6 +12,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.core.runtime.Assert;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.debug.ui.console.IConsoleLineTracker;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
@@ -523,11 +527,15 @@ public class ScriptConsoleDocumentListener implements IDocumentListener {
             
         };
         //Handle the command in a thread that doesn't block the U/I.
-        new Thread(){
-            public void run(){
-                handler.handleCommand(commandLine, onResponseReceived, onContentsReceived);
-            }
-        }.start();
+        // Use the eclipse threadpool so we don't go trigger-happy with OS threads
+        Job j = new Job("PyDev Console Hander") {
+            protected IStatus run(IProgressMonitor monitor) {
+                handler.handleCommand(commandLine, onResponseReceived, onContentsReceived);        
+                return Status.OK_STATUS;
+            };
+        };
+        j.setSystem(true);
+        j.schedule();
     }
 
     
