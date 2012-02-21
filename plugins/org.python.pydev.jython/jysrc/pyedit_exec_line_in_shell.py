@@ -27,6 +27,7 @@ from org.python.pydev.debug.newconsole import PydevConsole
 from org.python.pydev.editor.actions import PyAction #@UnresolvedImport
 
 from org.eclipse.ui import PlatformUI #@UnresolvedImport
+from org.eclipse.ui.console import ConsolePlugin #@UnresolvedImport
 from org.eclipse.ui.console import IConsoleConstants #@UnresolvedImport
 from java.lang import Runnable #@UnresolvedImport
 from org.eclipse.swt.widgets import Display #@UnresolvedImport
@@ -83,101 +84,48 @@ class ExecuteLine(Action):
         self._current_block_indent = None
         self._prev_line_indent = None
 
-    def _get_console_view_parts(self, page, restore):
-        '''
-        Find the Console Pages within the Console View.
-        Logic taken from EvaluationActionSetter.java
-        '''
-        console_view_parts = []
-        viewReferences = page.getViewReferences()
-        for ref in viewReferences:
-            if ref.getId() != IConsoleConstants.ID_CONSOLE_VIEW:
-                continue
 
-            view_part = ref.getView(restore)
-            if view_part is None:
-                continue
-            
-            console_view_parts.append(view_part)
-            if restore:
-                return console_view_parts
+    def _find_top_console(self):
+        def isConsoleView(view):
+            if view is None:
+                return False
+            return view.getId() == IConsoleConstants.ID_CONSOLE_VIEW
 
-        return console_view_parts;
-
-    def _show_console(self):
-        '''
-        Raise the Console Page from within the Console View
-        Logic derived from EvaluationActionSetter.java
-        '''
         window = PlatformUI.getWorkbench().getActiveWorkbenchWindow()
         if window is None:
-            return False
-        
+             return None
         page = window.getActivePage()
         if page is None:
-            return False
+            return None
+        views = page.getViewReferences()
 
-        console_view_parts = self._get_console_view_parts(page, False)
-        if len(console_view_parts) == 0:
-            console_view_parts = self._get_console_view_parts(page, True)
+        cviews = map(lambda v: v.getView(True), filter(isConsoleView, views))
+        if not len(cviews):
+            return None
+        return cviews[0].getConsole()
 
-        for view_part in console_view_parts:
-            if view_part.getConsole().getType() == PydevConsoleConstants.CONSOLE_TYPE:
-                self._set_console(view_part.getConsole())
-            elif self._console is not None:
-                page.bringToTop(view_part)
-                view_part.display(self._console)
-            else: return False
-            
-        return True
-
-    def _get_console(self):
-        '''
-        Resolve the appropriate console for code submission.
-        If a console doesn't exist; create it.
-        If a console was closed; reopen it.
-        If the current console isn't a PyDev Console; raise the most 
-        recent PyDev Console
-        '''
-        # create console on first use
-        if self._console is None or self._console.getViewer() is None:
-            self._create_console()
-
-        # if console has been closed then recreate
-        if self._console.getViewer().getDocument() is None:
-            self._create_console()
-        return self._console
-
-    def _create_console(self):
-        '''
-        If a Console page within the Console View doesn't exist, we need 
-        to create one.
-        '''
-        self._set_console(PydevConsoleFactory().createConsole())
+    def _show_console(self):
+        def isPyDevConsole(console):
+            if console is None:
+                return False
+            return console.getType() == PydevConsoleConstants.CONSOLE_TYPE
         
-    def _set_console(self, console):
-        '''
-        Sets the current Console to the current page if the current page if it's 
-        actually a Console Page; otherwise we can use the previous one.
+        console_manager = ConsolePlugin.getDefault().getConsoleManager()
+        consoles = console_manager.getConsoles()
         
-        Test: If the Scripting Console is visible and the previous Console page is 
-        removed; verify this works.
-        '''
-        if not console is None:
-            self._console = console
+        top_console = self._find_top_console()#
 
-    def _should_bring_to_top(self, console, view):
-        '''
-        Returns whether the given console view should be brought to the top.
-        The view should not be brought to the top if the view is pinned on
-        a console other than the given console.
-        '''
-        retval = True
-        if view.isPinned():
-            pinned_console = view.getConsole()
-            retval = self._console == pinned_console
-        return retval
-        
+        if  isPyDevConsole(top_console):
+            self._console = top_console
+        elif self._console not in consoles:
+            pydev_consoles = filter(isPyDevConsole, consoles)
+            if len(pydev_consoles):
+                self._console = pydev_consoles[0]
+            else: 
+                self._console = PydevConsoleFactory().createConsole()
+
+        console_manager.showConsoleView(self._console)
+     
     def _get_newline(self):
         return PyAction.getDelimiter(self._editor.getDocument())
 
@@ -288,9 +236,7 @@ class ExecuteLine(Action):
         self._send_to_console(current_line)
 
     def run(self):
-        # If there's no console, don't do anything else.
-        if not self._show_console():
-            return
+        self._show_console()
 
         selection = self._get_selection()
 
@@ -347,6 +293,3 @@ def runInUi(c):
 if cmd == 'onCreateActions' or cmd == 'onSave' or cmd == 'onSetDocument':
     # This chain of crazy bind calls allows us to bind this command to a key. Go figure ;)
     runInUi(bindInInterface)
-
-
-
