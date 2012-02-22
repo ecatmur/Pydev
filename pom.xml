@@ -6,6 +6,11 @@
   <artifactId>plugins</artifactId>
   <version>2.3.0-SNAPSHOT</version>
   <packaging>pom</packaging>
+  
+  <properties>
+    <tycho-version>0.14.0</tycho-version>
+  </properties>
+
   <modules>
     <!-- Build output: p2 repository -->
     <module>builders/org.python.pydev.build</module>
