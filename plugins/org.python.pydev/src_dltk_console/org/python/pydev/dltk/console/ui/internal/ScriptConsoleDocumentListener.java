@@ -8,6 +8,8 @@ package org.python.pydev.dltk.console.ui.internal;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Formatter;
 import java.util.Iterator;
 import java.util.List;
 
@@ -25,10 +27,13 @@ import org.eclipse.jface.text.IDocumentListener;
 import org.eclipse.jface.text.IDocumentPartitioner;
 import org.eclipse.jface.text.Region;
 import org.eclipse.jface.text.TextUtilities;
+import org.eclipse.jface.text.contentassist.ICompletionProposal;
+import org.eclipse.swt.widgets.Display;
 import org.python.pydev.core.Tuple;
 import org.python.pydev.core.callbacks.ICallback;
 import org.python.pydev.core.docutils.PySelection;
 import org.python.pydev.core.docutils.StringUtils;
+import org.python.pydev.core.docutils.PySelection.ActivationTokenAndQual;
 import org.python.pydev.core.log.Log;
 import org.python.pydev.core.uiutils.RunInUiThread;
 import org.python.pydev.dltk.console.InterpreterResponse;
@@ -39,6 +44,9 @@ import org.python.pydev.dltk.console.ui.ScriptConsolePartitioner;
 import org.python.pydev.dltk.console.ui.ScriptStyleRange;
 import org.python.pydev.editor.autoedit.DocCmd;
 import org.python.pydev.editor.autoedit.PyAutoIndentStrategy;
+import org.python.pydev.editor.codecompletion.PyLinkedModeCompletionProposal;
+
+import sun.org.mozilla.javascript.internal.IdScriptableObject;
 
 /**
  * This class will listen to the document and will:
@@ -537,9 +545,117 @@ public class ScriptConsoleDocumentListener implements IDocumentListener {
         j.setSystem(true);
         j.schedule();
     }
+   
+    
+    /**
+     * Attempts to query the console backend (ipython) for completions
+     * and update the console's cursor as appropriate.
+     */
+    public void handleConsoleTabCompletions() {
+        final String commandLine = getCommandLine();
+        final int commandLineOffset = viewer.getCommandLineOffset();
+        final int caretOffset = viewer.getCaretOffset();
 
-    
-    
+        // Don't block the UI when talking to the console
+        Job j = new Job("Async Fetch completions") {
+
+            @Override
+            protected IStatus run(IProgressMonitor monitor) {
+                final StringBuilder sb = new StringBuilder("\n");
+                ICompletionProposal[] completions = handler.getCompletions(commandLine, caretOffset - commandLineOffset);
+                if (completions.length == 0)
+                    return Status.OK_STATUS;
+                
+                // Evaluate all the completions
+                final List<String> compList = new ArrayList<String>();
+                for (ICompletionProposal completion : completions) {
+                    Document out = new Document(commandLine);
+                    completion.apply(out);
+                    compList.add(out.get());
+                }
+
+                // Discover the longest possible completion so we can zip up to it
+                String longestCommonPrefix = null;
+                int length = 0;
+                for (String completion : compList) {
+                    // Handle magic % character -> IPython does the right thing
+                    if (completion.charAt(0) == '%')
+                        completion = completion.substring(1);
+                    // Calculate the longest common prefix so we can auto-complete at least up to there.
+                    if (longestCommonPrefix == null) {
+                        longestCommonPrefix = completion;
+                    } else {
+                        for (int i = 0 ; i < longestCommonPrefix.length() && i < completion.length(); i++) {
+                            if (longestCommonPrefix.charAt(i) != completion.charAt(i)) {
+                                longestCommonPrefix = longestCommonPrefix.substring(0, i);
+                                break;
+                            }
+                        }
+                        // Handle mismatched lengths: dir and dirs
+                        if (longestCommonPrefix.length() > completion.length())
+                            longestCommonPrefix = completion;
+                    }
+
+                    // Calculate the maximum length of the completions for string formatting
+                    length = Math.max(length, completion.length());
+                }
+                if (longestCommonPrefix == null)
+                    longestCommonPrefix = commandLine;
+                
+                final String fLongestCommonPrefix = longestCommonPrefix;
+                final int maxLength = length;
+
+                // Find common substring
+                Runnable r = new Runnable() {
+                    public void run() {
+                        String currentCommand = getCommandLine();
+
+                        // disconnect the console so we can write content into it
+                        startDisconnected();
+
+                        // Get the viewer width + format the auto-completion output appropriately
+                        int consoleWidth = viewer.getConsoleWidthInCharacters();
+                        int formatLength = maxLength + 4;
+                        int completionsPerLine = consoleWidth / formatLength;
+                        if (completionsPerLine <= 0)
+                            completionsPerLine = 1;
+
+                        String formatString = "%-" + formatLength + "s";
+
+                        int i = 0;
+                        for (String completion : compList) {
+                            sb.append(String.format(formatString, completion));
+                            if (++i % completionsPerLine == 0) {
+                                sb.append("\n");
+                            }
+                        }
+                        sb.append("\n");
+
+                        // Add our completions to the console
+                        addToConsoleView(sb.toString(), true);
+
+                        // Re-add >>> 
+                        appendInvitation(false);
+                        stopDisconnected();
+
+                        // Auto-complete the command up to the longest common prefix (if it hasn't changed since we were last here)
+                        if (!currentCommand.equals(commandLine) || fLongestCommonPrefix.isEmpty())
+                            addToConsoleView(currentCommand, true);
+                        else
+                            addToConsoleView(fLongestCommonPrefix, true);
+                    }
+                };
+                RunInUiThread.async(r);
+
+                return Status.OK_STATUS;
+            }
+        };
+        j.setPriority(Job.INTERACTIVE);
+        j.setSystem(true);
+        j.schedule();
+    }
+
+
     /**
      * This method should be called after all the lines received were processed.
      */

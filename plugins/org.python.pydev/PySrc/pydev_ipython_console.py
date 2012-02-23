@@ -13,7 +13,8 @@ except ImportError:
     from pydev_ipython_console_011 import PyDevFrontEnd
     sys.stderr.write('PyDev console: using IPython 0.11\n')
  
-
+ 
+from pydevconsole import log
 
 #=======================================================================================================================
 # InterpreterInterface
@@ -38,11 +39,11 @@ class InterpreterInterface(BaseInterpreterInterface):
         return self.interpreter.getNamespace()
     
         
-    def getCompletions(self, text, act_tok):
+    def getCompletions(self, text, act_tok, ipython_only):
         if not text:
             return []
         try:
-            ipython_completion = text.startswith('%')
+            ipython_completion = ipython_only or text.startswith('%')
             if not ipython_completion:
                 s = re.search(r'\bcd\b', text)
                 if s is not None and s.start() == 0:
@@ -50,11 +51,27 @@ class InterpreterInterface(BaseInterpreterInterface):
                 
             if ipython_completion:
                 TYPE_LOCAL = '9'
+
+                # looks like:
+                # text = numpy.  -> _line = numpy.  ; completions = [numpy.abs, numpy....
+                # text = dir(a   -> _line = a ; completions = [abs, ...
                 _line, completions = self.interpreter.complete(text)
-                
+
+                if text.strip().startswith("cd "):
+                    # TODO: it might be better to make the completion API return the fully completed string in all cases
+                    text_prefix = text[:len(text) - len(_line)]
+                    completions = [text_prefix + x for x in completions]
+                else:
+                    # Note that PyDev doesn't expect completions with dots in the name, as might be 
+                    # return by this API. See PyDevConsoleCommunciation#convertToICompletions
+                    completions = [comp if not '.' in comp else comp[comp.rfind('.') + 1:] for comp in completions]
+
+                log("ipython completion: " + text + " -> " + str(_line) + " , " + str(completions) )
+
                 ret = []
                 append = ret.append
                 for completion in completions:
+                    # Return the full completion
                     append((completion, '', '', TYPE_LOCAL))
                 return ret
 

@@ -15,6 +15,7 @@ import java.util.List;
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.debug.ui.console.IConsoleLineTracker;
 import org.eclipse.jface.text.ITextHover;
+import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.jface.text.quickassist.IQuickAssistProcessor;
 import org.eclipse.jface.text.source.SourceViewerConfiguration;
@@ -27,6 +28,7 @@ import org.python.pydev.core.IInterpreterInfo;
 import org.python.pydev.core.REF;
 import org.python.pydev.core.Tuple;
 import org.python.pydev.core.callbacks.ICallback;
+import org.python.pydev.core.log.Log;
 import org.python.pydev.dltk.console.IScriptConsoleInterpreter;
 import org.python.pydev.dltk.console.InterpreterResponse;
 import org.python.pydev.dltk.console.ScriptConsoleHistory;
@@ -35,6 +37,8 @@ import org.python.pydev.dltk.console.ui.internal.ICommandHandler;
 import org.python.pydev.dltk.console.ui.internal.ScriptConsolePage;
 import org.python.pydev.dltk.console.ui.internal.ScriptConsoleSession;
 import org.python.pydev.dltk.console.ui.internal.ScriptConsoleViewer;
+import org.python.pydev.editor.codecompletion.AbstractCompletionProcessorWithCycling;
+import org.python.pydev.editor.codecompletion.CompletionError;
 import org.python.pydev.editor.codecompletion.PyCodeCompletionPreferencesPage;
 import org.python.pydev.editor.codecompletion.PyContentAssistant;
 import org.python.pydev.editor.correctionassist.PyCorrectionAssistant;
@@ -195,6 +199,19 @@ public abstract class ScriptConsole extends TextConsole implements ICommandHandl
             }
         }, onContentsReceived);
 
+    }
+
+    /**
+     * Fetch the current completions for the content presented in the user's ipython console
+     */
+    public ICompletionProposal[] getCompletions(String commandLine, int cursorPosition) {
+        try {
+            ICompletionProposal[] completions = interpreter.getCompletions(viewer.get(), commandLine, cursorPosition, cursorPosition, AbstractCompletionProcessorWithCycling.SHOW_ONLY_CONSOLE_COMPLETIONS);
+            return completions;
+        } catch (Exception e) {
+            Log.log(e);
+        }
+        return new ICompletionProposal[0];
     }
 
     /**

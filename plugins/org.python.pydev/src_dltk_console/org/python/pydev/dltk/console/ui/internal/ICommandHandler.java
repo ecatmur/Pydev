@@ -9,6 +9,7 @@
  *******************************************************************************/
 package org.python.pydev.dltk.console.ui.internal;
 
+import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.python.pydev.core.Tuple;
 import org.python.pydev.core.callbacks.ICallback;
 import org.python.pydev.dltk.console.InterpreterResponse;
@@ -19,4 +20,7 @@ public interface ICommandHandler {
             String userInput, 
             ICallback<Object, InterpreterResponse> onResponseReceived,
             ICallback<Object, Tuple<String, String>> onContentsReceived);
+    
+
+    public ICompletionProposal[] getCompletions(String commandLine, int cursorPosition);
 }

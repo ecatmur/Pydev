@@ -109,7 +109,7 @@ class InterpreterInterface(BaseInterpreterInterface):
         return self.namespace
 
 
-    def getCompletions(self, text, act_tok):
+    def getCompletions(self, text, act_tok, ipython_only):
         try:
             from _completer import Completer
             completer = Completer(self.namespace, None)
@@ -179,9 +179,9 @@ class PyDevServer(SimpleXMLRPCServer):
         self.req_queue.put(('addExec',(line,)))
         return self.resp_queue.get(block=True)
 
-    def getCompletions(self, text, act_tok):
-        log("server-getCompletions: %r %r" % (text, act_tok))
-        self.req_queue.put(('getCompletions', (text, act_tok)))
+    def getCompletions(self, text, act_tok, ipython_only):
+        log("server-getCompletions: %r %r %r" % (text, act_tok, ipython_only))
+        self.req_queue.put(('getCompletions', (text, act_tok, ipython_only)))
         return self.resp_queue.get(block=True)
 
     def getDescription(self, text):
@@ -343,7 +343,7 @@ def run(host, port, client_port):
 #=======================================================================================================================
 if __name__ == '__main__':
     # Uncomment this to make logging go
-    # import ahl.logging
+    #import ahl.logging
 
     # http://jira.maninvestments.com/jira/browse/AHLRAP-1421
     def exit_on_parent_death():

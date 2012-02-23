@@ -14,6 +14,12 @@ import org.python.pydev.dltk.console.ui.IConsoleStyleProvider;
  * it relies from the IScriptConsoleViewer2
  */
 public interface IScriptConsoleViewer2ForDocumentListener {
+    
+    int getCommandLineOffset();
+
+    int getConsoleWidthInCharacters();
+    
+    int getCaretOffset();
 
     void setCaretOffset(int length, boolean async);
 

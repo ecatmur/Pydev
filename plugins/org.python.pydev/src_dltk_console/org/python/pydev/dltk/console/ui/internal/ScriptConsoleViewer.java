@@ -109,12 +109,12 @@ public class ScriptConsoleViewer extends TextConsoleViewer implements IScriptCon
                         }
                         
                     }
-
+                    
                     if (!isSelectedRangeEditable()) {
                         event.doit = false;
                         return;
                     }
-
+                    
                     if (event.character == SWT.CR || event.character == SWT.LF) {
                         
                         //if we had an enter with the shift pressed and we're in a completion, we must stop it
@@ -138,6 +138,7 @@ public class ScriptConsoleViewer extends TextConsoleViewer implements IScriptCon
                         }
                         return;
                     }
+
                 }else{ //not printable char
                     if (isCaretInEditableRange()) {
                         if(!inCompletion && event.keyCode == SWT.PAGE_UP){
@@ -417,6 +418,13 @@ public class ScriptConsoleViewer extends TextConsoleViewer implements IScriptCon
     }
 
     /**
+     * @return the number of characters visible on a line
+     */
+    public int getConsoleWidthInCharacters() {
+        return getTextWidget().getSize().x / getWidthInPixels("a");
+    }
+    
+    /**
      * @return the caret offset (based on the document)
      */
     public int getCaretOffset() {
@@ -587,8 +595,20 @@ public class ScriptConsoleViewer extends TextConsoleViewer implements IScriptCon
             }}
         );
 
+        // IPython tab completion
+        styledText.addVerifyKeyListener(new VerifyKeyListener(){
+            public void verifyKey(VerifyEvent event) {
+                // Don't auto-complete if the tab is the first character on the line
+                if (event.character == SWT.TAB && !listener.getCommandLine().trim().isEmpty()) {
+                        // Show IPython completions when the user tabs in the console
+                        listener.handleConsoleTabCompletions();
+                        // And eat the tab
+                        event.doit = false;
+                    }
+                }
+            }
+        );
 
-        
         //execute the content assist
         styledText.addKeyListener(new KeyListener() {
             public void keyPressed(KeyEvent e) {

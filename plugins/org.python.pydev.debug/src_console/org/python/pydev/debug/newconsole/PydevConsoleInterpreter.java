@@ -175,7 +175,11 @@ public class PydevConsoleInterpreter implements IScriptConsoleInterpreter {
         if(!showOnlyTemplates){
             //shell completions 
             if(consoleCommunication != null){
-                ICompletionProposal[] consoleCompletions = consoleCommunication.getCompletions(text, actTok, offset);
+                ICompletionProposal[] consoleCompletions = consoleCommunication.getCompletions(text, actTok, offset, whatToShow == AbstractCompletionProcessorWithCycling.SHOW_ONLY_CONSOLE_COMPLETIONS);
+                // If we're only showing ipython completions, then short-circuit the rest
+                if (whatToShow == AbstractCompletionProcessorWithCycling.SHOW_ONLY_CONSOLE_COMPLETIONS)
+                    return consoleCompletions;
+
                 results2.addAll(Arrays.asList(consoleCompletions));
             }
         }
