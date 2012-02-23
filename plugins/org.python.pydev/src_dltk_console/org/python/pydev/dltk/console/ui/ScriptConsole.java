@@ -291,4 +291,6 @@ public abstract class ScriptConsole extends TextConsole implements ICommandHandl
      * @return
      */
     public abstract boolean getFocusOnStart();
+
+    public abstract boolean getTabCompletionEnabled();
 }

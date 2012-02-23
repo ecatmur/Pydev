@@ -93,6 +93,11 @@ public class ScriptConsoleViewer extends TextConsoleViewer implements IScriptCon
     private boolean isMainViewer;
     
     /**
+     * Should tab completion be enabled in this interpreter
+     */
+    private boolean tabCompletionEnabled;
+    
+    /**
      * This class is responsible for checking if commands should be issued or not given the command requested
      * and updating the caret to the correct position for it to happen (if needed).
      */
@@ -507,9 +512,10 @@ public class ScriptConsoleViewer extends TextConsoleViewer implements IScriptCon
      * @param contentHandler
      */
     public ScriptConsoleViewer(Composite parent, ScriptConsole console,
-            final IScriptConsoleContentHandler contentHandler, IConsoleStyleProvider styleProvider, String initialCommands, boolean focusOnStart) {
+            final IScriptConsoleContentHandler contentHandler, IConsoleStyleProvider styleProvider, String initialCommands, boolean focusOnStart, boolean tabCompletionEnabled) {
         super(parent, console);
         this.focusOnStart = focusOnStart;
+        this.tabCompletionEnabled = tabCompletionEnabled;
 
         this.console = console;
         this.getTextWidget().setBackground(console.getPydevConsoleBackground());
@@ -598,6 +604,8 @@ public class ScriptConsoleViewer extends TextConsoleViewer implements IScriptCon
         // IPython tab completion
         styledText.addVerifyKeyListener(new VerifyKeyListener(){
             public void verifyKey(VerifyEvent event) {
+                if (!ScriptConsoleViewer.this.tabCompletionEnabled)
+                    return;
                 // Don't auto-complete if the tab is the first character on the line
                 if (event.character == SWT.TAB && !listener.getCommandLine().trim().isEmpty()) {
                         // Show IPython completions when the user tabs in the console
