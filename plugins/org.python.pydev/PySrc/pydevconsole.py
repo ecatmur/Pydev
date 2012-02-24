@@ -1,3 +1,6 @@
+# Ed says we need this as pkg_resources does some environment checking
+# which is needed as ipython screws with the sys.modules for readline
+import pkg_resources
 try:
     from code import InteractiveConsole
 except ImportError:
