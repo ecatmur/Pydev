@@ -1,3 +1,6 @@
+# Ed says we need this as pkg_resources does some environment checking
+# which is needed as ipython screws with the sys.modules for readline
+import pkg_resources
 try:
     from code import InteractiveConsole
 except ImportError:
@@ -125,8 +128,10 @@ class InterpreterInterface(BaseInterpreterInterface):
 
 try:
     from pydev_ipython_console import InterpreterInterface
-except:
+except Exception as e:
     sys.stderr.write('PyDev console: using default backend (IPython not available).\n')
+    print e
+    import traceback;traceback.print_exc(file=sys.stderr)
     pass #IPython not available, proceed as usual.
 
 #=======================================================================================================================
@@ -343,7 +348,7 @@ def run(host, port, client_port):
 #=======================================================================================================================
 if __name__ == '__main__':
     # Uncomment this to make logging go
-    #import ahl.logging
+    import ahl.logging
 
     # http://jira.maninvestments.com/jira/browse/AHLRAP-1421
     def exit_on_parent_death():
