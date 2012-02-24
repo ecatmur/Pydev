@@ -13,8 +13,8 @@ except ImportError:
     from pydev_ipython_console_011 import PyDevFrontEnd
     sys.stderr.write('PyDev console: using IPython 0.11\n')
  
- 
-from pydevconsole import log
+# NB this is a cyclic import ; fix someother way.
+#from pydevconsole import log
 
 #=======================================================================================================================
 # InterpreterInterface
@@ -66,7 +66,7 @@ class InterpreterInterface(BaseInterpreterInterface):
                     # return by this API. See PyDevConsoleCommunciation#convertToICompletions
                     completions = [comp if not '.' in comp else comp[comp.rfind('.') + 1:] for comp in completions]
 
-                log("ipython completion: " + text + " -> " + str(_line) + " , " + str(completions) )
+                #log("ipython completion: " + text + " -> " + str(_line) + " , " + str(completions) )
 
                 ret = []
                 append = ret.append
