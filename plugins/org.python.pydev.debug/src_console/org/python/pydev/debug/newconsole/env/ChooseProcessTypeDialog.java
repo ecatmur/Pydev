@@ -9,6 +9,7 @@ package org.python.pydev.debug.newconsole.env;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
@@ -185,7 +186,7 @@ final class ChooseProcessTypeDialog extends Dialog {
             
             //we need to get the natures matching the one selected in all the projects.
             IWorkspace w = ResourcesPlugin.getWorkspace();
-            HashSet<String> pythonpath = new HashSet<String>();
+            Collection<String> pythonpath = new LinkedHashSet<String>();
             for(IProject p:w.getRoot().getProjects()){
                 PythonNature nature = PythonNature.getPythonNature(p);
                 try{
