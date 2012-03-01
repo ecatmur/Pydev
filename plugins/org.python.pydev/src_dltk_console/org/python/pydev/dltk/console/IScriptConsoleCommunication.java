@@ -12,20 +12,21 @@ package org.python.pydev.dltk.console;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.python.pydev.core.Tuple;
 import org.python.pydev.core.callbacks.ICallback;
+import org.python.pydev.dltk.console.ui.internal.IStreamMonitor;
 
 /**
  * Interface for the console communication.
  * 
  * This interface is meant to be the way to communicate with the shell.
  */
-public interface IScriptConsoleCommunication {
+public interface IScriptConsoleCommunication extends IStreamMonitor {
     
     /**
      * Executes a given command in the interpreter (push a line)
      * 
      * @param command the command to be executed
      * @param onContentsReceived 
-     * @return the response from the interpreter (contains the stdout, stderr, etc).
+     * @return the response from the interpreter.
      * @throws Exception
      */
     void execInterpreter(
@@ -80,5 +81,4 @@ public interface IScriptConsoleCommunication {
      * @throws Exception
      */
     void interrupt(int signal) throws Exception;
-
 }

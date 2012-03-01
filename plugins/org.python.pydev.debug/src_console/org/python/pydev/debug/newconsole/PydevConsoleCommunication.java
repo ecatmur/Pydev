@@ -10,6 +10,8 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.XmlRpcHandler;
@@ -31,6 +33,11 @@ import org.python.pydev.core.log.Log;
 import org.python.pydev.debug.newconsole.prefs.InteractiveConsolePrefs;
 import org.python.pydev.dltk.console.IScriptConsoleCommunication;
 import org.python.pydev.dltk.console.InterpreterResponse;
+import org.python.pydev.dltk.console.ui.internal.IStreamListener;
+import org.python.pydev.dltk.console.ui.internal.IStreamMonitor;
+import org.python.pydev.dltk.console.ui.internal.StreamMessage;
+import org.python.pydev.dltk.console.ui.internal.StreamReader;
+import org.python.pydev.dltk.console.ui.internal.ThreadedStreamMonitor;
 import org.python.pydev.editor.codecompletion.AbstractPyCodeCompletion;
 import org.python.pydev.editor.codecompletion.IPyCompletionProposal;
 import org.python.pydev.editor.codecompletion.PyCalltipsContextInformation;
@@ -52,15 +59,20 @@ public class PydevConsoleCommunication implements IScriptConsoleCommunication, X
     private IPydevXmlRpcClient client;
     
     /**
-     * Responsible for getting the stdout of the process.
+     * Queue of messages coming from stdout and stderr.
      */
-    private final ThreadStreamReader stdOutReader;
+    private BlockingQueue<StreamMessage> outputQueue;
     
     /**
-     * Responsible for getting the stderr of the process.
+     * Stream reader which picks up stdout and stderr
      */
-    private final ThreadStreamReader stdErrReader;
+    private final StreamReader streamReader;
 
+    /**
+     * Stream monitor which will notify listeners of changes in the streams.
+     */
+    private final ThreadedStreamMonitor streamMonitor;
+    
     /**
      * This is the server responsible for giving input to a raw_input() requested.
      */
@@ -75,10 +87,11 @@ public class PydevConsoleCommunication implements IScriptConsoleCommunication, X
      * @throws MalformedURLException
      */
     public PydevConsoleCommunication(int port, Process process, int clientPort) throws Exception {
-        stdOutReader = new ThreadStreamReader(process.getInputStream());
-        stdErrReader = new ThreadStreamReader(process.getErrorStream());
-        stdOutReader.start();
-        stdErrReader.start();
+        outputQueue   = new LinkedBlockingQueue<StreamMessage>();
+        streamMonitor = new ThreadedStreamMonitor(outputQueue);
+        streamReader  = new StreamReader(process.getInputStream(), process.getErrorStream(), outputQueue);
+        streamReader.run();
+        streamMonitor.start();
         
         //start the server that'll handle input requests
         this.webServer = new WebServer(clientPort);
@@ -92,7 +105,7 @@ public class PydevConsoleCommunication implements IScriptConsoleCommunication, X
         
         this.webServer.start();
 
-        IPydevXmlRpcClient client = new PydevXmlRpcClient(process, stdErrReader, stdOutReader);
+        IPydevXmlRpcClient client = new PydevXmlRpcClient(process);
         client.setPort(port);
         
         this.client = client;
@@ -170,7 +183,6 @@ public class PydevConsoleCommunication implements IScriptConsoleCommunication, X
      */
     private volatile boolean firstCommWorked = false;
 
-    
     /**
      * Called when the server is requesting some input from this class.
      */
@@ -179,12 +191,9 @@ public class PydevConsoleCommunication implements IScriptConsoleCommunication, X
         inputReceived = null;
         boolean needInput = true;
         
-        String stdOutContents = stdOutReader.getAndClearContents();
-        String stderrContents = stdErrReader.getAndClearContents();
         //let the busy loop from execInterpreter free and enter a busy loop
         //in this function until execInterpreter gives us an input
-        nextResponse = new InterpreterResponse(stdOutContents, 
-                stderrContents, false, needInput);
+        nextResponse = new InterpreterResponse(false, needInput);
         
         //busy loop until we have an input
         while(inputReceived == null){
@@ -227,7 +236,6 @@ public class PydevConsoleCommunication implements IScriptConsoleCommunication, X
                 private Tuple<String, Boolean> exec() throws XmlRpcException{
                 
                     Object[] execute = (Object[]) client.execute("addExec", new Object[]{command});
-                    
                     Object object = execute[0];
                     boolean more;
                     
@@ -287,7 +295,8 @@ public class PydevConsoleCommunication implements IScriptConsoleCommunication, X
                                     if(commAttempts < maximumAttempts){
                                         commAttempts += 1;
                                         Thread.sleep(250);
-                                        executed.o1 = stdErrReader.getAndClearContents();
+                                        //TODO: cleanup
+                                        //executed.o1 = stdErrReader.getAndClearContents();
                                         continue;
                                     }else{
                                         break;
@@ -304,22 +313,12 @@ public class PydevConsoleCommunication implements IScriptConsoleCommunication, X
                         
                         firstCommWorked = true;
                         
-                        String errorContents = executed.o1;
                         boolean more = executed.o2;
                         
-                        String stdOutContents;
-                        if(errorContents == null){
-                            errorContents = stdErrReader.getAndClearContents();
-                        }else{
-                            errorContents += "\n"+stdErrReader.getAndClearContents();
-                        }
-                        stdOutContents = stdOutReader.getAndClearContents();
-                        nextResponse = new InterpreterResponse(stdOutContents, 
-                                errorContents, more, needInput);
+                        nextResponse = new InterpreterResponse(more, needInput);
                         
                     }catch(Exception e){
-                        nextResponse = new InterpreterResponse("", "Exception while pushing line to console:"+e.getMessage(), 
-                                false, needInput);
+                        nextResponse = new InterpreterResponse(false, needInput);
                     }
                     return Status.OK_STATUS;
                 }
@@ -345,8 +344,9 @@ public class PydevConsoleCommunication implements IScriptConsoleCommunication, X
             
             if(i <= 0 && nextResponse == null){
                 i = 250; //after the first, get it each 250 millis
-                String stderrContents = stdErrReader.getAndClearContents();
-                String stdOutContents = stdOutReader.getAndClearContents();
+                //TODO: cleanup
+                String stderrContents = "";
+                String stdOutContents = "";
                 if(stdOutContents.length() > 0 || stderrContents.length() > 0){
                     onContentsReceived.call(new Tuple<String, String>(stdOutContents, stderrContents));
                 }
@@ -482,6 +482,14 @@ public class PydevConsoleCommunication implements IScriptConsoleCommunication, X
             return "Unable to get description: waiting for input.";
         }
         return client.execute("getDescription", new Object[]{text}).toString();
+    }
+
+    public void addListener(IStreamListener listener) {
+        streamMonitor.addListener(listener);
+    }
+
+    public void removeListener(IStreamListener listener) {
+        streamMonitor.removeListener(listener);
     }
 
 

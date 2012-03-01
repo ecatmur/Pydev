@@ -12,6 +12,8 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.TestCase;
 
@@ -27,10 +29,15 @@ import org.python.pydev.core.TestDependent;
 import org.python.pydev.core.docutils.StringUtils;
 import org.python.pydev.debug.newconsole.IPydevXmlRpcClient;
 import org.python.pydev.debug.newconsole.PydevXmlRpcClient;
+import org.python.pydev.dltk.console.ui.internal.IStreamListener;
+import org.python.pydev.dltk.console.ui.internal.IStreamMonitor;
+import org.python.pydev.dltk.console.ui.internal.StreamMessage;
+import org.python.pydev.dltk.console.ui.internal.StreamReader;
+import org.python.pydev.dltk.console.ui.internal.ThreadedStreamMonitor;
 import org.python.pydev.plugin.SocketUtil;
 import org.python.pydev.runners.ThreadStreamReader;
 
-public class XmlRpcTest extends TestCase{
+public class XmlRpcTest extends TestCase implements IStreamListener{
 
     String[] EXPECTED = new String[]{
             "false",
@@ -74,10 +81,13 @@ public class XmlRpcTest extends TestCase{
     
     private int next = -1;
 
-    private ThreadStreamReader err;
+    private BlockingQueue<StreamMessage> outputQueue;
+    
+    private StreamReader streamReader;
 
-    private ThreadStreamReader out;
-
+    private IStreamMonitor streamMonitor;
+    
+    
     private WebServer webServer;
     
     public static void main(String[] args) throws MalformedURLException, XmlRpcException {
@@ -112,11 +122,11 @@ public class XmlRpcTest extends TestCase{
         }
         
         Process process = Runtime.getRuntime().exec(cmdLine);
-        err = new ThreadStreamReader(process.getErrorStream());
-        out = new ThreadStreamReader(process.getInputStream());
-        err.start();
-        out.start();
-        
+        outputQueue   = new LinkedBlockingQueue<StreamMessage>();
+        streamMonitor = new ThreadedStreamMonitor(outputQueue);
+        streamReader  = new StreamReader(process.getInputStream(), process.getErrorStream(), outputQueue);
+        streamReader.run();
+        streamMonitor.addListener(this);
         
         this.webServer = new WebServer(client_port);
         XmlRpcServer serverToHandleRawInput = this.webServer.getXmlRpcServer();
@@ -172,19 +182,19 @@ public class XmlRpcTest extends TestCase{
         }
         
         try {
-            IPydevXmlRpcClient client = new PydevXmlRpcClient(process, err, out);
+            IPydevXmlRpcClient client = new PydevXmlRpcClient(process);
             client.setPort(port);
             
-            printArr(client.execute("addExec", new Object[]{"abc = 10"}));
-            printArr(client.execute("addExec", new Object[]{"abc"}));
-            printArr(client.execute("addExec", new Object[]{"import sys"}));
-            printArr(client.execute("addExec", new Object[]{"class Foo:"}));
-            printArr(client.execute("addExec", new Object[]{"    print 20"}));
-            printArr(client.execute("addExec", new Object[]{"    print >> sys.stderr, 30"}));
-            printArr(client.execute("addExec", new Object[]{""}));
-            printArr(client.execute("addExec", new Object[]{"foo=Foo()"}));
-            printArr(client.execute("addExec", new Object[]{"foo.__doc__=None"}));
-            printArr("start get completions");
+            client.execute("addExec", new Object[]{"abc = 10"});
+            client.execute("addExec", new Object[]{"abc"});
+            client.execute("addExec", new Object[]{"import sys"});
+            client.execute("addExec", new Object[]{"class Foo:"});
+            client.execute("addExec", new Object[]{"    print 20"});
+            client.execute("addExec", new Object[]{"    print >> sys.stderr, 30"});
+            client.execute("addExec", new Object[]{""});
+            client.execute("addExec", new Object[]{"foo=Foo()"});
+            client.execute("addExec", new Object[]{"foo.__doc__=None"});
+            print("start get completions");
             Object[] completions = (Object[]) client.execute("getCompletions", new Object[]{"fo"});
             //the completions may come in any order, we must sort it for the test and remove things we don't expect.
             Arrays.sort(completions, new Comparator<Object>() {
@@ -206,11 +216,11 @@ public class XmlRpcTest extends TestCase{
             printArr("end get completions");
             
             printArr("start raw_input");
-            printArr(client.execute("addExec", new Object[]{"raw_input()"}));
+            client.execute("addExec", new Object[]{"raw_input()"});
             printArr("finish raw_input");
-            printArr(client.execute("addExec", new Object[]{"'foo'"}));
+            client.execute("addExec", new Object[]{"'foo'"});
 //            System.out.println("Ask exit");
-            printArr(client.execute("addExec", new Object[]{"sys.exit(0)"}));
+            client.execute("addExec", new Object[]{"sys.exit(0)"});
 //            System.out.println("End Ask exit");
         } finally {
             if(process != null){
@@ -221,11 +231,6 @@ public class XmlRpcTest extends TestCase{
     }
 
     private void printArr(Object ... execute) {
-        if(this.out != null){
-            print(this.out.getAndClearContents());
-            print(this.err.getAndClearContents());
-        }
-        
         for(Object o:execute){
             print(o);
         }
@@ -272,6 +277,11 @@ public class XmlRpcTest extends TestCase{
     private int nextExpected() {
         next += 1;
         return next;
+    }
+
+    public void onStream(StreamMessage message) {
+        print(message.message);
+        
     }
     
 }

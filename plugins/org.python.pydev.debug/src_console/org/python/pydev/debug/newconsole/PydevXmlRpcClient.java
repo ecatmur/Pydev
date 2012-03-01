@@ -40,16 +40,6 @@ public class PydevXmlRpcClient implements IPydevXmlRpcClient{
     private Process process;
     
     /**
-     * This is the thread that's reading the error stream from the process.
-     */
-    private ThreadStreamReader stdErrReader;
-
-    /**
-     * This is the thread that's reading the output stream from the process.
-     */
-    private ThreadStreamReader stdOutReader;
-    
-    /**
      * Add a flag (and memory barrier) which indicates if the RPC command has completed
      */
     private volatile boolean commandCompleted;
@@ -58,11 +48,9 @@ public class PydevXmlRpcClient implements IPydevXmlRpcClient{
     /**
      * Constructor (see fields description)
      */
-    public PydevXmlRpcClient(Process process, ThreadStreamReader stdErrReader, ThreadStreamReader stdOutReader) {
+    public PydevXmlRpcClient(Process process) {
         this.impl = new XmlRpcClient();
         this.process = process;
-        this.stdErrReader = stdErrReader;
-        this.stdOutReader = stdOutReader;
     }
 
     /**
@@ -108,17 +96,19 @@ public class PydevXmlRpcClient implements IPydevXmlRpcClient{
         while(!commandCompleted){
             try {
                 if(process != null){
-                    final String errStream = stdErrReader.getContents();
+                    //TODO: cleanup
+                    final String errStream = "";
                     if(errStream.indexOf("sys.exit called. Interactive console finishing.") != -1){
                         result[0] = new Object[]{errStream};
                         break;
                     }
 
                     int exitValue = process.exitValue();
+                    //TODO: cleanup
                     result[0] = new Object[]{
                             StringUtils.format("Console already exited with value: %s while waiting for an answer.\n" +
                             		"Error stream: "+errStream+"\n" +
-                    				"Output stream: "+stdOutReader.getContents(), exitValue)};
+                    				"Output stream: ", exitValue)};
 
                     //ok, we have an exit value!
                     break;

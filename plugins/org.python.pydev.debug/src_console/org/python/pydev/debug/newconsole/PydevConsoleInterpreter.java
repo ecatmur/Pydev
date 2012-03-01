@@ -36,6 +36,7 @@ import org.python.pydev.dltk.console.IScriptConsoleCommunication;
 import org.python.pydev.dltk.console.IScriptConsoleInterpreter;
 import org.python.pydev.dltk.console.InterpreterResponse;
 import org.python.pydev.dltk.console.ui.IScriptConsoleViewer;
+import org.python.pydev.dltk.console.ui.internal.IStreamListener;
 import org.python.pydev.editor.codecompletion.AbstractCompletionProcessorWithCycling;
 import org.python.pydev.editor.codecompletion.IPyCodeCompletion;
 import org.python.pydev.editor.codecompletion.IPyCompletionProposal;
@@ -286,6 +287,14 @@ public class PydevConsoleInterpreter implements IScriptConsoleInterpreter {
 	public IInterpreterInfo getInterpreterInfo() {
 		return this.interpreterInfo;
 	}
+
+    public void addListener(IStreamListener listener) {
+        consoleCommunication.addListener(listener);
+    }
+
+    public void removeListener(IStreamListener listener) {
+        consoleCommunication.removeListener(listener);
+    }
 
 
 }

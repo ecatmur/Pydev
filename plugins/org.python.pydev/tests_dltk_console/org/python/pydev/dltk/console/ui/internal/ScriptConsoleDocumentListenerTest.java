@@ -80,7 +80,7 @@ public class ScriptConsoleDocumentListenerTest extends TestCase {
             public void handleCommand(String userInput, ICallback<Object, InterpreterResponse> onResponseReceived,
                     ICallback<Object, Tuple<String, String>> onContentsReceived) {
                 commandsHandled.add(userInput);
-                onResponseReceived.call(new InterpreterResponse("", "", false, false));
+                onResponseReceived.call(new InterpreterResponse(false, false));
             }
 
             public ICompletionProposal[] getCompletions(String commandLine, int cursorPosition) {

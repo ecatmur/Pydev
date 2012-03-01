@@ -23,6 +23,8 @@ public class ScriptConsoleSession implements IScriptConsoleListener, IScriptCons
     }
 
     public void interpreterResponse(InterpreterResponse response, ScriptConsolePrompt prompt) {
+        //TODO: cleanup
+        /*
         if (response != null) {
             if(response.err != null && response.err.length() > 0){
                 session.append(response.err);
@@ -31,6 +33,7 @@ public class ScriptConsoleSession implements IScriptConsoleListener, IScriptCons
                 session.append(response.out);
             }
         }
+        */
     }
 
     public void userRequest(String text, ScriptConsolePrompt prompt) {

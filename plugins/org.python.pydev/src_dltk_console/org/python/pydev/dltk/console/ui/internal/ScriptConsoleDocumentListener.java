@@ -52,11 +52,11 @@ import sun.org.mozilla.javascript.internal.IdScriptableObject;
  * This class will listen to the document and will:
  * 
  * - pass the commands to the handler
- * - add the results from the handler
+ * - add the results from the asynchronous stream
  * - show the prompt
  * - set the color of the console regions
  */
-public class ScriptConsoleDocumentListener implements IDocumentListener {
+public class ScriptConsoleDocumentListener implements IDocumentListener, IStreamListener {
 
     private ICommandHandler handler;
 
@@ -65,6 +65,8 @@ public class ScriptConsoleDocumentListener implements IDocumentListener {
     private ScriptConsoleHistory history;
 
     private int offset;
+    
+    private volatile boolean promptReady;
 
     /**
      * Document to which this listener is attached.
@@ -89,13 +91,37 @@ public class ScriptConsoleDocumentListener implements IDocumentListener {
     public long getLastChangeMillis() {
         return lastChangeMillis;
     }
-    
+
     /**
-     * Constructor.
+     * Constructor
      * 
-     * Will initialize the lastChangeMillis to the creation time of this listener. 
+     * @param viewer this is the viewer to which this listener is attached. It's the main viewer. Other viewers
+     * may be added later through addViewer() for sharing the same listener and being properly updated.
+     * 
+     * @param handler this is the object that'll handle the commands
+     * @param prompt shows the prompt to the user
+     * @param history keeps track of the commands added by the user.
+     * @param initialCommands the commands that should be initially added 
      */
-    public ScriptConsoleDocumentListener() {
+    public ScriptConsoleDocumentListener(IScriptConsoleViewer2ForDocumentListener viewer, 
+            ICommandHandler handler, ScriptConsolePrompt prompt,
+            ScriptConsoleHistory history, List<IConsoleLineTracker> consoleLineTrackers, String initialCommands) {
+        this.prompt = prompt;
+        
+        this.handler = handler;
+        
+        this.history = history;
+
+        this.viewer = viewer;
+
+        this.offset = 0;
+
+        this.doc = null;
+        
+        this.consoleLineTrackers = consoleLineTrackers;
+        
+        this.initialCommands = initialCommands;
+        
         this.lastChangeMillis = System.currentTimeMillis();
     }
     
@@ -204,37 +230,6 @@ public class ScriptConsoleDocumentListener implements IDocumentListener {
     }
 
     /**
-     * Constructor
-     * 
-     * @param viewer this is the viewer to which this listener is attached. It's the main viewer. Other viewers
-     * may be added later through addViewer() for sharing the same listener and being properly updated.
-     * 
-     * @param handler this is the object that'll handle the commands
-     * @param prompt shows the prompt to the user
-     * @param history keeps track of the commands added by the user.
-     * @param initialCommands the commands that should be initially added 
-     */
-    public ScriptConsoleDocumentListener(IScriptConsoleViewer2ForDocumentListener viewer, 
-            ICommandHandler handler, ScriptConsolePrompt prompt,
-            ScriptConsoleHistory history, List<IConsoleLineTracker> consoleLineTrackers, String initialCommands) {
-        this.prompt = prompt;
-        
-        this.handler = handler;
-        
-        this.history = history;
-
-        this.viewer = viewer;
-
-        this.offset = 0;
-
-        this.doc = null;
-        
-        this.consoleLineTrackers = consoleLineTrackers;
-        
-        this.initialCommands = initialCommands;
-    }
-
-    /**
      * Set the document that this class should listen.
      * 
      * @param doc the document that should be used in the console.
@@ -255,11 +250,8 @@ public class ScriptConsoleDocumentListener implements IDocumentListener {
      * 
      * @param result the response from the interpreter after sending some command for it to process.
      */
-    protected void processResult(final InterpreterResponse result){
+    protected void processResult(final InterpreterResponse result) {
         if (result != null) {
-            addToConsoleView(result.out, true);
-            addToConsoleView(result.err, false);
-
             history.commit();
             try{
                 offset = getLastLineLength();
@@ -274,14 +266,16 @@ public class ScriptConsoleDocumentListener implements IDocumentListener {
      * Adds some text that came as an output to stdout or stderr to the console.
      * 
      * @param out the text that should be added
-     * @param stdout true if it came from stdout and also if it came from stderr
+     * @param stdout true if it came from stdout and false if it came from stderr
      */
+    
     private void addToConsoleView(String out, boolean stdout){
         if(out.length() == 0){
             return; //nothing to add!
         }
-        int start = doc.getLength();
 
+        int start = doc.getLength();
+        
         IConsoleStyleProvider styleProvider = viewer.getStyleProvider();
         Tuple<List<ScriptStyleRange>, String> style = null;
         if (styleProvider != null) {
@@ -344,7 +338,7 @@ public class ScriptConsoleDocumentListener implements IDocumentListener {
      * correctly treated in the console).
      * 
      * @param offset the offset where the addition took place
-     * @param text the text that should be adedd
+     * @param text the text that should be added
      */
     protected void proccessAddition(int offset, String text){
         //we have to do some gymnastics here to add line-by-line the contents that the user entered.
@@ -523,8 +517,9 @@ public class ScriptConsoleDocumentListener implements IDocumentListener {
                     
                     public void run() {
                         if (result != null) {
-                            addToConsoleView(result.o1, true);
-                            addToConsoleView(result.o2, false);
+                            //TODO: cleanup
+                            //addToConsoleView(result.o1, true);
+                            //addToConsoleView(result.o2, false);
                             revealEndOfDocument();
                         }
                     }
@@ -538,6 +533,7 @@ public class ScriptConsoleDocumentListener implements IDocumentListener {
         // Use the eclipse threadpool so we don't go trigger-happy with OS threads
         Job j = new Job("PyDev Console Hander") {
             protected IStatus run(IProgressMonitor monitor) {
+                promptReady = false;
                 handler.handleCommand(commandLine, onResponseReceived, onContentsReceived);        
                 return Status.OK_STATUS;
             };
@@ -771,14 +767,10 @@ public class ScriptConsoleDocumentListener implements IDocumentListener {
         try{
             doc.replace(initialOffset, 0, text);
         }catch(BadLocationException e){
-            Log.log(e);
+
         }
     }
-
-    /**
-     * Shows the prompt for the user (e.g.: >>>)
-     */
-    protected void appendInvitation(boolean async){
+    private String formattedPrompt() {
         int start = doc.getLength();
         String promptStr = prompt.toString();
         IConsoleStyleProvider styleProvider = viewer.getStyleProvider();
@@ -788,9 +780,54 @@ public class ScriptConsoleDocumentListener implements IDocumentListener {
                 addToPartitioner(style);
             }
         }
+        return promptStr;
+    }
+
+    /**
+     * Shows the prompt for the user (e.g.: >>>)
+     */
+    protected void appendInvitation(boolean async){
+        String promptStr = formattedPrompt();
         appendText(promptStr); //caret already updated
         setCaretOffset(doc.getLength(), async);
         revealEndOfDocument();
+        
+        promptReady = true;
+    }
+    
+    private class PromptContext {
+        public boolean removedPrompt;
+        // offset from the end of the document.
+        public int     cursorOffset;
+        public String   userInput;
+        
+        public PromptContext(boolean removedPrompt, int cursorOffset, String userInput) {
+            this.removedPrompt = removedPrompt;
+            this.cursorOffset  = cursorOffset;
+            this.userInput     = userInput;
+        }
+    }
+    
+    protected PromptContext removeUserInput() {
+        if(!promptReady)
+            return new PromptContext(false, -1, "");
+
+        PromptContext pc = new PromptContext(true, -1, "");
+        try {
+            int lastLine = doc.getNumberOfLines()-1;
+            int lastLineLength = doc.getLineLength(lastLine);
+            int end = doc.getLength();
+            int start = end - lastLineLength;
+            pc.userInput = doc.get(start, lastLineLength);
+            pc.cursorOffset = end - viewer.getCaretOffset();
+            doc.replace(start, lastLineLength, "");
+            
+            pc.userInput = pc.userInput.replace(formattedPrompt(), "");
+            
+        } catch (BadLocationException e) {
+            e.printStackTrace();
+        }
+        return pc;
     }
 
     /**
@@ -808,7 +845,6 @@ public class ScriptConsoleDocumentListener implements IDocumentListener {
             }
         }
     }
-
 
     private void setCaretOffset(int offset) {
         setCaretOffset(offset, false);
@@ -875,7 +911,6 @@ public class ScriptConsoleDocumentListener implements IDocumentListener {
         int lastLine = doc.getNumberOfLines() - 1;
         return doc.getLineLength(lastLine) - getLastLineReadOnlySize();
     }
-
     
     /**
      * @return the command line that the user entered.
@@ -914,6 +949,34 @@ public class ScriptConsoleDocumentListener implements IDocumentListener {
      */
     public void setCommandLine(String command) throws BadLocationException {
         doc.replace(getCommandLineOffset(), getCommandLineLength(), command);
+    }
+
+    /**
+     * Applies the new text from the input stream to the console. This must run
+     * in the UI thread as it's updating a widget.
+     */
+    public void onStream(final StreamMessage msg) {
+        Runnable r = new Runnable() {
+            public void run() {
+                startDisconnected();
+                PromptContext pc = removeUserInput();
+                addToConsoleView(msg.message, msg.type == StreamType.STDOUT);
+                
+                if(pc.removedPrompt) {
+                    appendInvitation(false);
+                }
+                
+                stopDisconnected();
+                
+                if(pc.removedPrompt) {
+                    appendText(pc.userInput);
+                    viewer.setCaretOffset(doc.getLength() - pc.cursorOffset, false);
+                }
+                
+                revealEndOfDocument();
+            }
+        };
+        RunInUiThread.async(r);
     }
 
 

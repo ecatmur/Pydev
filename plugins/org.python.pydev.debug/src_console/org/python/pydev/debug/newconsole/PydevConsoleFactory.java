@@ -77,7 +77,6 @@ public class PydevConsoleFactory implements IConsoleFactory {
             Log.log(e);
         }
         return null;
-    	
     }
 
     /**
@@ -89,15 +88,7 @@ public class PydevConsoleFactory implements IConsoleFactory {
      */
     public static PydevConsoleInterpreter createDefaultPydevInterpreter() throws Exception, 
             UserCanceledException {
-
-//            import sys; sys.ps1=''; sys.ps2=''
-//            import sys;print >> sys.stderr, ' '.join([sys.executable, sys.platform, sys.version])
-//            print >> sys.stderr, 'PYTHONPATH:'
-//            for p in sys.path:
-//                print >> sys.stderr,  p
-//
-//            print >> sys.stderr, 'Ok, all set up... Enjoy'
-        
+       
         IProcessFactory iprocessFactory = new IProcessFactory();
         
         PydevConsoleLaunchInfo launchAndProcess = iprocessFactory.createInteractiveLaunch();
@@ -105,20 +96,21 @@ public class PydevConsoleFactory implements IConsoleFactory {
             return null;
         }
         return createPydevInterpreter(launchAndProcess, iprocessFactory.getNaturesUsed());
-
-        
     }
     
     // Use IProcessFactory to get the required tuple
     public static PydevConsoleInterpreter createPydevInterpreter(
             PydevConsoleLaunchInfo info, List<IPythonNature> natures) throws Exception {
-        final ILaunch launch = info.launch;
-        Process process = info.process;
-        Integer clientPort = info.clientPort;
-        IInterpreterInfo interpreterInfo = info.interpreter;
-        if(launch == null){
+        
+        if(info.launch == null) {
             return null;
         }
+        
+        final ILaunch   launch          = info.launch;
+        Process          process         = info.process;
+        Integer          clientPort      = info.clientPort;
+        IInterpreterInfo interpreterInfo = info.interpreter;
+
 
         PydevConsoleInterpreter consoleInterpreter = new PydevConsoleInterpreter();
         int port = Integer.parseInt(launch.getAttribute(IProcessFactory.INTERACTIVE_LAUNCH_PORT));
@@ -135,8 +127,6 @@ public class PydevConsoleFactory implements IConsoleFactory {
             }
         });
         return consoleInterpreter;
-
-    	
     }
 
 }

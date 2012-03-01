@@ -12,9 +12,10 @@ package org.python.pydev.dltk.console;
 import org.python.pydev.core.IInterpreterInfo;
 import org.python.pydev.core.Tuple;
 import org.python.pydev.core.callbacks.ICallback;
+import org.python.pydev.dltk.console.ui.internal.IStreamMonitor;
 
 
-public interface IScriptConsoleInterpreter extends IScriptConsoleShell, IConsoleRequest {
+public interface IScriptConsoleInterpreter extends IScriptConsoleShell, IConsoleRequest, IStreamMonitor {
 
     /**
      * @param command the command (entered in the console) to be executed
@@ -28,6 +29,5 @@ public interface IScriptConsoleInterpreter extends IScriptConsoleShell, IConsole
             ICallback<Object, Tuple<String, String>> onContentsReceived);
 
 	IInterpreterInfo getInterpreterInfo();
-
 
 }

@@ -45,6 +45,7 @@ import org.python.pydev.debug.newconsole.PydevConsoleCompletionProcessor;
 import org.python.pydev.debug.newconsole.PydevConsoleInterpreter;
 import org.python.pydev.dltk.console.IScriptConsoleCommunication;
 import org.python.pydev.dltk.console.InterpreterResponse;
+import org.python.pydev.dltk.console.ui.internal.IStreamListener;
 import org.python.pydev.editor.codecompletion.PyCodeCompletionPreferencesPage;
 import org.python.pydev.editor.codecompletion.PyContentAssistant;
 import org.python.pydev.plugin.nature.PythonNature;
@@ -186,6 +187,18 @@ public class ConsoleCompletionsPageParticipant implements IConsolePageParticipan
                 Log.log(e);
             }
             
+        }
+
+
+        public void addListener(IStreamListener listener) {
+            // Should never have any stdout/stderr to report to users, so ignore.
+            throw new RuntimeException("Not implemented");
+        }
+
+
+        public void removeListener(IStreamListener listener) {
+            // Should never have any stdout/stderr to report to users, so ignore.
+            throw new RuntimeException("Not implemented");
         }
     }
     
