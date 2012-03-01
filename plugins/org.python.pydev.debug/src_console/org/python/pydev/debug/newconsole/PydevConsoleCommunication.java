@@ -23,7 +23,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
-import org.python.pydev.core.FullRepIterable;
 import org.python.pydev.core.ICompletionState;
 import org.python.pydev.core.IToken;
 import org.python.pydev.core.Tuple;
@@ -124,6 +123,14 @@ public class PydevConsoleCommunication implements IScriptConsoleCommunication, X
             this.webServer.shutdown();
             this.webServer = null;
         }
+    }
+    
+    /**
+     * Sends a message to the client to be handled (SIGINT, SIGSTP, etc). 
+     * Don't confuse 'kill' with the idea of only sending 'SIGKILL'.
+     */
+    public void interrupt(int signal) throws Exception {
+        client.interrupt(signal);
     }
     
     /**

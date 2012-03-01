@@ -38,7 +38,6 @@ import org.python.pydev.dltk.console.ui.internal.ScriptConsolePage;
 import org.python.pydev.dltk.console.ui.internal.ScriptConsoleSession;
 import org.python.pydev.dltk.console.ui.internal.ScriptConsoleViewer;
 import org.python.pydev.editor.codecompletion.AbstractCompletionProcessorWithCycling;
-import org.python.pydev.editor.codecompletion.CompletionError;
 import org.python.pydev.editor.codecompletion.PyCodeCompletionPreferencesPage;
 import org.python.pydev.editor.codecompletion.PyContentAssistant;
 import org.python.pydev.editor.correctionassist.PyCorrectionAssistant;
@@ -223,6 +222,16 @@ public abstract class ScriptConsole extends TextConsole implements ICommandHandl
         } catch (Exception e) {
         }
         interpreter = null;
+    }
+
+    /**
+     * Interrupts the interpreter
+     */
+    public void interrupt(int signal) {
+        try {
+            interpreter.interrupt(signal);
+        } catch (Exception e) {
+        }
     }
 
     public void setViewer(ScriptConsoleViewer scriptConsoleViewer) {

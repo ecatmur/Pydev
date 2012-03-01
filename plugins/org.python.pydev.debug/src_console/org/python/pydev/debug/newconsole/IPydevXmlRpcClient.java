@@ -34,4 +34,8 @@ public interface IPydevXmlRpcClient {
      */
     Object execute(String command, Object[] args) throws XmlRpcException;
 
+    /**
+     * Send an interrupt signal to the underlying python process
+     */
+    void interrupt(int signal);
 }

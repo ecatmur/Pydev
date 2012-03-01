@@ -73,6 +73,12 @@ public interface IScriptConsoleCommunication {
      * @throws Exception
      */
     void close() throws Exception;
-    
+
+    /**
+     * Send the signal to the underlying process
+     * @param signal
+     * @throws Exception
+     */
+    void interrupt(int signal) throws Exception;
 
 }

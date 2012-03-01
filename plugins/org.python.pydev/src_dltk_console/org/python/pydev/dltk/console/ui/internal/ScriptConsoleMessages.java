@@ -22,6 +22,10 @@ public class ScriptConsoleMessages extends NLS {
     public static String TerminateConsoleAction;
 
     public static String TerminateConsoleTooltip;
+    
+    public static String InterruptConsoleAction;
+
+    public static String InterruptConsoleTooltip;
 
     static {
         NLS.initializeMessages(BUNDLE_NAME, ScriptConsoleMessages.class);

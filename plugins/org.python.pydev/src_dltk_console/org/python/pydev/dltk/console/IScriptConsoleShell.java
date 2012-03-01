@@ -18,7 +18,6 @@ import org.python.pydev.dltk.console.ui.IScriptConsoleViewer;
  * that must be asked to the server.
  */
 public interface IScriptConsoleShell {
-
     /**
      * @param viewer the viewer that requested the completions (can be used to get document, etc).
      * @param commandLine the current command in the buffer (still not entered)
@@ -47,4 +46,10 @@ public interface IScriptConsoleShell {
      * @throws Exception
      */
     void close() throws Exception;
+    
+    /**
+     * Sends a signal to the process running in the shell
+     * @throws Exception
+     */
+    void interrupt(int signal) throws Exception;
 }

@@ -15,6 +15,6 @@ package org.python.pydev.dltk.console.ui;
 public class ScriptConsoleUIConstants {
     
     public static final String TERMINATE_ICON = "terminate.gif"; //$NON-NLS-1$
-
+    public static final String INTERRUPT_ICON = "interrupt.gif"; //$NON-NLS-1$
     public static final String SAVE_SESSION_ICON = "save.gif"; //$NON-NLS-1$
 }

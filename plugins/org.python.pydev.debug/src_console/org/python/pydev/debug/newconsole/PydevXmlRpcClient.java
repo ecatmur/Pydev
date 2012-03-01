@@ -6,6 +6,7 @@
  */
 package org.python.pydev.debug.newconsole;
 
+import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -14,8 +15,10 @@ import org.apache.xmlrpc.XmlRpcRequest;
 import org.apache.xmlrpc.client.AsyncCallback;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
+import org.eclipse.core.runtime.IStatus;
 import org.python.pydev.core.docutils.StringUtils;
 import org.python.pydev.core.net.LocalHost;
+import org.python.pydev.debug.core.PydevDebugPlugin;
 import org.python.pydev.runners.ThreadStreamReader;
 
 /**
@@ -130,6 +133,18 @@ public class PydevXmlRpcClient implements IPydevXmlRpcClient{
             }
         }
         return result[0];
+    }
+
+    public void interrupt(int signal) {
+        // This is evil evil evil. I'm sorry.
+        // Todo this properly, borrow the native process signalling bits from Eclipse CDT
+        try {
+            Field f = process.getClass().getDeclaredField("pid");
+            f.setAccessible(true);
+            Runtime.getRuntime().exec("kill -" + signal + " " + f.get(process));
+        } catch (Exception e) {
+            PydevDebugPlugin.log(IStatus.ERROR, "Problem interrupting python process", e);
+        }
     }
 
 }

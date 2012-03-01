@@ -165,6 +165,9 @@ public class ConsoleCompletionsPageParticipant implements IConsolePageParticipan
         public void close() throws Exception {
             throw new RuntimeException("Not implemented");
         }
+        public void interrupt(int signal) throws Exception {
+            throw new RuntimeException("Not implemented");
+        }
 
         /**
          * Received when the completions command receives a response (ICommandResponseListener)

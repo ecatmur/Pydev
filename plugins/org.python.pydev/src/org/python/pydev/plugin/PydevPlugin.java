@@ -398,7 +398,8 @@ public class PydevPlugin extends AbstractUIPlugin  {
     //Images for the console
     private static final String[][] IMAGES = new String[][] { { "icons/save.gif", //$NON-NLS-1$
             ScriptConsoleUIConstants.SAVE_SESSION_ICON }, { "icons/terminate.gif", //$NON-NLS-1$
-            ScriptConsoleUIConstants.TERMINATE_ICON } };
+            ScriptConsoleUIConstants.TERMINATE_ICON }, {"icons/interrupt.gif", //$NON-NLS-1$
+            ScriptConsoleUIConstants.INTERRUPT_ICON }};
 
     @Override
     protected void initializeImageRegistry(ImageRegistry registry) {
