@@ -1,5 +1,7 @@
-# Ed says we need this as pkg_resources does some environment checking
-# which is needed as ipython screws with the sys.modules for readline
+
+# This import is needed as pkg_resources does some one-time library path 
+# checking, the results of which are invalidated by Ipython as it messes
+# with sys.modules for the readline library.
 import pkg_resources
 try:
     from code import InteractiveConsole
