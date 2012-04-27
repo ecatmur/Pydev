@@ -44,6 +44,7 @@ from org.eclipse.swt.widgets import Display
 
 import re
 RE_COMMENT = re.compile('^\s*#')
+RE_BLOCK_CONTINUATION = re.compile("^\s*(else|elif|except|finally).*:\s*$")
 
 class ConsoleDocumentListener(IDocumentListener):
     def __init__(self, execution_engine):
@@ -247,13 +248,20 @@ class ExecuteLine(Action):
         next_indent = len(next_line) - len(next_line.lstrip())
         if next_indent > self._base_indent:
             self._in_block = True
-        elif self._in_block and next_indent <= self._base_indent \
-        and not (next_line and (next_line.strip()[-1] in ')]}' or next_line.endswith('\\'))):
-            # We've finished a block - need to send 2 newlines to IPython to tell it to
-            # close the block. Don't do this though if we're tracking the same level
-            # of indentation.
-            self._in_block = False
-            current_line += self._get_newline() * 2
+        if self._in_block and next_indent <= self._base_indent:
+            end_of_block = True
+            if next_line \
+            and (next_line.strip()[-1] in ")]}"
+                 or next_line.endswith("\\")
+                 or RE_BLOCK_CONTINUATION.match(next_line)):
+                    end_of_block = False
+
+            if end_of_block:
+                # We"ve finished a block - need to send 2 newlines to IPython to tell it to
+                # close the block. Don"t do this though if we"re tracking the same level
+                # of indentation.
+                self._in_block = False
+                current_line += self._get_newline() * 2
 
         # send command to console
         current_line += self._get_newline()
