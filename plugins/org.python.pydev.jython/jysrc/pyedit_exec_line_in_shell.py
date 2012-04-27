@@ -1,41 +1,46 @@
-#--------------------------------------------------------------- REQUIRED LOCALS
-#interface: String indicating which command will be executed #As this script will be watching the PyEdit (that is the actual editor in Pydev), and this script
-#will be listening to it, this string can indicate any of the methods of org.python.pydev.editor.IPyEditListener
+'''
+$Header: http://subversion/SVN_MSS/python/mss/core/trunk/core/pyrun/eclipse_config/pydev/jysrc/pyedit_exec_line_in_shell.py 5857 2012-04-27 09:22:20Z anroberts $
+
+PyDev plugin to send lines from the editor to a python console.
+'''
+# This is the command ID as specified in plugin.xml
+COMMAND_ID = "com.mi.ahl.eclipse.python.execLineInConsole"
+
+#
+# Required Locals
+#
+# interface: String indicating which command will be executed
+# As this script will be watching the PyEdit (that is the actual editor in Pydev), and this script
+# will be listening to it, this string can indicate any of the methods of org.python.pydev.editor.IPyEditListener
 assert cmd is not None
 
 #interface: PyEdit object: this is the actual editor that we will act upon assert editor is not None
+assert editor is not None
 
 import sys
 print 'Command: ' + cmd
 print 'File: ' + editor.getEditorFile().getName()
 print 'sys.version:' + sys.version
 
-from org.eclipse.jface.action import Action #@UnresolvedImport
-from org.eclipse.jface.dialogs import MessageDialog #@UnresolvedImport
-from org.eclipse.jface.text import IDocumentListener #@UnresolvedImport
-from org.eclipse.core.runtime.jobs import Job #@UnresolvedImport
-from org.eclipse.ui.progress import UIJob #@UnresolvedImport
+from org.eclipse.jface.action import Action
+from org.eclipse.jface.dialogs import MessageDialog
+from org.eclipse.jface.text import IDocumentListener
+from org.eclipse.core.runtime.jobs import Job
+from org.eclipse.ui.progress import UIJob
 from org.eclipse.core.runtime import Status
+from org.eclipse.ui.contexts import IContextService
 
-
-from org.python.pydev.core.docutils import PySelection #@UnresolvedImport
-from string import rstrip
-
+from org.python.pydev.core.docutils import PySelection
 from org.python.pydev.debug.newconsole import PydevConsoleConstants
-from org.python.pydev.debug.newconsole import PydevConsoleFactory #@UnresolvedImport
+from org.python.pydev.debug.newconsole import PydevConsoleFactory
 from org.python.pydev.debug.newconsole import PydevConsole
-from org.python.pydev.editor.actions import PyAction #@UnresolvedImport
+from org.python.pydev.editor.actions import PyAction
 
-from org.eclipse.ui import PlatformUI #@UnresolvedImport
-from org.eclipse.ui.console import ConsolePlugin #@UnresolvedImport
-from org.eclipse.ui.console import IConsoleConstants #@UnresolvedImport
-from java.lang import Runnable #@UnresolvedImport
-from org.eclipse.swt.widgets import Display #@UnresolvedImport
-
-#from com.python.pydev.interactiveconsole import EvaluateActionSetter
-
-# This is the command ID as specified in plugin.xml
-COMMAND_ID = "com.mi.ahl.eclipse.python.execLineInConsole"
+from org.eclipse.ui import PlatformUI
+from org.eclipse.ui.console import ConsolePlugin
+from org.eclipse.ui.console import IConsoleConstants
+from java.lang import Runnable
+from org.eclipse.swt.widgets import Display
 
 import re
 RE_COMMENT = re.compile('^\s*#')
@@ -44,10 +49,10 @@ class ConsoleDocumentListener(IDocumentListener):
     def __init__(self, execution_engine):
         self.execution_engine = execution_engine
         self.new_prompt = False
-    
+
     def documentAboutToBeChanged(self,event):
-        pass 
-    
+        pass
+
     def documentChanged(self,event):
         if (self.new_prompt and len(event.getText())== 0 and self.lines_to_process == 0) or self.lines_to_process < 0 :  
             self.new_prompt = False        
@@ -56,13 +61,13 @@ class ConsoleDocumentListener(IDocumentListener):
             self.new_prompt = event.getText() == '>>> ' or event.getText() == '... '
             if self.new_prompt :
                 self.lines_to_process = self.lines_to_process - 1
-      
+
 class DoTopCommandJob(UIJob):  
     def __init__(self, executor) :
-        UIJob.__init__(self,'do top command')
-        self.executor=executor
+        UIJob.__init__(self, 'do top command')
+        self.executor = executor
         self.setPriority(Job.SHORT)
-        
+
     def runInUIThread(self, progress_monitor):
         try:
             self.executor._do_top_command()
@@ -72,18 +77,16 @@ class DoTopCommandJob(UIJob):
         return Status.OK_STATUS
 
 class ExecuteLine(Action):
-    '''
-    Code to execute a line
-    '''
+    '''Code to execute a line'''
+
     def __init__(self, editor=None):
         Action.__init__(self)
         self._editor = editor
         self._console = None
         self._console_listener = ConsoleDocumentListener(self)
         self._commands = []
-        self._current_block_indent = None
-        self._prev_line_indent = None
-
+        self._in_block = False
+        self._base_indent = 0
 
     def _find_top_console(self):
         def isConsoleView(view):
@@ -112,8 +115,8 @@ class ExecuteLine(Action):
         
         console_manager = ConsolePlugin.getDefault().getConsoleManager()
         consoles = console_manager.getConsoles()
-        
-        top_console = self._find_top_console()#
+
+        top_console = self._find_top_console()
 
         if  isPyDevConsole(top_console):
             self._console = top_console
@@ -121,11 +124,11 @@ class ExecuteLine(Action):
             pydev_consoles = filter(isPyDevConsole, consoles)
             if len(pydev_consoles):
                 self._console = pydev_consoles[0]
-            else: 
-                self._console = PydevConsoleFactory().createConsole()
+            else:
+                self._console = PydevConsoleFactory().createConsole('')
 
         console_manager.showConsoleView(self._console)
-     
+
     def _get_newline(self):
         return PyAction.getDelimiter(self._editor.getDocument())
 
@@ -133,7 +136,7 @@ class ExecuteLine(Action):
         return PySelection(self._editor).getSelectedText()
 
     def _send_to_console(self, text):
-        if len(rstrip(text)):
+        if len(text.rstrip()):
             self._commands.append( text ) 
             if len(self._commands)==1:
                 job = DoTopCommandJob(self)
@@ -145,7 +148,7 @@ class ExecuteLine(Action):
         document.addDocumentListener(self._console_listener)
         self._console_listener.lines_to_process = text.count('\n')
         document.replace(document.getLength(), 0, text)
-    
+
     def complete_top_command(self):
         self._console.getDocument().removeDocumentListener(self._console_listener)
         self._commands = self._commands[1:]
@@ -154,17 +157,14 @@ class ExecuteLine(Action):
             job.schedule()
 
     def _reset_line_state(self):
-        self._current_block_indent = None
-        self._prev_line_indent     = None
-
+        self._in_block = False
+        self._base_indent = 0
 
     def _get_line(self):
-        '''
-        Find the current line.
-        '''
+        '''Find the current line'''
         selection = PySelection(self._editor).getLine()
         # strip tailing whitespace
-        return rstrip(selection)
+        return selection.rstrip()
 
     def _goto_next_line(self):
         '''
@@ -173,7 +173,6 @@ class ExecuteLine(Action):
         the line is incremented past the end. No user wants to go back to imports 
         once they've completed their step-through, so we protect against that.
         '''
-
         # skip cursor to next line
         oSelection = PySelection(self._editor)
         current_line = oSelection.getCursorLine()
@@ -185,25 +184,56 @@ class ExecuteLine(Action):
         return True
 
     def _should_skip(self, line):
-        return len(line) == 0 or RE_COMMENT.match(line)
+        return len(line.strip()) == 0 or RE_COMMENT.match(line)
 
     def _run_selection_mode(self, selection):
-        '''
-        User has selected a block of text and hit F1
-        '''
+        '''User has selected a block of text and hit F1'''
         self._reset_line_state()
-        if selection[-1]=='\n' :
-            text = selection
-        else :
-            text = selection + '\n'
+
+        # get the lines and remove any empty lines from the start and end
+        lines = selection.splitlines()
+        while lines:
+            if lines[0].strip():
+                break
+            lines.pop(0)
+
+        while lines:
+            if lines[-1].strip():
+                break
+            lines.pop()
+
+        # don't do anything if no non-blank lines were selected
+        if not lines:
+            return
+
+        # get the indentation from the first line and remove it from
+        # subsequent lines. This is a bit simplistic and may truncate
+        # and code that's not properly indented.
+        first_line = lines[0]
+        first_indent = len(first_line) - len(first_line.lstrip())
+
+        last_line = lines[-1]
+        last_indent = len(last_line) - len(last_line.lstrip())
+
+        lines = [l[first_indent:] for l in lines]
+        text = self._get_newline().join(lines) + self._get_newline()
+
+        # add an couple of extra lines if the code is a block to execute it in the console
+        if last_indent > first_indent:
+            text += self._get_newline() * 2
+
         self._send_to_console(text)
 
     def _run_line_mode(self):
-        ''' 
-        User is running through the code line by line
-        '''
+        '''User is running through the code line by line'''
         # Save away the current line which we'll send to the console
+        # and remove any non-block level indentation (i.e. when copying
+        # code that's indented in the editor it needs to be shifted left
+        # so the indentation is correct in the console).
         current_line = self._get_line()
+        if not self._in_block:
+            self._base_indent = len(current_line) - len(current_line.lstrip()) 
+        current_line = current_line[self._base_indent:]
 
         # Skip through to the next non-blank line
         self._goto_next_line()
@@ -211,28 +241,22 @@ class ExecuteLine(Action):
         while self._should_skip(next_line) and self._goto_next_line():
             next_line = self._get_line()
 
-        # Look-ahead for indentation changes
-        indentation = len(next_line) - len(next_line.lstrip())
-        if self._current_block_indent is None:
-            # We're starting a new block which might not be at indent 0
-            self._current_block_indent = indentation
-            self._prev_line_indent = indentation
-
-        if indentation <= self._current_block_indent and indentation != self._prev_line_indent:
+        # Look-ahead to see if we're stepping into or out of a block
+        # This is determined by indentation change, but not if the line
+        # is closing an list/tuple or dict block, or is continued with a \.
+        next_indent = len(next_line) - len(next_line.lstrip())
+        if next_indent > self._base_indent:
+            self._in_block = True
+        elif self._in_block and next_indent <= self._base_indent \
+        and not (next_line and (next_line.strip()[-1] in ')]}' or next_line.endswith('\\'))):
             # We've finished a block - need to send 2 newlines to IPython to tell it to
             # close the block. Don't do this though if we're tracking the same level
             # of indentation.
-            self._current_block_indent = indentation
-            self._prev_line_indent = indentation
-            # Current line gets an extra newline to terminate the block
-            current_line = "%s%s" % (current_line, 2 * self._get_newline())
-
-        self._prev_line_indent = indentation
-
-        # add newline
-        current_line += self._get_newline()
+            self._in_block = False
+            current_line += self._get_newline() * 2
 
         # send command to console
+        current_line += self._get_newline()
         self._send_to_console(current_line)
 
     def run(self):
@@ -246,35 +270,38 @@ class ExecuteLine(Action):
         else:
             # User has no selection, use line-by-line mode
             self._run_line_mode()
-            
+
     def unhook(self):
         if self._console:
             self._console.getDocument().removeDocumentListener(self._console_listener)
         
 def bindInInterface():
-        # Cribbed from http://eclipse-pydev.sourcearchive.com/documentation/1.2.5/pyedit__next__problem_8py-source.html
-        #bind the action to some internal definition
-        action = ExecuteLine(editor)
+    # Cribbed from http://eclipse-pydev.sourcearchive.com/documentation/1.2.5/pyedit__next__problem_8py-source.html
+    # bind the action to some internal definition
+    action = ExecuteLine(editor)
 
-        #The plugin.xml file defined a command and a binding with the string from COMMAND_ID.
-        #by seting the action definition id and the id itself, we will bind this command to the keybinding defined
-        #(this is the right way of doing it, as it will enter the abstractions of Eclipse and allow the user to
-        #later change that keybinding).
-        action.setActionDefinitionId(COMMAND_ID)
-        action.setId(COMMAND_ID)
-        try:
-            #We're starting in a thread, so, it may be closed before
-            #we've the change to bind it
-            last_execute_line = editor.getAction(COMMAND_ID)
-            if last_execute_line :
-                last_execute_line.unhook()
-            editor.setAction(COMMAND_ID, action)
-        except:
-            pass
 
+    # The plugin.xml file defined a command and a binding with the string from COMMAND_ID.
+    # by seting the action definition id and the id itself, we will bind this command to the keybinding defined
+    # (this is the right way of doing it, as it will enter the abstractions of Eclipse and allow the user to
+    # later change that keybinding).
+    action.setActionDefinitionId(COMMAND_ID)
+    action.setId(COMMAND_ID)
+
+    try:
+        #We're starting in a thread, so, it may be closed before
+        #we've the change to bind it
+        last_execute_line = editor.getAction(COMMAND_ID)
+        if last_execute_line :
+            last_execute_line.unhook()
+        editor.setAction(COMMAND_ID, action)
+        last_execute_line = editor.getAction(COMMAND_ID)
+    except Exception, e:
+        pass
 
 class RunInUi(Runnable):
-    '''Helper class that implements a Runnable (just so that we
+    '''
+    Helper class that implements a Runnable (just so that we
     can pass it to the Java side). It simply calls some callable.
     '''
     def __init__(self, c):
@@ -282,7 +309,6 @@ class RunInUi(Runnable):
 
     def run(self):
         self.callable()
-
 
 def runInUi(c):
     '''
