@@ -13,6 +13,7 @@ package org.python.pydev.editor.codecompletion.shell;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.eclipse.core.runtime.CoreException;
 import org.python.pydev.core.IInterpreterInfo;
@@ -69,6 +70,13 @@ public class PythonShell extends AbstractShell{
             Log.log(e);
         }
         
+        // Don't inherit the Java tool opts from the user's virtual environment
+        for (int i = 0; i < envp.length; i++) {
+            if (envp[i].contains("JAVA_TOOL_OPTIONS")) {
+                envp[i] = "JAVA_TOOL_OPTIONS=-Xmx128M";
+            }
+        }
+
         process = SimpleRunner.createProcess(parameters, envp, serverFile.getParentFile());
 
         return execMsg;
