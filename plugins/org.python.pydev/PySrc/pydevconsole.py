@@ -99,7 +99,28 @@ class InterpreterInterface(BaseInterpreterInterface):
     def __init__(self, host, client_port):
         self.client_port = client_port
         self.host = host
-        self.namespace = globals()
+        try:
+            import pydevd
+        except:
+            # This happens on Jython embedded in host eclipse 
+            self.namespace = globals()
+        else:
+            #Adapted from the code in pydevd
+            #patch provided by: Scott Schlesier - when script is run, it does not 
+            #pretend pydevconsole is not the main module, and
+            #convince the file to be debugged that it was loaded as main
+            sys.modules['pydevconsole'] = sys.modules['__main__']
+            sys.modules['pydevconsole'].__name__ = 'pydevconsole'            
+            
+            from imp import new_module
+            m = new_module('__main__')
+            sys.modules['__main__'] = m
+            ns = m.__dict__
+            try:
+                ns['__builtins__'] = __builtins__
+            except NameError:
+                pass #Not there on Jython...
+            self.namespace = ns
         self.interpreter = InteractiveConsole(self.namespace)
         self._input_error_printed = False
 
@@ -179,6 +200,11 @@ class PyDevServer(SimpleXMLRPCServer):
         self.register_function(self.getDescription)
         self.register_function(self.close)
 
+        #Functions so that the console can work as a debugger (i.e.: variables view, expressions...)
+        self.register_function(self.connectToDebugger)
+        self.register_function(self.postCommand)
+        self.register_function(self.hello)
+
     def addExec(self, line):
         log("server-addExec: %r" % line)
         self.req_queue.put(('addExec',(line,)))
@@ -192,12 +218,27 @@ class PyDevServer(SimpleXMLRPCServer):
     def getDescription(self, text):
         log("server-getDescription: %r" % text)
         self.req_queue.put(('getDescription',(text,)))
-        return self.resp_queue.get(block=True)
 
     def close(self):
         log("server-close")
-        self.req_queue.put(('close',None))
+        return self.req_queue.put(('close',None))
         # Main thread shuts us down after this
+    
+    def connectToDebugger(self, debugger_port):
+        log("server-connectToDebugger: %r" % debugger_port)
+        self.req_queue.put(('connectToDebugger',(debugger_port,)))
+        return self.resp_queue.get(block=True)
+
+    def postCommand(self, cmd):
+        log("server-postCommand: %r" % cmd)
+        self.req_queue.put(('postCommand',(cmd,)))
+        return self.resp_queue.get(block=True)
+
+    def hello(self, input):
+        log("server-hello: %r" % input)
+        self.req_queue.put(('hello',(input,)))
+        return self.resp_queue.get(block=True)
+
 
 class ServerThread(threading.Thread):
     """
@@ -251,7 +292,7 @@ def run(host, port, client_port):
 #=======================================================================================================================
 if __name__ == '__main__':
     # Uncomment this to make logging go
-    #import ahl.logging
+    import ahl.logging
 
     # http://jira.maninvestments.com/jira/browse/AHLRAP-1421
     def exit_on_parent_death():

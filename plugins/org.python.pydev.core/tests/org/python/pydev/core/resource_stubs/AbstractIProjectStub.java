@@ -23,9 +23,6 @@ import org.eclipse.core.runtime.content.IContentTypeMatcher;
 
 public class AbstractIProjectStub extends AbstractIContainerStub implements IProject{
 
-    public void build(int kind, String builderName, Map<String, String> args, IProgressMonitor monitor) throws CoreException {
-        throw new RuntimeException("Not implemented");
-    }
 
     public void build(int kind, IProgressMonitor monitor) throws CoreException {
         throw new RuntimeException("Not implemented");
@@ -50,7 +47,7 @@ public class AbstractIProjectStub extends AbstractIContainerStub implements IPro
     public void delete(boolean deleteContent, boolean force, IProgressMonitor monitor) throws CoreException {
         throw new RuntimeException("Not implemented");
     }
-
+    
     public IContentTypeMatcher getContentTypeMatcher() throws CoreException {
         throw new RuntimeException("Not implemented");
     }
@@ -86,6 +83,7 @@ public class AbstractIProjectStub extends AbstractIContainerStub implements IPro
     public IProject[] getReferencingProjects() {
         throw new RuntimeException("Not implemented");
     }
+    
 
     public boolean hasNature(String natureId) throws CoreException {
         throw new RuntimeException("Not implemented");
@@ -129,35 +127,32 @@ public class AbstractIProjectStub extends AbstractIContainerStub implements IPro
 		throw new RuntimeException("Not implemented");
 	}
 
+    public void build(int kind, String builderName, Map<String, String> args, IProgressMonitor monitor) throws CoreException {
+        throw new RuntimeException("Not implemented");
+    }
+
     public void build(IBuildConfiguration config, int kind, IProgressMonitor monitor) throws CoreException {
-        // TODO Auto-generated method stub
-        
+        throw new RuntimeException("Not implemented");
     }
 
     public IBuildConfiguration getActiveBuildConfig() throws CoreException {
-        // TODO Auto-generated method stub
-        return null;
+        throw new RuntimeException("Not implemented");
     }
 
     public IBuildConfiguration getBuildConfig(String configName) throws CoreException {
-        // TODO Auto-generated method stub
-        return null;
+        throw new RuntimeException("Not implemented");
     }
 
     public IBuildConfiguration[] getBuildConfigs() throws CoreException {
-        // TODO Auto-generated method stub
-        return null;
+        throw new RuntimeException("Not implemented");
     }
 
-    public IBuildConfiguration[] getReferencedBuildConfigs(String configName, boolean includeMissing)
-            throws CoreException {
-        // TODO Auto-generated method stub
-        return null;
+    public IBuildConfiguration[] getReferencedBuildConfigs(String configName, boolean includeMissing) throws CoreException {
+        throw new RuntimeException("Not implemented");
     }
 
     public boolean hasBuildConfig(String configName) throws CoreException {
-        // TODO Auto-generated method stub
-        return false;
+        throw new RuntimeException("Not implemented");
     }
 
 
