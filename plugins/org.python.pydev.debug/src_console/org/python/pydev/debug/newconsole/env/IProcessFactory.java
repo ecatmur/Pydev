@@ -201,15 +201,12 @@ public class IProcessFactory {
         launch.setAttribute(INTERACTIVE_LAUNCH_PORT, ""+port);
 
 		File scriptWithinPySrc = PydevPlugin.getScriptWithinPySrc("pydevconsole.py");
-		Collection<String> extraPath = pythonpath;
 		if (InteractiveConsolePrefs.getConsoleConnectVariableView()
 				&& interpreterManager.getInterpreterType() != IInterpreterManager.INTERPRETER_TYPE_JYTHON_ECLIPSE) {
 			// Add PydevDebugPlugin's PySrc so we can access pydevd
-			extraPath = new HashSet<String>();
-			extraPath.addAll(pythonpath);
-			extraPath.add(PydevDebugPlugin.getPySrcPath().getAbsolutePath());
+		    pythonpath.add(PydevDebugPlugin.getPySrcPath().getAbsolutePath());
 		}
-        String pythonpathEnv = SimpleRunner.makePythonPathEnvFromPaths(extraPath);
+        String pythonpathEnv = SimpleRunner.makePythonPathEnvFromPaths(pythonpath);
         String[] commandLine;
         switch(interpreterManager.getInterpreterType()){
         
