@@ -17,6 +17,7 @@ import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.debug.ui.console.IConsoleLineTracker;
 import org.eclipse.jface.text.BadLocationException;
@@ -543,6 +544,16 @@ public class ScriptConsoleDocumentListener implements IDocumentListener, IStream
     }
    
     
+    private static class TabCompletionSingletonRule implements ISchedulingRule {
+        public boolean contains(ISchedulingRule rule) {
+            return rule == this;
+        }
+
+        public boolean isConflicting(ISchedulingRule rule) {
+            return rule instanceof TabCompletionSingletonRule;
+        }
+    }
+    
     /**
      * Attempts to query the console backend (ipython) for completions
      * and update the console's cursor as appropriate.
@@ -551,7 +562,7 @@ public class ScriptConsoleDocumentListener implements IDocumentListener, IStream
         final String commandLine = getCommandLine();
         final int commandLineOffset = viewer.getCommandLineOffset();
         final int caretOffset = viewer.getCaretOffset();
-
+        
         // Don't block the UI when talking to the console
         Job j = new Job("Async Fetch completions") {
 
@@ -647,6 +658,7 @@ public class ScriptConsoleDocumentListener implements IDocumentListener, IStream
             }
         };
         j.setPriority(Job.INTERACTIVE);
+        j.setRule(new TabCompletionSingletonRule());        
         j.setSystem(true);
         j.schedule();
     }
