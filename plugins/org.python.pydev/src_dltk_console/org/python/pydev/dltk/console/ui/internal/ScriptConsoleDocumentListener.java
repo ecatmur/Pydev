@@ -8,8 +8,6 @@ package org.python.pydev.dltk.console.ui.internal;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Formatter;
 import java.util.Iterator;
 import java.util.List;
 
@@ -29,12 +27,10 @@ import org.eclipse.jface.text.IDocumentPartitioner;
 import org.eclipse.jface.text.Region;
 import org.eclipse.jface.text.TextUtilities;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
-import org.eclipse.swt.widgets.Display;
 import org.python.pydev.core.Tuple;
 import org.python.pydev.core.callbacks.ICallback;
 import org.python.pydev.core.docutils.PySelection;
 import org.python.pydev.core.docutils.StringUtils;
-import org.python.pydev.core.docutils.PySelection.ActivationTokenAndQual;
 import org.python.pydev.core.log.Log;
 import org.python.pydev.core.uiutils.RunInUiThread;
 import org.python.pydev.dltk.console.InterpreterResponse;
@@ -45,9 +41,6 @@ import org.python.pydev.dltk.console.ui.ScriptConsolePartitioner;
 import org.python.pydev.dltk.console.ui.ScriptStyleRange;
 import org.python.pydev.editor.autoedit.DocCmd;
 import org.python.pydev.editor.autoedit.PyAutoIndentStrategy;
-import org.python.pydev.editor.codecompletion.PyLinkedModeCompletionProposal;
-
-import sun.org.mozilla.javascript.internal.IdScriptableObject;
 
 /**
  * This class will listen to the document and will:
@@ -374,15 +367,27 @@ public class ScriptConsoleDocumentListener implements IDocumentListener, IStream
 
         //1st, remove the text the user just entered (and enter it line-by-line later)
         try{
-            text = doc.get(offset, doc.getLength() - offset);
+            // Remove the just entered text
+            doc.replace(offset, text.length(), ""); //$NON-NLS-1$
+            // Is the current offset in the command line
+            // NB we do this after the above as the pasted text may have new lines in it
+            boolean offset_in_command_line = offset >= getCommandLineOffset(); 
+
+            // If the offset isn't in the command line, then just append to the existing
+            // command line text
+            if (!offset_in_command_line) {
+                offset = newDeltaCaretPosition = getCommandLineOffset();
+                // Remove any existing command line text and prepend it to the text
+                // we're inserting
+                text = doc.get(getCommandLineOffset(), getCommandLineLength()) + text;
+                doc.replace(getCommandLineOffset(), getCommandLineLength(), "");
+            } else {
+                // paste is within the command line
+                text = text + doc.get(offset, doc.getLength() - offset);
+                doc.replace(offset, doc.getLength() - offset, "");
+            }
         }catch(BadLocationException e){
             text = "";
-            Log.log(e);
-        }
-
-        try{
-            doc.replace(offset, text.length(), ""); //$NON-NLS-1$
-        }catch(BadLocationException e){
             Log.log(e);
         }
 
