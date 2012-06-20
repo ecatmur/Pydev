@@ -218,12 +218,13 @@ class PyDevServer(SimpleXMLRPCServer):
     def getDescription(self, text):
         log("server-getDescription: %r" % text)
         self.req_queue.put(('getDescription',(text,)))
+        return self.resp_queue.get(block=True)
 
     def close(self):
         log("server-close")
         return self.req_queue.put(('close',None))
         # Main thread shuts us down after this
-    
+
     def connectToDebugger(self, debugger_port):
         log("server-connectToDebugger: %r" % debugger_port)
         self.req_queue.put(('connectToDebugger',(debugger_port,)))
