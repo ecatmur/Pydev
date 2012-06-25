@@ -221,7 +221,7 @@ class ExecuteLine(Action):
 
         # add an couple of extra lines if the code is a block to execute it in the console
         if last_indent > first_indent:
-            text += self._get_newline() * 2
+            text += self._get_newline()
 
         self._send_to_console(text)
 
@@ -261,7 +261,7 @@ class ExecuteLine(Action):
                 # close the block. Don"t do this though if we"re tracking the same level
                 # of indentation.
                 self._in_block = False
-                current_line += self._get_newline() * 2
+                current_line += self._get_newline()
 
         # send command to console
         current_line += self._get_newline()
