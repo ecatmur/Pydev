@@ -55,8 +55,10 @@ class PyDevFrontEnd(PrefilterFrontEnd):
         
     def getNamespace(self):
         return self.shell.user_ns
-    
-    
+
+    def interrupt(self):
+        pass
+
     def addExec(self, line):
         if self._curr_exec_lines:
             if not line:

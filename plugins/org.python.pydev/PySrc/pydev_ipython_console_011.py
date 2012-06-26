@@ -64,6 +64,9 @@ class PyDevFrontEnd:
     def is_complete(self, string):
         return  not self.input_splitter.push_accepts_more()
 
+    def interrupt(self):
+        self.input_splitter.reset()
+
     def getNamespace(self):
         return self.ipython.user_ns
 

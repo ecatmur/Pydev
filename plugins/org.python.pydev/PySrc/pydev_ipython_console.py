@@ -34,11 +34,9 @@ class InterpreterInterface(BaseInterpreterInterface):
     def doAddExec(self, line):
         return bool(self.interpreter.addExec(line))
     
-    
     def getNamespace(self):
         return self.interpreter.getNamespace()
-    
-        
+
     def getCompletions(self, text, act_tok, ipython_only):
         if not text:
             return []
@@ -82,8 +80,10 @@ class InterpreterInterface(BaseInterpreterInterface):
         except:
             import traceback;traceback.print_exc()
             return []
-        
-    
+
+    def interrupt(self):
+        self.interpreter.interrupt()
+
     def close(self):
         sys.exit(0)
 

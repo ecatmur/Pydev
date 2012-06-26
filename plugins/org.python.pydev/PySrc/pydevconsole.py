@@ -283,6 +283,8 @@ def run(host, port, client_port):
             except Queue.Empty:
                 #log("nothing in queue")
                 gui_helper.Update()
+        except KeyboardInterrupt:
+            interpreter.interrupt()
         except:
             log(traceback.format_exc())
             print traceback.format_exc()
