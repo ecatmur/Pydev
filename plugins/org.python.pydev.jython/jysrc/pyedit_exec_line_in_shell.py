@@ -46,6 +46,7 @@ import re
 RE_COMMENT = re.compile('^\s*#')
 RE_BLOCK_CONTINUATION = re.compile("^\s*(else|elif|except|finally).*:\s*$")
 
+
 class ConsoleDocumentListener(IDocumentListener):
     def __init__(self, execution_engine):
         self.execution_engine = execution_engine
@@ -62,6 +63,52 @@ class ConsoleDocumentListener(IDocumentListener):
             self.new_prompt = event.getText() == '>>> ' or event.getText() == '... '
             if self.new_prompt :
                 self.lines_to_process = self.lines_to_process - 1
+                
+class LinesCursor(object):
+    """Cursor object to iterate over selected lines"""
+    def __init__(self, lines):
+        self._lines = lines
+        self._cursor = 0
+    def get_line(self):
+        '''Find the current line, if we've already passed the end of the selection just return empty lines'''
+        if self.is_complete():
+            return ""
+        else:
+            return self._lines[self._cursor]
+    def goto_next_line(self):
+        '''
+        Find the next line. Return if there was a new line to traverse to.
+        '''
+        self._cursor += 1
+        return not self.is_complete()
+    def is_complete(self):
+        return self._cursor >= len(self._lines)
+
+class SourceCursor(object):
+    """Cursor object to iterate over all lines the editor"""
+    def __init__(self, editor):
+        self._editor = editor
+    def get_line(self):
+        '''Find the current line'''
+        selection = PySelection(self._editor).getLine()
+        # strip tailing whitespace
+        return selection.rstrip()
+    def goto_next_line(self):
+        '''
+        Find the next line. Return if there was a new line to traverse to.
+        Note: the selection system appears to wrap around to the beginning if 
+        the line is incremented past the end. No user wants to go back to imports 
+        once they've completed their step-through, so we protect against that.
+        '''
+        # skip cursor to next line
+        oSelection = PySelection(self._editor)
+        current_line = oSelection.getCursorLine()
+        last_line = oSelection.getDoc().getNumberOfLines()-1
+        offset = oSelection.getLineOffset(current_line + 1)
+        if current_line == last_line:
+            return False
+        self._editor.setSelection(offset, 0)
+        return True
 
 class DoTopCommandJob(UIJob):  
     def __init__(self, executor) :
@@ -86,6 +133,7 @@ class ExecuteLine(Action):
         self._console = None
         self._console_listener = ConsoleDocumentListener(self)
         self._commands = []
+        self._cursor = SourceCursor(editor)
         self._in_block = False
         self._base_indent = 0
 
@@ -161,29 +209,6 @@ class ExecuteLine(Action):
         self._in_block = False
         self._base_indent = 0
 
-    def _get_line(self):
-        '''Find the current line'''
-        selection = PySelection(self._editor).getLine()
-        # strip tailing whitespace
-        return selection.rstrip()
-
-    def _goto_next_line(self):
-        '''
-        Find the next line. Return if there was a new line to traverse to.
-        Note: the selection system appears to wrap around to the beginning if 
-        the line is incremented past the end. No user wants to go back to imports 
-        once they've completed their step-through, so we protect against that.
-        '''
-        # skip cursor to next line
-        oSelection = PySelection(self._editor)
-        current_line = oSelection.getCursorLine()
-        last_line = oSelection.getDoc().getNumberOfLines()-1
-        offset = oSelection.getLineOffset(current_line + 1)
-        if current_line == last_line:
-            return False
-        self._editor.setSelection(offset, 0)
-        return True
-
     def _should_skip(self, line):
         return len(line.strip()) == 0 or RE_COMMENT.match(line)
 
@@ -206,41 +231,29 @@ class ExecuteLine(Action):
         # don't do anything if no non-blank lines were selected
         if not lines:
             return
+        
+        cursor = LinesCursor(lines)
+        while not cursor.is_complete():
+            self._run_line_mode(cursor)
+            
 
-        # get the indentation from the first line and remove it from
-        # subsequent lines. This is a bit simplistic and may truncate
-        # and code that's not properly indented.
-        first_line = lines[0]
-        first_indent = len(first_line) - len(first_line.lstrip())
-
-        last_line = lines[-1]
-        last_indent = len(last_line) - len(last_line.lstrip())
-
-        lines = [l[first_indent:] for l in lines]
-        text = self._get_newline().join(lines) + self._get_newline()
-
-        # add an couple of extra lines if the code is a block to execute it in the console
-        if last_indent > first_indent:
-            text += self._get_newline()
-
-        self._send_to_console(text)
-
-    def _run_line_mode(self):
+    def _run_line_mode(self, cursor):
         '''User is running through the code line by line'''
         # Save away the current line which we'll send to the console
         # and remove any non-block level indentation (i.e. when copying
         # code that's indented in the editor it needs to be shifted left
         # so the indentation is correct in the console).
-        current_line = self._get_line()
+        current_line = cursor.get_line()
+            
         if not self._in_block:
             self._base_indent = len(current_line) - len(current_line.lstrip()) 
         current_line = current_line[self._base_indent:]
 
         # Skip through to the next non-blank line
-        self._goto_next_line()
-        next_line = self._get_line()
-        while self._should_skip(next_line) and self._goto_next_line():
-            next_line = self._get_line()
+        cursor.goto_next_line()
+        next_line = cursor.get_line()
+        while self._should_skip(next_line) and cursor.goto_next_line():
+            next_line = cursor.get_line()
 
         # Look-ahead to see if we're stepping into or out of a block
         # This is determined by indentation change, but not if the line
@@ -277,7 +290,7 @@ class ExecuteLine(Action):
             self._run_selection_mode(selection)
         else:
             # User has no selection, use line-by-line mode
-            self._run_line_mode()
+            self._run_line_mode(self._cursor)
 
     def unhook(self):
         if self._console:
