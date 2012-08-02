@@ -245,6 +245,11 @@ class ExecuteLine(Action):
         # so the indentation is correct in the console).
         current_line = cursor.get_line()
             
+        # If the user has F1ed a comment do nothing except moving them on to the next line
+        if self._should_skip(current_line):
+            cursor.goto_next_line()
+            return
+            
         if not self._in_block:
             self._base_indent = len(current_line) - len(current_line.lstrip()) 
         current_line = current_line[self._base_indent:]
