@@ -191,10 +191,9 @@ def log(msg):
     logging.getLogger('pydevconsole').debug(msg)
 
 class PyDevServer(SimpleXMLRPCServer):
-    def __init__(self, host, port):
-        self.req_queue = Queue.Queue()
-        self.resp_queue = Queue.Queue()
+    def __init__(self, host, port, call):
         SimpleXMLRPCServer.__init__(self, (host,port), logRequests=False)
+        self.call = call
         self.register_function(self.addExec)
         self.register_function(self.getCompletions)
         self.register_function(self.getDescription)
@@ -207,38 +206,32 @@ class PyDevServer(SimpleXMLRPCServer):
 
     def addExec(self, line):
         log("server-addExec: %r" % line)
-        self.req_queue.put(('addExec',(line,)))
-        return self.resp_queue.get(block=True)
+        return self.call('addExec', line)
 
     def getCompletions(self, text, act_tok, ipython_only):
         log("server-getCompletions: %r %r %r" % (text, act_tok, ipython_only))
-        self.req_queue.put(('getCompletions', (text, act_tok, ipython_only)))
-        return self.resp_queue.get(block=True)
+        return self.call('getCompletions', text, act_tok, ipython_only)
 
     def getDescription(self, text):
         log("server-getDescription: %r" % text)
-        self.req_queue.put(('getDescription',(text,)))
-        return self.resp_queue.get(block=True)
+        return self.call('getDescription', text)
 
     def close(self):
         log("server-close")
-        return self.req_queue.put(('close',None))
+        return self.call('close')
         # Main thread shuts us down after this
 
     def connectToDebugger(self, debugger_port):
         log("server-connectToDebugger: %r" % debugger_port)
-        self.req_queue.put(('connectToDebugger',(debugger_port,)))
-        return self.resp_queue.get(block=True)
+        return self.call('connectToDebugger', debugger_port)
 
     def postCommand(self, cmd):
         log("server-postCommand: %r" % cmd)
-        self.req_queue.put(('postCommand',(cmd,)))
-        return self.resp_queue.get(block=True)
+        return self.call('postCommand', cmd)
 
     def hello(self, input):
         log("server-hello: %r" % input)
-        self.req_queue.put(('hello',(input,)))
-        return self.resp_queue.get(block=True)
+        return self.call('hello', input)
 
 
 class ServerThread(threading.Thread):
@@ -257,37 +250,79 @@ class ServerThread(threading.Thread):
         self.server.serve_forever()
         log('Server finished')
 
-def run(host, port, client_port):
-    gui_helper = _ExecHelper()
-    interpreter = InterpreterInterface(host, client_port)
-    server = PyDevServer(host, port)
-    server_thread = ServerThread(server)
-    server_thread.start()
-    while True:
+
+class ServerMainLoop(object):
+    def __init__(self, host, port, client_port):
+        self.req_queue = Queue.Queue()
+        self.resp_queue = Queue.Queue()
+        self.gui_helper = _ExecHelper()
+        self.interpreter = InterpreterInterface(host, client_port)
+        self.server = PyDevServer(host, port, self.server_call)
+
+    def run(self):
+        server_thread = ServerThread(self.server)
+        server_thread.start()
+        self.main_loop()
+
+    def server_call(self, func_name, *param):
+        self.req_queue.put((func_name, param))
+        self.notify()
+        return self.resp_queue.get(block=True)
+
+    def main_loop(self):
+        raise NotImplementedError
+
+    def notify(self):
+        raise NotImplementedError
+
+    def process_request(self, timeout=None):
         try:
-            try:
-                func_name, param = server.req_queue.get(block=True, timeout=1.0/10.0)
-                log("got cmd from queue: %r %r" % (func_name, param))
-                if func_name == 'addExec':
-                    gui_helper.Prepare()
-                func = getattr(interpreter, func_name)
-                if func_name == 'close' :
-                    server.shutdown()
-                if param is not None:
-                    log("Calling %r(%r)" % (func, param))
-                    server.resp_queue.put(func(*param))
-                else:
-                   server.resp_queue.put(func())
-                if func_name == 'addExec':
-                    gui_helper.Cleanup()
-            except Queue.Empty:
-                #log("nothing in queue")
-                gui_helper.Update()
+            func_name, param = self.req_queue.get(block=True, timeout=timeout)
+            log("got cmd from queue: %r %r" % (func_name, param))
+            if func_name == 'addExec':
+                self.gui_helper.Prepare()
+            func = getattr(self.interpreter, str(func_name))
+            if func_name == 'close':
+                self.server.shutdown()
+            log("Calling %r(%r)" % (func, param))
+            self.resp_queue.put(func(*param))
+            if func_name == 'addExec':
+                self.gui_helper.Cleanup()
+        except Queue.Empty:
+            raise
         except KeyboardInterrupt:
-            interpreter.interrupt()
+            self.interpreter.interrupt()
         except:
             log(traceback.format_exc())
             print traceback.format_exc()
+
+
+class PollingMainLoop(ServerMainLoop):
+    def main_loop(self):
+        logging.getLogger('pydevconsole').warn('Backend is {0}, polling for GUI integration'.format(backend))
+        while True:
+            try:
+                self.process_request(timeout=1.0/10.0)
+            except Queue.Empty:
+                self.gui_helper.Update()
+
+    def notify(self):
+        pass
+
+
+class QtMainLoop(ServerMainLoop):
+    def __init__(self, *args, **kwargs):
+        super(QtMainLoop, self).__init__(*args, **kwargs)
+        from PyQt4 import QtCore, QtGui
+        self.ping = type('Ping', (QtCore.QThread,), {'ping': QtCore.pyqtSignal()})()
+        self.ping.ping.connect(self.process_request, type=QtCore.Qt.BlockingQueuedConnection)
+        self.app = QtGui.QApplication([]) 
+
+    def main_loop(self):
+        self.app.exec_()
+
+    def notify(self):
+        self.ping.ping.emit()
 
 
 #=======================================================================================================================
@@ -309,5 +344,7 @@ if __name__ == '__main__':
     port, client_port = sys.argv[1:3]
     import pydev_localhost
     host = pydev_localhost.get_localhost()
-    run(host, int(port), int(client_port))
-
+    import matplotlib
+    backend = matplotlib.get_backend()
+    cls = QtMainLoop if backend == "Qt4Agg" else PollingMainLoop
+    cls(host, int(port), int(client_port)).run()
