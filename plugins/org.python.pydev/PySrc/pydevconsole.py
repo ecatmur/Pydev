@@ -1,5 +1,5 @@
 
-# This import is needed as pkg_resources does some one-time library path 
+# This import is needed as pkg_resources does some one-time library path
 # checking, the results of which are invalidated by Ipython as it messes
 # with sys.modules for the readline library.
 import pkg_resources
@@ -10,7 +10,6 @@ except ImportError:
 
 import os
 import sys
-import thread, time
 
 try:
     False
@@ -21,8 +20,6 @@ except NameError: # version < 2.3 -- didn't have the True/False builtins
     setattr(__builtin__, 'False', 0)
 
 from pydev_console_utils import BaseStdIn, StdIn, BaseInterpreterInterface
-sys.stdin = BaseStdIn()
-
 
 
 try:
@@ -102,16 +99,16 @@ class InterpreterInterface(BaseInterpreterInterface):
         try:
             import pydevd
         except:
-            # This happens on Jython embedded in host eclipse 
+            # This happens on Jython embedded in host eclipse
             self.namespace = globals()
         else:
             #Adapted from the code in pydevd
-            #patch provided by: Scott Schlesier - when script is run, it does not 
+            #patch provided by: Scott Schlesier - when script is run, it does not
             #pretend pydevconsole is not the main module, and
             #convince the file to be debugged that it was loaded as main
             sys.modules['pydevconsole'] = sys.modules['__main__']
-            sys.modules['pydevconsole'].__name__ = 'pydevconsole'            
-            
+            sys.modules['pydevconsole'].__name__ = 'pydevconsole'
+
             from imp import new_module
             m = new_module('__main__')
             sys.modules['__main__'] = m
@@ -182,7 +179,6 @@ def _DoExit(*args):
 os.environ['TERM'] = 'dumb'
 
 import threading
-import traceback
 import functools
 import signal
 import atexit
@@ -193,21 +189,11 @@ def log(msg):
     logging.getLogger('pydevconsole').debug(msg)
 
 
-class PyDevServer(SimpleXMLRPCServer):
-    def __init__(self, host, port, interpreter, main_loop):
-        SimpleXMLRPCServer.__init__(self, (host,port), logRequests=False)
+class ThreadedXMLRPCServer(SimpleXMLRPCServer):
+    def __init__(self, addr, main_loop, **kwargs):
+        SimpleXMLRPCServer.__init__(self, addr, **kwargs)
         self.main_loop = main_loop
         self.resp_queue = Queue.Queue()
-
-        self.register_function(interpreter.addExec)
-        self.register_function(interpreter.getCompletions)
-        self.register_function(interpreter.getDescription)
-        self.register_function(interpreter.close)
-
-        #Functions so that the console can work as a debugger (i.e.: variables view, expressions...)
-        self.register_function(interpreter.connectToDebugger)
-        self.register_function(interpreter.postCommand)
-        self.register_function(interpreter.hello)
 
     def register_function(self, fn, name=None):
         @functools.wraps(fn)
@@ -219,31 +205,14 @@ class PyDevServer(SimpleXMLRPCServer):
                     log("Calling %r(*%r, **%r)" % (fn, args, kwargs))
                     self.resp_queue.put(fn(*args, **kwargs))
                 except:
+                    import traceback;traceback.print_exc()
                     log(traceback.format_exc())
-                    print traceback.format_exc()
                     self.resp_queue.put(None)
                 finally:
                     signal.signal(signal.SIGINT, int_handler)
             self.main_loop.call_in_main_thread(main_loop_cb)
             return self.resp_queue.get(block=True)
         SimpleXMLRPCServer.register_function(self, proxy_fn, name)
-
-
-class ServerThread(threading.Thread):
-    """
-    This thread runs the XMLRPC Server
-    """
-    def __init__(self, server):
-        threading.Thread.__init__(self)
-        log('Creating server thread')
-        self.daemon = True
-        self.server = server
-        self.running = True
-        log('Finished creating server thread')
-    def run(self):
-        log('Server running')
-        self.server.serve_forever()
-        log('Server finished')
 
 
 class MainLoop(object):
@@ -259,7 +228,7 @@ class MainLoop(object):
         not compulsory for this method to block until the main thread has
         finished processing `cb`; as such, this method must not be called from
         the main thread.
-        """ 
+        """
         raise NotImplementedError
 
 
@@ -268,10 +237,11 @@ class QtMainLoop(MainLoop):
         from PyQt4 import QtCore, QtGui
         self.ping = type('Ping', (QtCore.QThread,), {'call': QtCore.pyqtSignal(object)})()
         self.ping.call.connect(lambda cb: cb(), type=QtCore.Qt.BlockingQueuedConnection)
-        self.app = QtGui.QApplication([]) 
+        self.app = QtGui.QApplication([])
 
     def run(self):
-        self.app.exec_()
+        while True:
+            self.app.exec_()
 
     def call_in_main_thread(self, cb):
         self.ping.call.emit(cb)
@@ -301,15 +271,16 @@ class NoGuiMainLoop(MainLoop):
             try:
                 cb()
             except:
-                print traceback.format_exc()
+                import traceback;traceback.print_exc()
 
     def call_in_main_thread(self, cb):
         self.queue.put(cb)
 
 
-def run(host, port, client_port):
-    interpreter = InterpreterInterface(host, client_port)
-    signal.signal(signal.SIGINT, lambda signum, frame: interpreter.interrupt())
+#=======================================================================================================================
+# StartServer
+#=======================================================================================================================
+def StartServer(host, port, client_port):
     try:
         from IPython.core.pylabtools import find_gui_and_backend
         gui, _ = find_gui_and_backend()
@@ -321,9 +292,30 @@ def run(host, port, client_port):
                     'gtk': GtkMainLoop,
                     }.get(gui, NoGuiMainLoop)
     main_loop = MainLoop_cls()
-    server = PyDevServer(host, port, interpreter, main_loop)
+
+    try:
+        interpreter = InterpreterInterface(host, client_port)
+        server = ThreadedXMLRPCServer((host, port), main_loop, logRequests=False)
+    except:
+        sys.stderr.write('Error starting server with host: %s, port: %s, client_port: %s\n' % (host, port, client_port))
+        raise
+
+    signal.signal(signal.SIGINT, lambda signum, frame: interpreter.interrupt())
+
+    #Functions for basic protocol
+    server.register_function(interpreter.addExec)
+    server.register_function(interpreter.getCompletions)
+    server.register_function(interpreter.getDescription)
+    server.register_function(interpreter.close)
+
+    #Functions so that the console can work as a debugger (i.e.: variables view, expressions...)
+    server.register_function(interpreter.connectToDebugger)
+    server.register_function(interpreter.postCommand)
+    server.register_function(interpreter.hello)
+
     atexit.register(server.shutdown)
-    server_thread = ServerThread(server)
+    server_thread = threading.Thread(target=server.serve_forever)
+    server_thread.daemon = True
     server_thread.start()
     main_loop.run()
 
@@ -332,19 +324,23 @@ def run(host, port, client_port):
 # main
 #=======================================================================================================================
 if __name__ == '__main__':
+    sys.stdin = BaseStdIn()
+
     # Uncomment this to make logging go
     import ahl.logging
 
     # http://jira.maninvestments.com/jira/browse/AHLRAP-1421
+    import time
     def exit_on_parent_death():
         while True:
             time.sleep(5)
             # http://stackoverflow.com/questions/269494/how-can-i-cause-a-child-process-to-exit-when-the-parent-does
             if os.getppid() == 1:
                 _DoExit()
-    thread.start_new_thread(exit_on_parent_death, ())
+    exit_on_parent_death_thread = threading.Thread(target=exit_on_parent_death)
+    exit_on_parent_death_thread.daemon = True
+    exit_on_parent_death_thread.start()
 
     port, client_port = sys.argv[1:3]
     import pydev_localhost
-    host = pydev_localhost.get_localhost()
-    run(host, int(port), int(client_port))
+    StartServer(pydev_localhost.get_localhost(), int(port), int(client_port))
