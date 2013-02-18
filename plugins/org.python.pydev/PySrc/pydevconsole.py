@@ -19,6 +19,10 @@ except NameError: # version < 2.3 -- didn't have the True/False builtins
     setattr(__builtin__, 'True', 1) #Python 3.0 does not accept __builtin__.True = 1 in its syntax
     setattr(__builtin__, 'False', 0)
 
+import threading
+import functools
+import atexit
+from pydev_imports import SimpleXMLRPCServer, Queue
 from pydev_console_utils import BaseStdIn, StdIn, BaseInterpreterInterface
 
 
@@ -178,12 +182,7 @@ def _DoExit(*args):
 # Set terminal to 'dumb' - this fixes terminal paging in Ipython 0.11
 os.environ['TERM'] = 'dumb'
 
-import threading
-import functools
 import signal
-import atexit
-from pydev_imports import SimpleXMLRPCServer, Queue
-
 import logging
 def log(msg):
     logging.getLogger('pydevconsole').debug(msg)
