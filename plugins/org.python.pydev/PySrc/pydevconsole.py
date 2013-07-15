@@ -281,7 +281,7 @@ class NoGuiMainLoop(MainLoop):
 #=======================================================================================================================
 def StartServer(host, port, client_port):
     try:
-        from IPython.core.pylabtools import find_gui_and_backend
+        from pydev_ipython_console import find_gui_and_backend
         gui, _ = find_gui_and_backend()
     except Exception as ex:
         sys.stdout.write("Can't initialize GUI integration: %s\n" % str(ex))
