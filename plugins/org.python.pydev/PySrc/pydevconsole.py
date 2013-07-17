@@ -283,6 +283,8 @@ def StartServer(host, port, client_port):
     try:
         from pydev_ipython_console import find_gui_and_backend
         gui, _ = find_gui_and_backend()
+        import matplotlib
+        matplotlib.interactive(True)
     except Exception as ex:
         sys.stdout.write("Can't initialize GUI integration: %s\n" % str(ex))
         gui = None
