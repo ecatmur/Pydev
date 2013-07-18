@@ -194,6 +194,22 @@ class ThreadedXMLRPCServer(SimpleXMLRPCServer):
         self.main_loop = main_loop
         self.resp_queue = Queue.Queue()
 
+    if sys.version_info < (2, 7, 4) or (3,) <= sys.version_info < (3, 3):
+        # http://bugs.python.org/issue7978
+        def serve_forever(self, poll_interval=0.5):
+            import select
+            import errno
+            while True:
+                try:
+                    SimpleXMLRPCServer.serve_forever(self, poll_interval)
+                except (OSError, select.error) as e:
+                    if e.args[0] == errno.EINTR:
+                        continue
+                    else:
+                        raise
+                else:
+                    break
+
     def register_function(self, fn, name=None):
         @functools.wraps(fn)
         def proxy_fn(*args, **kwargs):
