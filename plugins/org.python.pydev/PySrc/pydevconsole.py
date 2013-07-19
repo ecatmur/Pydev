@@ -343,8 +343,10 @@ def StartServer(host, port, client_port):
 if __name__ == '__main__':
     sys.stdin = BaseStdIn()
 
-    # Uncomment this to make logging go
-    import ahl.logging
+    try:
+        import ahl.logging
+    except Exception as ex:
+        sys.stderr.write('Unable to initialise AHL logging framework: %s' % ex)
 
     # http://jira.maninvestments.com/jira/browse/AHLRAP-1421
     import time
