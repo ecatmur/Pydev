@@ -38,7 +38,7 @@
     <repository>
       <id>indigo</id>
       <layout>p2</layout>
-      <url>http://dlonapahls62.maninvestments.com:8092/download.eclipse.org/releases/indigo</url>
+      <url>http://ahltools/eclipse-plugins/download.eclipse.org/releases/indigo</url>
     </repository>
   </repositories>
   <build>
