@@ -608,11 +608,25 @@ public class PydevConsoleCommunication implements IScriptConsoleCommunication, X
      */
     public void hello(IProgressMonitor monitor) throws Exception, UserCanceledException {
         int maximumAttempts = InteractiveConsolePrefs.getMaximumAttempts();
+        IStreamListener listener = null;
         monitor.beginTask("Establishing Connection To Console Process", maximumAttempts);
         try {
             if (firstCommWorked) {
                 return;
             }
+
+            final StringBuilder out = new StringBuilder(), err = new StringBuilder();
+            listener = new IStreamListener() {
+                public void onStream(StreamMessage msg) {
+                    switch (msg.type) {
+                        case STDOUT:
+                            out.append(msg.message);
+                        case STDERR:
+                            err.append(msg.message);
+                    }
+                }
+            };
+            this.addListener(listener);
 
             // We'll do a connection attempt, we can try to
             // connect n times (until the 1st time the connection
@@ -651,11 +665,14 @@ public class PydevConsoleCommunication implements IScriptConsoleCommunication, X
             }
 
             if (!firstCommWorked) {
-                throw new Exception("Failed to recive suitable Hello response from pydevconsole. Last msg received: "
-                        + result);
+                throw new Exception("Failed to receive suitable Hello response from pydevconsole. Last msg received: "
+                        + result + "\nstdout: " + out + "\nstderr: " + err);
             }
         } finally {
             monitor.done();
+            if (listener != null) {
+                this.removeListener(listener);
+            }
         }
     }
 

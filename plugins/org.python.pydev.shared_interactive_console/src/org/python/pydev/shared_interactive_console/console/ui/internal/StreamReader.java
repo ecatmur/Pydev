@@ -6,12 +6,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.concurrent.BlockingQueue;
 
-import org.eclipse.core.runtime.ISafeRunnable;
-import org.eclipse.core.runtime.ListenerList;
-import org.eclipse.core.runtime.SafeRunner;
-import org.eclipse.debug.core.DebugPlugin;
-import org.eclipse.debug.internal.core.OutputStreamMonitor;
-
 /*
  * StreamReader spawns two threads to continually call the blocking readline
  * on both the stdout and stderr streams coming from the child process.
@@ -24,16 +18,17 @@ import org.eclipse.debug.internal.core.OutputStreamMonitor;
 public class StreamReader implements Runnable {
 
     private class ThreadedStreamReader extends Thread {
-        private final StreamType                   type;
-        private final BufferedReader               rdr;
+        private final StreamType type;
+        private final BufferedReader rdr;
         private final BlockingQueue<StreamMessage> q;
-        
+
         ThreadedStreamReader(StreamType type, InputStream stream, BlockingQueue<StreamMessage> q) {
-            this.type   = type;
-            this.rdr    = new BufferedReader(new InputStreamReader(stream));
-            this.q      = q;
+            this.type = type;
+            this.rdr = new BufferedReader(new InputStreamReader(stream));
+            this.q = q;
         }
 
+        @Override
         public void run() {
             /* This line separator can in theory be document dependent and hence
              * should use TextUtilities.getDefaultLineDelimiter(doc); 
@@ -44,37 +39,35 @@ public class StreamReader implements Runnable {
                 try {
                     StreamMessage m = new StreamMessage(type, "");
                     m.message = rdr.readLine();
-                    
+
                     if (m.message != null) {
                         m.message += endl;
                     }
-                    
+
                     q.put(m);
-                    
-                    if (m.message == null)
+
+                    if (m.message == null) {
                         return;
+                    }
 
                 } catch (IOException e) {
                     return;
                 } catch (InterruptedException e) {
                     return;
                 }
-                
+
             }
         }
     }
 
-    private final BlockingQueue<StreamMessage> q;
-    private final ThreadedStreamReader         out;
-    private final ThreadedStreamReader         err;
-    
+    private final ThreadedStreamReader out;
+    private final ThreadedStreamReader err;
+
     public StreamReader(InputStream out, InputStream err, BlockingQueue<StreamMessage> q) {
         this.out = new ThreadedStreamReader(StreamType.STDOUT, out, q);
         this.err = new ThreadedStreamReader(StreamType.STDERR, err, q);
-        this.q   = q;
     }
-    
-    
+
     public void run() {
         out.start();
         err.start();
