@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -26,7 +26,7 @@ public class PyHoverPreferencesPage extends FieldEditorPreferencePage implements
 
     public static final String SHOW_DEBUG_VARIABLES_VALUES_ON_HOVER = "SHOW_DEBUG_VARIABLES_VALUES_ON_HOVER";
     public static final boolean DEFAULT_SHOW_DEBUG_VARIABLES_VALUES_ON_HOVER = true;
-    
+
     public PyHoverPreferencesPage() {
         super(FLAT);
         setPreferenceStore(PydevPlugin.getDefault().getPreferenceStore());
@@ -37,7 +37,8 @@ public class PyHoverPreferencesPage extends FieldEditorPreferencePage implements
     protected void createFieldEditors() {
         final Composite p = getFieldEditorParent();
         addField(new BooleanFieldEditor(SHOW_DOCSTRING_ON_HOVER, "Show docstrings?", p));
-        addField(new BooleanFieldEditor(SHOW_DEBUG_VARIABLES_VALUES_ON_HOVER, "Show variables values while debugging?", p));
+        addField(new BooleanFieldEditor(SHOW_DEBUG_VARIABLES_VALUES_ON_HOVER, "Show variables values while debugging?",
+                p));
     }
 
     public void init(IWorkbench workbench) {
@@ -50,7 +51,7 @@ public class PyHoverPreferencesPage extends FieldEditorPreferencePage implements
     public static boolean getShowDocstringOnHover() {
         return PydevPrefs.getPreferences().getBoolean(SHOW_DOCSTRING_ON_HOVER);
     }
-    
+
     /**
      * @return whether the value of variables should be shown on hover while debugging.
      */

@@ -1,3 +1,19 @@
+/******************************************************************************
+* Copyright (C) 2006-2013  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Dennis Hunziker
+*     Ueli Kistler
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /* 
  * Copyright (C) 2006, 2007  Dennis Hunziker, Ueli Kistler
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
@@ -12,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.python.pydev.core.structure.FastStack;
 import org.python.pydev.parser.jython.SimpleNode;
 import org.python.pydev.parser.jython.ast.ClassDef;
 import org.python.pydev.parser.jython.ast.FunctionDef;
@@ -24,6 +39,7 @@ import org.python.pydev.refactoring.ast.adapters.ClassDefAdapter;
 import org.python.pydev.refactoring.ast.adapters.FunctionDefAdapter;
 import org.python.pydev.refactoring.ast.adapters.ModuleAdapter;
 import org.python.pydev.refactoring.ast.adapters.SimpleAdapter;
+import org.python.pydev.shared_core.structure.FastStack;
 
 public abstract class AbstractContextVisitor<T> extends VisitorBase {
 
@@ -72,11 +88,11 @@ public abstract class AbstractContextVisitor<T> extends VisitorBase {
 
         AbstractScopeNode<?> parent = parents.peek();
 
-        if(nodeHelper.isClassDef(node)){
+        if (nodeHelper.isClassDef(node)) {
             return new ClassDefAdapter(moduleAdapter, parent, (ClassDef) node, moduleAdapter.getAdapterPrefs());
-        }else if(nodeHelper.isFunctionDef(node)){
+        } else if (nodeHelper.isFunctionDef(node)) {
             return new FunctionDefAdapter(moduleAdapter, parent, (FunctionDef) node, moduleAdapter.getAdapterPrefs());
-        }else{
+        } else {
             return new SimpleAdapter(moduleAdapter, parent, node, moduleAdapter.getAdapterPrefs());
         }
     }
@@ -84,7 +100,7 @@ public abstract class AbstractContextVisitor<T> extends VisitorBase {
     protected abstract T createAdapter(AbstractScopeNode<?> parent, SimpleNode node);
 
     protected AbstractNodeAdapter<? extends SimpleNode> createContext(SimpleNode node) {
-        if(nodeHelper.isModule(node)){
+        if (nodeHelper.isModule(node)) {
             assert (node == moduleAdapter.getASTNode());
             return moduleAdapter;
         }
@@ -97,8 +113,8 @@ public abstract class AbstractContextVisitor<T> extends VisitorBase {
     }
 
     protected boolean isInClassDef() {
-        for(SimpleNode node:stack){
-            if(nodeHelper.isClassDef(node)){
+        for (SimpleNode node : stack) {
+            if (nodeHelper.isClassDef(node)) {
                 return true;
             }
         }
@@ -106,8 +122,8 @@ public abstract class AbstractContextVisitor<T> extends VisitorBase {
     }
 
     protected boolean isInFunctionDef() {
-        for(SimpleNode node:stack){
-            if(nodeHelper.isFunctionDef(node)){
+        for (SimpleNode node : stack) {
+            if (nodeHelper.isFunctionDef(node)) {
                 return true;
             }
         }
@@ -142,7 +158,7 @@ public abstract class AbstractContextVisitor<T> extends VisitorBase {
     }
 
     public void traverse(FunctionDef node) throws Exception {
-        if(node.decs != null){
+        if (node.decs != null) {
             visit(node.decs);
         }
         visit(node.name);
@@ -152,9 +168,9 @@ public abstract class AbstractContextVisitor<T> extends VisitorBase {
 
     @Override
     public void traverse(SimpleNode node) throws Exception {
-        if(nodeHelper.isFunctionDef(node)){
+        if (nodeHelper.isFunctionDef(node)) {
             traverse((FunctionDef) node);
-        }else{
+        } else {
             node.traverse(this);
         }
     }
@@ -165,17 +181,17 @@ public abstract class AbstractContextVisitor<T> extends VisitorBase {
     }
 
     public void visit(SimpleNode node) throws Exception {
-        if(node == null){
+        if (node == null) {
             return;
         }
         node.accept(this);
     }
 
     protected void visit(SimpleNode[] body) throws Exception {
-        if(body == null){
+        if (body == null) {
             return;
         }
-        for(SimpleNode node:body){
+        for (SimpleNode node : body) {
             visit(node);
         }
     }
@@ -196,7 +212,7 @@ public abstract class AbstractContextVisitor<T> extends VisitorBase {
     }
 
     protected void pushParent(AbstractNodeAdapter<? extends SimpleNode> context) {
-        if(context instanceof AbstractScopeNode<?>){
+        if (context instanceof AbstractScopeNode<?>) {
             parents.push((AbstractScopeNode<?>) context);
         }
     }

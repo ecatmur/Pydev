@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -19,7 +19,8 @@ import org.eclipse.jface.viewers.LabelProviderChangedEvent;
 import org.eclipse.swt.graphics.Image;
 import org.python.pydev.core.log.Log;
 import org.python.pydev.plugin.PydevPlugin;
-import org.python.pydev.ui.UIConstants;
+import org.python.pydev.shared_ui.UIConstants;
+
 
 /**
  * Decorates problems.
@@ -104,8 +105,8 @@ public class ProblemsLabelDecorator implements ILabelDecorator, ILightweightLabe
             fProblemChangedListener = new IProblemChangedListener() {
                 public void problemsChanged(IResource[] changedResources, boolean isMarkerChange) {
                     if (fListeners != null && !fListeners.isEmpty()) {
-                        LabelProviderChangedEvent event = new ProblemsLabelChangedEvent(ProblemsLabelDecorator.this, changedResources,
-                                isMarkerChange);
+                        LabelProviderChangedEvent event = new ProblemsLabelChangedEvent(ProblemsLabelDecorator.this,
+                                changedResources, isMarkerChange);
                         Object[] listeners = fListeners.getListeners();
                         for (int i = 0; i < listeners.length; i++) {
                             ((ILabelProviderListener) listeners[i]).labelProviderChanged(event);
@@ -136,10 +137,12 @@ public class ProblemsLabelDecorator implements ILabelDecorator, ILightweightLabe
     public void decorate(Object element, IDecoration decoration) {
         int errorState = getErrorState(element);
         if (errorState == IMarker.SEVERITY_ERROR) {
-            decoration.addOverlay(PydevPlugin.getImageCache().getDescriptor(UIConstants.ERROR_DECORATION), IDecoration.BOTTOM_LEFT);
-            
-        }else if (errorState == IMarker.SEVERITY_WARNING) {
-            decoration.addOverlay(PydevPlugin.getImageCache().getDescriptor(UIConstants.WARNING_DECORATION), IDecoration.BOTTOM_LEFT);
+            decoration.addOverlay(PydevPlugin.getImageCache().getDescriptor(UIConstants.ERROR_DECORATION),
+                    IDecoration.BOTTOM_LEFT);
+
+        } else if (errorState == IMarker.SEVERITY_WARNING) {
+            decoration.addOverlay(PydevPlugin.getImageCache().getDescriptor(UIConstants.WARNING_DECORATION),
+                    IDecoration.BOTTOM_LEFT);
         }
     }
 

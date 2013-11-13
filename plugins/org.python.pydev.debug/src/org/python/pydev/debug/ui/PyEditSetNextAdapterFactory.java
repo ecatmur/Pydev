@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -17,18 +17,18 @@ import org.python.pydev.editor.PyEdit;
  */
 public class PyEditSetNextAdapterFactory implements IAdapterFactory {
 
-	private static PySetNextTarget pySetNextTarget = new PySetNextTarget();
+    private static PySetNextTarget pySetNextTarget = new PySetNextTarget();
 
-	public Object getAdapter(Object adaptableObject, Class adapterType) {
-        if(adaptableObject instanceof PyEdit && adapterType == ISetNextTarget.class){
+    public Object getAdapter(Object adaptableObject, Class adapterType) {
+        if (adaptableObject instanceof PyEdit && adapterType == ISetNextTarget.class) {
             return pySetNextTarget;
-            
+
         }
-        return null;	
+        return null;
     }
 
-	public Class[] getAdapterList() {
-		return new Class[]{IRunToLineTarget.class};
-	}
+    public Class[] getAdapterList() {
+        return new Class[] { IRunToLineTarget.class };
+    }
 
 }

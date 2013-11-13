@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -15,6 +15,7 @@ import java.util.SortedMap;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.python.pydev.shared_core.structure.Tuple;
 
 public interface IModulesManager {
     /**
@@ -22,6 +23,7 @@ public interface IModulesManager {
      * clearing the deltas
      */
     public static final int MAXIMUN_NUMBER_OF_DELTAS = 100;
+
     /**
      * @param nature this is the nature for this project modules manager (can be used if no project is set)
      */
@@ -65,7 +67,8 @@ public interface IModulesManager {
      */
     public abstract IModule getModule(String name, IPythonNature nature, boolean dontSearchInit);
 
-    public abstract IModule getModule(String name, IPythonNature nature, boolean checkSystemManager, boolean dontSearchInit);
+    public abstract IModule getModule(String name, IPythonNature nature, boolean checkSystemManager,
+            boolean dontSearchInit);
 
     /**
      * @param member the member we want to know if it is in the pythonpath
@@ -123,20 +126,22 @@ public interface IModulesManager {
      */
     public abstract List<String> getCompletePythonPath(IInterpreterInfo interpreter, IInterpreterManager manager);
 
-    public abstract SortedMap<ModulesKey,ModulesKey> getAllModulesStartingWith(String moduleToGetTokensFrom);
-    public abstract SortedMap<ModulesKey,ModulesKey> getAllDirectModulesStartingWith(String moduleToGetTokensFrom);
-    
+    public abstract SortedMap<ModulesKey, ModulesKey> getAllModulesStartingWith(String moduleToGetTokensFrom);
+
+    public abstract SortedMap<ModulesKey, ModulesKey> getAllDirectModulesStartingWith(String moduleToGetTokensFrom);
+
     /**
      * @return true if it was started without problems
      */
     public boolean startCompletionCache();
+
     public void endCompletionCache();
 
     /**
      * @return the pythonpath helper related to this modules manager. May return null if it doesn't have a related
      * pythonpath helper (e.g.: a modules manager for another kind of project -- such as a java project).
      */
-    public abstract Object /*PythonPathHelper*/ getPythonPathHelper();
+    public abstract Object /*PythonPathHelper*/getPythonPathHelper();
 
     /**
      * This method removes some module from this modules manager.
@@ -155,9 +160,8 @@ public interface IModulesManager {
      * @return a tuple with the IModule requested and the IModulesManager that contained that module.
      * May return null if not found.
      */
-    public Tuple<IModule, IModulesManager> getModuleAndRelatedModulesManager(String name, IPythonNature nature, 
+    public Tuple<IModule, IModulesManager> getModuleAndRelatedModulesManager(String name, IPythonNature nature,
             boolean checkSystemManager, boolean dontSearchInit);
-
 
     /**
      * Used so that we can deal with modules that are not saved (i.e.: modules that we're currently
@@ -165,12 +169,12 @@ public interface IModulesManager {
      * 
      * @return the handle to be used to pop it later on.
      */
-	public int pushTemporaryModule(String moduleName, IModule module);
+    public int pushTemporaryModule(String moduleName, IModule module);
 
-	/**
-	 * Remove a previous pushTemporaryModule.
-	 */
-	public void popTemporaryModule(String moduleName, int handle);
+    /**
+     * Remove a previous pushTemporaryModule.
+     */
+    public void popTemporaryModule(String moduleName, int handle);
 
     public void saveToFile(File workspaceMetadataFile);
 }

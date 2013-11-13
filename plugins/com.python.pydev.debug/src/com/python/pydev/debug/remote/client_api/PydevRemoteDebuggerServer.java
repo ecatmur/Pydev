@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -16,32 +16,31 @@ import com.python.pydev.debug.ui.launching.PydevdServerLaunchShortcut;
  * 
  * It provides methods to start the server, finish the server and gets its current state.
  */
-public class PydevRemoteDebuggerServer{
+public class PydevRemoteDebuggerServer {
 
     /**
      * This method will start the debug server.
      */
-    public static void startServer(){
+    public static void startServer() {
         RemoteDebuggerServer.getInstance().startListening(); //doing that, it will automatically start it
-        
+
         PydevdServerLaunchShortcut s = new PydevdServerLaunchShortcut();
-        s.launch((FileOrResource[])null, "run");
+        s.launch((FileOrResource[]) null, "run");
     }
-    
+
     /**
      * This method will stop the debug server.
      */
-    public static void stopServer(){
+    public static void stopServer() {
         RemoteDebuggerServer.getInstance().stopListening();
     }
 
     /**
      * @return true if the debug server is running and false otherwise.
      */
-    public static boolean isRunning(){
+    public static boolean isRunning() {
         RemoteDebuggerServer instance = RemoteDebuggerServer.getInstance();
         return !instance.isTerminated();
     }
-    
-    
+
 }

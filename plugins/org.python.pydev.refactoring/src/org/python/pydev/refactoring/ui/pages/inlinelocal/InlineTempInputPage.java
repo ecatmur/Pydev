@@ -1,3 +1,17 @@
+/******************************************************************************
+* Copyright (C) 2007-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /*
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
  *
@@ -28,9 +42,9 @@ public class InlineTempInputPage extends MessageWizardPage {
         InlineLocalRequestProcessor req = getInlineRefactoring().getRequestProcessor();
         int occurences = req.getOccurences();
         String variableName = req.getVariableName();
-        if(occurences == 1){
+        if (occurences == 1) {
             return Messages.format(Messages.inlineLocalMessage, variableName);
-        }else{
+        } else {
             return Messages.format(Messages.inlineLocalMessageMany, variableName, occurences);
         }
     }

@@ -1,3 +1,19 @@
+/******************************************************************************
+* Copyright (C) 2006-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Dennis Hunziker
+*     Ueli Kistler
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /* 
  * Copyright (C) 2006, 2007  Dennis Hunziker, Ueli Kistler
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
@@ -26,10 +42,12 @@ public class PythonRefactoringWizard extends RefactoringWizard {
     private ITextEditor targetEditor;
     private LinkedList<IWizardPage> pages;
 
-    public PythonRefactoringWizard(AbstractPythonRefactoring refactoring, ITextEditor targetEditor, IWizardPage page, int flags) {
+    public PythonRefactoringWizard(AbstractPythonRefactoring refactoring, ITextEditor targetEditor, IWizardPage page,
+            int flags) {
         super(refactoring, flags);
 
-        ImageDescriptor wizardImg = PepticPlugin.imageDescriptorFromPlugin(PepticPlugin.PLUGIN_ID, Messages.imagePath + Messages.imgLogo);
+        ImageDescriptor wizardImg = PepticPlugin.imageDescriptorFromPlugin(PepticPlugin.PLUGIN_ID, Messages.imagePath
+                + Messages.imgLogo);
 
         this.targetEditor = targetEditor;
         this.refactoring = refactoring;
@@ -45,17 +63,17 @@ public class PythonRefactoringWizard extends RefactoringWizard {
     @Override
     protected void addUserInputPages() {
         this.getShell().setMinimumSize(640, 480);
-        for(IWizardPage page:pages){
+        for (IWizardPage page : pages) {
             addPage(page);
         }
     }
 
     public void run() {
-        try{
+        try {
             RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(this);
 
             op.run(getShell(), refactoring.getName());
-        }catch(InterruptedException e){
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
@@ -64,6 +82,7 @@ public class PythonRefactoringWizard extends RefactoringWizard {
      * Looks for an usable shell
      */
     public Shell getShell() {
-        return targetEditor != null ? targetEditor.getSite().getShell() : PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+        return targetEditor != null ? targetEditor.getSite().getShell() : PlatformUI.getWorkbench()
+                .getActiveWorkbenchWindow().getShell();
     }
 }

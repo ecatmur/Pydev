@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -26,14 +26,13 @@ public class InterpreterGroup extends ElementWithChildren {
         return true;
     }
 
-
     @Override
     protected void calculateChildren() {
         Iterator<String> forcedLibsIterator = this.interpreterInfo.forcedLibsIterator();
-        while(forcedLibsIterator.hasNext()){
+        while (forcedLibsIterator.hasNext()) {
             addChild(new ForcedLibGroup(this, this.interpreterInfo, forcedLibsIterator.next()));
         }
-        
+
         ISystemModulesManager modulesManager = this.interpreterInfo.getModulesManager();
         Set<String> allModuleNames = modulesManager.getAllModuleNames(false, "");
         for (String moduleName : allModuleNames) {
@@ -41,11 +40,9 @@ public class InterpreterGroup extends ElementWithChildren {
         }
     }
 
-    
     @Override
     public String toString() {
         return this.interpreterInfo.getNameForUI();
     }
-
 
 }

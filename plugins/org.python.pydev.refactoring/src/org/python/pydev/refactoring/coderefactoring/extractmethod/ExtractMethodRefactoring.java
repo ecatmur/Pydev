@@ -1,3 +1,19 @@
+/******************************************************************************
+* Copyright (C) 2006-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Dennis Hunziker
+*     Ueli Kistler
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /* 
  * Copyright (C) 2006, 2007  Dennis Hunziker, Ueli Kistler
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
@@ -40,9 +56,9 @@ public class ExtractMethodRefactoring extends AbstractPythonRefactoring {
 
         validateSelections();
 
-        try{
+        try {
             initWizard();
-        }catch(Throwable e){
+        } catch (Throwable e) {
             status.addInfo(Messages.infoFixCode);
         }
     }
@@ -50,12 +66,13 @@ public class ExtractMethodRefactoring extends AbstractPythonRefactoring {
     private void initWizard() throws Throwable {
         ITextSelection standardSelection = info.getUserSelection();
         ModuleAdapter standardModule = this.parsedUserSelection;
-        if(standardModule == null){
+        if (standardModule == null) {
             standardSelection = info.getExtendedSelection();
             standardModule = this.parsedExtendedSelection;
         }
 
-        this.requestProcessor = new ExtractMethodRequestProcessor(info.getScopeAdapter(), standardModule, this.getModule(), standardSelection);
+        this.requestProcessor = new ExtractMethodRequestProcessor(info.getScopeAdapter(), standardModule,
+                this.getModule(), standardSelection);
     }
 
     @Override
@@ -69,15 +86,16 @@ public class ExtractMethodRefactoring extends AbstractPythonRefactoring {
     @Override
     public RefactoringStatus checkInitialConditions(IProgressMonitor pm) throws CoreException {
 
-        if(this.requestProcessor.getScopeAdapter() == null || this.requestProcessor.getScopeAdapter() instanceof IClassDefAdapter){
+        if (this.requestProcessor.getScopeAdapter() == null
+                || this.requestProcessor.getScopeAdapter() instanceof IClassDefAdapter) {
             status.addFatalError(Messages.extractMethodScopeInvalid);
             return status;
         }
-        if(status.getEntries().length > 0){
+        if (status.getEntries().length > 0) {
             return status;
         }
 
-        if(parsedExtendedSelection == null && parsedUserSelection == null){
+        if (parsedExtendedSelection == null && parsedUserSelection == null) {
             status.addFatalError(Messages.extractMethodIncompleteSelection);
             return status;
         }
@@ -86,24 +104,24 @@ public class ExtractMethodRefactoring extends AbstractPythonRefactoring {
 
     private void validateSelections() {
         /* FIXME: refactor this (-rschuett) */
-        try{
-            if(parsedUserSelection != null){
+        try {
+            if (parsedUserSelection != null) {
                 VisitorFactory.validateSelection(parsedUserSelection);
             }
-        }catch(SelectionException e){
+        } catch (SelectionException e) {
             this.parsedUserSelection = null;
-            if(parsedExtendedSelection == null){
+            if (parsedExtendedSelection == null) {
                 status.addFatalError(e.getMessage());
                 return;
             }
         }
-        try{
-            if(parsedExtendedSelection != null){
+        try {
+            if (parsedExtendedSelection != null) {
                 VisitorFactory.validateSelection(parsedExtendedSelection);
             }
-        }catch(SelectionException e){
+        } catch (SelectionException e) {
             this.parsedExtendedSelection = null;
-            if(parsedUserSelection == null){
+            if (parsedUserSelection == null) {
                 status.addFatalError(e.getMessage());
                 return;
             }

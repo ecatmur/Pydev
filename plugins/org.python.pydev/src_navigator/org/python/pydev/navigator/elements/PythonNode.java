@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -18,12 +18,12 @@ public class PythonNode implements Comparable, IWrappedResource {
      * This is the parent (PythonFile or PythonNode) for this object
      */
     public Object parent;
-    
+
     /**
      * The entry itself
      */
     public ParsedItem entry;
-    
+
     /**
      * The pythonfile where this node is contained
      */
@@ -41,17 +41,17 @@ public class PythonNode implements Comparable, IWrappedResource {
         this.entry = e;
         this.pythonFile = pythonFile;
     }
-    
+
     @Override
     public String toString() {
         return entry.toString();
     }
 
     public int compareTo(Object o) {
-        if(!(o instanceof PythonNode)){
+        if (!(o instanceof PythonNode)) {
             return 0;
         }
-        return entry.compareTo(((PythonNode)o).entry);
+        return entry.compareTo(((PythonNode) o).entry);
     }
 
     public Object getParentElement() {
@@ -66,10 +66,10 @@ public class PythonNode implements Comparable, IWrappedResource {
         return pythonFile.getSourceFolder();
     }
 
-    public PythonFile getPythonFile(){
+    public PythonFile getPythonFile() {
         return pythonFile;
     }
-    
+
     public int getRank() {
         return IWrappedResource.RANK_PYTHON_NODE;
     }

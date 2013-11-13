@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -136,8 +136,8 @@ public class PythonSourceViewer extends SourceViewer implements IPropertyChangeL
         IPreferenceStore store = getPreferenceStore();
         if (store != null) {
             StyledText styledText = getTextWidget();
-            Color color = store.getBoolean(AbstractTextEditor.PREFERENCE_COLOR_FOREGROUND_SYSTEM_DEFAULT) ? null : createColor(store, AbstractTextEditor.PREFERENCE_COLOR_FOREGROUND, styledText
-                    .getDisplay());
+            Color color = store.getBoolean(AbstractTextEditor.PREFERENCE_COLOR_FOREGROUND_SYSTEM_DEFAULT) ? null
+                    : createColor(store, AbstractTextEditor.PREFERENCE_COLOR_FOREGROUND, styledText.getDisplay());
             styledText.setForeground(color);
             if (getForegroundColor() != null) {
                 getForegroundColor().dispose();
@@ -221,14 +221,15 @@ public class PythonSourceViewer extends SourceViewer implements IPropertyChangeL
      * @see IPropertyChangeListener#propertyChange(PropertyChangeEvent)
      */
     public void propertyChange(PropertyChangeEvent event) {
-        IContentAssistant assistant = getContentAssistant();
         String property = event.getProperty();
 
         if (JFaceResources.TEXT_FONT.equals(property)) {
             updateViewerFont();
         }
-        if (AbstractTextEditor.PREFERENCE_COLOR_FOREGROUND.equals(property) || AbstractTextEditor.PREFERENCE_COLOR_FOREGROUND_SYSTEM_DEFAULT.equals(property)
-                || AbstractTextEditor.PREFERENCE_COLOR_BACKGROUND.equals(property) || AbstractTextEditor.PREFERENCE_COLOR_BACKGROUND_SYSTEM_DEFAULT.equals(property)) {
+        if (AbstractTextEditor.PREFERENCE_COLOR_FOREGROUND.equals(property)
+                || AbstractTextEditor.PREFERENCE_COLOR_FOREGROUND_SYSTEM_DEFAULT.equals(property)
+                || AbstractTextEditor.PREFERENCE_COLOR_BACKGROUND.equals(property)
+                || AbstractTextEditor.PREFERENCE_COLOR_BACKGROUND_SYSTEM_DEFAULT.equals(property)) {
             updateViewerColors();
         }
         if (affectsTextPresentation(event)) {

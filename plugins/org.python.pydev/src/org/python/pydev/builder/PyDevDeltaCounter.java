@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -16,30 +16,31 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.text.IDocument;
 import org.python.pydev.plugin.nature.PythonNature;
+import org.python.pydev.shared_core.callbacks.ICallback0;
 
 /**
  * @author Fabio Zadrozny
  */
-public class PyDevDeltaCounter extends PydevInternalResourceDeltaVisitor{
+public class PyDevDeltaCounter extends PydevInternalResourceDeltaVisitor {
 
     private int nVisited = 0;
 
-    public PyDevDeltaCounter(){
+    public PyDevDeltaCounter() {
         super(null, 0);
     }
-    
+
     @Override
-    protected void handleAddedPycFiles(IResource resource, PythonNature nature){
+    protected void handleAddedPycFiles(IResource resource, PythonNature nature) {
         //don't do anything special on pyc files!
     }
-    
+
     /**
      * Overridden so that we don't load the document on this visitor (there is no need for that).
      */
     @Override
     protected boolean chooseVisit(IResourceDelta delta, IResource resource, boolean isAddOrChange) {
         switch (delta.getKind()) {
-            case IResourceDelta.ADDED :
+            case IResourceDelta.ADDED:
                 visitAddedResource(resource, null, monitor);
                 isAddOrChange = true;
                 break;
@@ -57,14 +58,16 @@ public class PyDevDeltaCounter extends PydevInternalResourceDeltaVisitor{
     /**
      * @see org.python.pydev.builder.PyDevBuilderVisitor#visitChangedResource(org.eclipse.core.resources.IResource, org.eclipse.jface.text.IDocument)
      */
-    public void visitChangedResource(IResource resource, IDocument document, IProgressMonitor monitor) {
+    @Override
+    public void visitChangedResource(IResource resource, ICallback0<IDocument> document, IProgressMonitor monitor) {
         nVisited += 1;
     }
 
     /**
      * @see org.python.pydev.builder.PyDevBuilderVisitor#visitRemovedResource(org.eclipse.core.resources.IResource, org.eclipse.jface.text.IDocument)
      */
-    public void visitRemovedResource(IResource resource, IDocument document, IProgressMonitor monitor) {
+    @Override
+    public void visitRemovedResource(IResource resource, ICallback0<IDocument> document, IProgressMonitor monitor) {
     }
 
     /**
@@ -80,6 +83,5 @@ public class PyDevDeltaCounter extends PydevInternalResourceDeltaVisitor{
     public int getNVisited() {
         return nVisited;
     }
-
 
 }

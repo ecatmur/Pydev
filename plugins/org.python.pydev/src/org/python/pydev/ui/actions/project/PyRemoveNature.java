@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -13,9 +13,9 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
-import org.python.pydev.core.docutils.StringUtils;
 import org.python.pydev.core.log.Log;
 import org.python.pydev.plugin.nature.PythonNature;
+
 
 /**
  * Action to remove the pydev nature from a given project.
@@ -37,21 +37,24 @@ public class PyRemoveNature implements IObjectActionDelegate {
      * Actually remove the python nature from the project.
      */
     public void run(IAction action) {
-        if(selectedProject == null){
+        if (selectedProject == null) {
             return;
         }
-        
-        if (!MessageDialog.openConfirm(null, "Confirm Remove Pydev Nature", StringUtils.format(
-                "Are you sure that you want to remove the Pydev nature from %s?", selectedProject.getName()))) {
+
+        if (!MessageDialog.openConfirm(
+                null,
+                "Confirm Remove Pydev Nature",
+                org.python.pydev.shared_core.string.StringUtils.format("Are you sure that you want to remove the Pydev nature from %s?",
+                        selectedProject.getName()))) {
             return;
         }
-        
+
         try {
             PythonNature.removeNature(selectedProject, null);
         } catch (Throwable e) {
             Log.log(e);
         }
-        
+
     }
 
     /**
@@ -59,17 +62,17 @@ public class PyRemoveNature implements IObjectActionDelegate {
      */
     public void selectionChanged(IAction action, ISelection selection) {
         selectedProject = null;
-        
+
         if (selection.isEmpty() || !(selection instanceof IStructuredSelection)) {
             return;
         }
-        
+
         IStructuredSelection selections = (IStructuredSelection) selection;
         Object project = selections.getFirstElement();
-        if(!(project instanceof IProject)){
+        if (!(project instanceof IProject)) {
             return;
         }
-        
+
         this.selectedProject = (IProject) project;
     }
 

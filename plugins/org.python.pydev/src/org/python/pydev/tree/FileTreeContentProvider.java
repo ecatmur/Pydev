@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -11,6 +11,7 @@ import java.io.File;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.python.pydev.core.log.Log;
+
 
 public class FileTreeContentProvider implements ITreeContentProvider {
     public Object[] getChildren(Object element) {
@@ -33,11 +34,10 @@ public class FileTreeContentProvider implements ITreeContentProvider {
 
         if (element instanceof File) {
             return ((File) element).getParent();
-        }else if(element instanceof String){
+        } else if (element instanceof String) {
             return new File((String) element).getParent();
         }
-        Log.log(("element not instance of File of String: " + element.getClass().getName() + " " 
-        + element.toString()));
+        Log.log(("element not instance of File of String: " + element.getClass().getName() + " " + element.toString()));
         return null;
     }
 

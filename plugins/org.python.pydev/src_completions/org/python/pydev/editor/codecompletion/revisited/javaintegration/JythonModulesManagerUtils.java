@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -11,6 +11,7 @@ import org.python.pydev.core.log.Log;
 import org.python.pydev.editor.codecompletion.revisited.modules.AbstractModule;
 import org.python.pydev.editor.codecompletion.revisited.modules.EmptyModuleForZip;
 
+
 /**
  * Wrap things related to jython (specially dependent on JDT)
  * 
@@ -20,10 +21,11 @@ import org.python.pydev.editor.codecompletion.revisited.modules.EmptyModuleForZi
  */
 public class JythonModulesManagerUtils {
 
-    public static AbstractModule createModuleFromJar(EmptyModuleForZip emptyModuleForZip) throws JDTNotAvailableException{
-        try{
+    public static AbstractModule createModuleFromJar(EmptyModuleForZip emptyModuleForZip)
+            throws JDTNotAvailableException {
+        try {
             return new JavaZipModule(emptyModuleForZip);
-        }catch(Exception e){
+        } catch (Exception e) {
             tryRethrowAsJDTNotAvailableException(e);
             throw new RuntimeException("Should never get here", e);
         }
@@ -38,18 +40,18 @@ public class JythonModulesManagerUtils {
      * @throws JDTNotAvailableException
      */
     public static void tryRethrowAsJDTNotAvailableException(Throwable e) throws JDTNotAvailableException {
-        if(isOptionalJDTClassNotFound(e)){
+        if (isOptionalJDTClassNotFound(e)) {
             throw new JDTNotAvailableException();
-            
-        }else if(e instanceof JDTNotAvailableException){
+
+        } else if (e instanceof JDTNotAvailableException) {
             JDTNotAvailableException jdtNotAvailableException = (JDTNotAvailableException) e;
             throw jdtNotAvailableException;
-            
-        }else if(e instanceof RuntimeException){
+
+        } else if (e instanceof RuntimeException) {
             RuntimeException runtimeException = (RuntimeException) e;
             throw runtimeException;
         }
-        
+
         Log.log(e);
         throw new RuntimeException(e);
     }

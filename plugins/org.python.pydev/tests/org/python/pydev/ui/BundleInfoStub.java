@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -17,29 +17,28 @@ import java.net.URL;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.python.pydev.core.TestDependent;
-import org.python.pydev.core.bundle.IBundleInfo;
-import org.python.pydev.core.bundle.ImageCache;
-
+import org.python.pydev.shared_ui.ImageCache;
+import org.python.pydev.shared_ui.bundle.IBundleInfo;
 
 public class BundleInfoStub implements IBundleInfo {
 
     public File getRelativePath(IPath relative) throws CoreException {
-        if(relative.toString().indexOf("interpreterInfo.py") != -1){
-            return new File(TestDependent.TEST_PYDEV_PLUGIN_LOC+"PySrc/interpreterInfo.py");
+        if (relative.toString().indexOf("interpreterInfo.py") != -1) {
+            return new File(TestDependent.TEST_PYDEV_PLUGIN_LOC + "pysrc/interpreterInfo.py");
         }
-        if(relative.toString().indexOf("pycompletionserver.py") != -1){
-            return new File(TestDependent.TEST_PYDEV_PLUGIN_LOC+"PySrc/pycompletionserver.py");
+        if (relative.toString().indexOf("pycompletionserver.py") != -1) {
+            return new File(TestDependent.TEST_PYDEV_PLUGIN_LOC + "pysrc/pycompletionserver.py");
         }
-        if(relative.toString().indexOf("jycompletionserver.py") != -1){
-            return new File(TestDependent.TEST_PYDEV_PLUGIN_LOC+"PySrc/jycompletionserver.py");
+        if (relative.toString().indexOf("jycompletionserver.py") != -1) {
+            return new File(TestDependent.TEST_PYDEV_PLUGIN_LOC + "pysrc/jycompletionserver.py");
         }
-        if(relative.toString().indexOf("indent.py") != -1){
-            return new File(TestDependent.TEST_PYDEV_JYTHON_PLUGIN_LOC+"jysrc/indent.py");
+        if (relative.toString().indexOf("indent.py") != -1) {
+            return new File(TestDependent.TEST_PYDEV_JYTHON_PLUGIN_LOC + "jysrc/indent.py");
         }
-        if(relative.toString().indexOf("PySrc/pydev_sitecustomize") != -1){
-        	return new File(TestDependent.TEST_PYDEV_PLUGIN_LOC+"PySrc/pydev_sitecustomize");
+        if (relative.toString().indexOf("pysrc/pydev_sitecustomize") != -1) {
+            return new File(TestDependent.TEST_PYDEV_PLUGIN_LOC + "pysrc/pydev_sitecustomize");
         }
-        throw new RuntimeException("Not available info on: "+relative);
+        throw new RuntimeException("Not available info on: " + relative);
     }
 
     public String getPluginID() {

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -15,8 +15,6 @@ public class LinePart extends AbstractLinePart implements ILinePart, ILinePart2 
         this.setString(string);
     }
 
-
-
     /* (non-Javadoc)
      * @see org.python.pydev.parser.prettyprinterv2.ILinePart2#setString(java.lang.String)
      */
@@ -30,11 +28,10 @@ public class LinePart extends AbstractLinePart implements ILinePart, ILinePart2 
     public String getString() {
         return string;
     }
-    
+
     @Override
     public String toString() {
         return getString();
     }
-
 
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -18,20 +18,20 @@ import org.eclipse.ui.IMarkerResolutionGenerator;
  */
 public class PyQuickFix implements IMarkerResolutionGenerator {
 
-    public static String CONTENT_GENERATOR_MARKER = "org.python.pydev.editor.markers.pycontentgeneratormarker"; 
+    public static String CONTENT_GENERATOR_MARKER = "org.python.pydev.editor.markers.pycontentgeneratormarker";
 
     public IMarkerResolution[] getResolutions(IMarker mk) {
         return new IMarkerResolution[] {};
-//        try {
-//           Object problem = mk.getAttribute("WhatsUp");
-//           return new IMarkerResolution[] {
-//              new MarkerResolution("Fix #1 for "+problem),
-//              new MarkerResolution("Fix #2 for "+problem),
-//           };
-//        }
-//        catch (CoreException e) {
-//           return new IMarkerResolution[0];
-//        }
-     }
+        //        try {
+        //           Object problem = mk.getAttribute("WhatsUp");
+        //           return new IMarkerResolution[] {
+        //              new MarkerResolution("Fix #1 for "+problem),
+        //              new MarkerResolution("Fix #2 for "+problem),
+        //           };
+        //        }
+        //        catch (CoreException e) {
+        //           return new IMarkerResolution[0];
+        //        }
+    }
 
 }

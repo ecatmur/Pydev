@@ -1,3 +1,17 @@
+/******************************************************************************
+* Copyright (C) 2007-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /* 
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
  *
@@ -16,22 +30,23 @@ import org.python.pydev.refactoring.tests.core.IInputOutputTestCase;
 
 public class InlineLocalTestSuite extends AbstractIOTestSuite {
 
-	public InlineLocalTestSuite(String name) {
-		super(name);
-	}
+    public InlineLocalTestSuite(String name) {
+        super(name);
+    }
 
-	public static Test suite() {
-		String testdir = "tests" + File.separator + "python" + File.separator + "coderefactoring" + File.separator + "inlinelocal";
+    public static Test suite() {
+        String testdir = "tests" + File.separator + "python" + File.separator + "coderefactoring" + File.separator
+                + "inlinelocal";
 
-		InlineLocalTestSuite testSuite = new InlineLocalTestSuite("Inline Local");
-		
-		testSuite.createTests(testdir);
-		
-		return testSuite;
-	}
-	
-	@Override
-	protected IInputOutputTestCase createTestCase(String testCaseName) {
-		return new InlineLocalTestCase(testCaseName);
-	}
+        InlineLocalTestSuite testSuite = new InlineLocalTestSuite("Inline Local");
+
+        testSuite.createTests(testdir);
+
+        return testSuite;
+    }
+
+    @Override
+    protected IInputOutputTestCase createTestCase(String testCaseName) {
+        return new InlineLocalTestCase(testCaseName);
+    }
 }

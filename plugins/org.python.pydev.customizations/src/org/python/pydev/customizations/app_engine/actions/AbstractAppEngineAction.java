@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -16,24 +16,24 @@ import org.eclipse.ui.IWorkbenchPart;
  * Just checks if the selection has size == 1 and if it has, mark that as the source folder
  * (doesn't actually check if it is a source folder)
  */
-public abstract class AbstractAppEngineAction implements IObjectActionDelegate{
+public abstract class AbstractAppEngineAction implements IObjectActionDelegate {
 
     protected Object sourceFolder;
 
-    public void setActivePart(IAction action, IWorkbenchPart targetPart){
+    public void setActivePart(IAction action, IWorkbenchPart targetPart) {
     }
-    
-    public void selectionChanged(IAction action, ISelection selection){
+
+    public void selectionChanged(IAction action, ISelection selection) {
         sourceFolder = null;
         if (!(selection instanceof IStructuredSelection)) {
             return;
         }
-        
+
         IStructuredSelection selections = (IStructuredSelection) selection;
-        if(selections.size() != 1){
+        if (selections.size() != 1) {
             return;
         }
-        
+
         this.sourceFolder = selections.getFirstElement();
     }
 }

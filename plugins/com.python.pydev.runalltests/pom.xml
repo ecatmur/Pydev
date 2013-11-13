@@ -3,13 +3,32 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <artifactId>plugins</artifactId>
     <groupId>org.python.pydev</groupId>
-    <version>2.2.4-SNAPSHOT</version>
-    <relativePath>../../pom.xml</relativePath>
+    <artifactId>plugins</artifactId>
+    <version>3.1.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
   <groupId>org.python.pydev</groupId>
-  <artifactId>com.python.pydev.runalltests2</artifactId>
-  <version>2.2.4-SNAPSHOT</version>
-  <packaging>eclipse-plugin</packaging>
+  <artifactId>com.python.pydev.runalltests</artifactId>
+  <packaging>eclipse-test-plugin</packaging>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-surefire-plugin</artifactId>
+        <version>${tycho-version}</version>
+        <configuration>
+          <useUIHarness>true</useUIHarness>
+          <useUIHarness>true</useUIHarness>
+          <testSuite>com.python.pydev.runalltests</testSuite>
+          <testClass>com.python.pydev.runalltests2.AllWorkbenchTests</testClass>
+          <systemProperties>
+            <!-- We are not in test mode when running Workbench tests.
+                 See SharedCorePlugin.inTestMode().  -->
+            <PyDevInTestMode>false</PyDevInTestMode>
+          </systemProperties>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

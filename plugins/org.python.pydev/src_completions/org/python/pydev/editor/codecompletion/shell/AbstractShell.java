@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -12,11 +12,14 @@ package org.python.pydev.editor.codecompletion.shell;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -34,35 +37,33 @@ import org.python.pydev.core.IPythonNature;
 import org.python.pydev.core.IToken;
 import org.python.pydev.core.MisconfigurationException;
 import org.python.pydev.core.PythonNatureWithoutProjectException;
-import org.python.pydev.core.Tuple;
 import org.python.pydev.core.log.Log;
-import org.python.pydev.core.net.LocalHost;
 import org.python.pydev.editor.codecompletion.PyCodeCompletionPreferencesPage;
 import org.python.pydev.editor.codecompletion.revisited.ModulesManager;
 import org.python.pydev.logging.DebugSettings;
 import org.python.pydev.plugin.PydevPlugin;
-import org.python.pydev.plugin.SocketUtil;
-import org.python.pydev.runners.ThreadStreamReader;
+import org.python.pydev.shared_core.net.SocketUtil;
+import org.python.pydev.shared_core.structure.Tuple;
 
 /**
  * This is the shell that 'talks' to the python / jython process (it is intended to be subclassed so that
- * we know how to deal with each). 
- * 
+ * we know how to deal with each).
+ *
  * Its methods are synched to prevent concurrent access.
- * 
+ *
  * @author fabioz
  *
  */
 public abstract class AbstractShell {
 
-    public static final int BUFFER_SIZE = 1024 ;
+    public static final int BUFFER_SIZE = 1024;
     public static final int OTHERS_SHELL = 2;
     public static final int COMPLETION_SHELL = 1;
     protected static final int DEFAULT_SLEEP_BETWEEN_ATTEMPTS = 1000; //1sec, so we can make the number of attempts be shown as elapsed in secs
     protected static final int DEBUG_SHELL = -1;
-    
-    private final String TYPE_UNKNOWN_STR = ""+IToken.TYPE_UNKNOWN;
-    
+
+    private final String TYPE_UNKNOWN_STR = "" + IToken.TYPE_UNKNOWN;
+
     /**
      * Determines if we are already in a method that starts the shell
      */
@@ -71,8 +72,8 @@ public abstract class AbstractShell {
     /**
      * Determines if we are (theoretically) already connected (meaning that trying to start the shell
      * again will not do anything)
-     * 
-     * Ending the shell sets this to false and starting it sets it to true (if successful) 
+     *
+     * Ending the shell sets this to false and starting it sets it to true (if successful)
      */
     private boolean isConnected = false;
 
@@ -81,17 +82,17 @@ public abstract class AbstractShell {
     private boolean isInRestart = false;
     private IInterpreterInfo shellInterpreter;
     private int shellMillis;
-    
+
     /**
      * Lock to know if there is someone already using this shell for some operation
      */
     private boolean isInOperation = false;
 
     private static void dbg(String string, int priority) {
-        if(priority <= DEBUG_SHELL){
+        if (priority <= DEBUG_SHELL) {
             System.out.println(string);
         }
-        if(DebugSettings.DEBUG_CODE_COMPLETION){
+        if (DebugSettings.DEBUG_CODE_COMPLETION) {
             Log.toLogFile(string, AbstractShell.class);
         }
     }
@@ -100,35 +101,35 @@ public abstract class AbstractShell {
      * the encoding used to encode messages
      */
     private static final String ENCODING_UTF_8 = "UTF-8";
-    
+
     /**
      * Reference to 'global python shells'
-     * 
+     *
      * this works as follows:
      * we have the interpreter as that the shell is related to as the 1st key
-     * 
+     *
      * and then we have the id with the shell type that points to the actual shell
-     * 
+     *
      * @see #COMPLETION_SHELL
      * @see #OTHERS_SHELL
      */
-    protected static Map<String,Map<Integer,AbstractShell>> shells = new HashMap<String,Map<Integer,AbstractShell>>();
-    
+    protected static Map<String, Map<Integer, AbstractShell>> shells = new HashMap<String, Map<Integer, AbstractShell>>();
+
     /**
-     * if we are already finished for good, we may not start new shells (this is a static, because this 
+     * if we are already finished for good, we may not start new shells (this is a static, because this
      * should be set only at shutdown).
      */
     private static boolean finishedForGood = false;
-    
+
     /**
      * simple stop of a shell (it may be later restarted)
      */
     public synchronized static void stopServerShell(IInterpreterInfo interpreter, int id) {
-        synchronized(shells){
+        synchronized (shells) {
             Map<Integer, AbstractShell> typeToShell = getTypeToShellFromId(interpreter);
-            AbstractShell pythonShell = (AbstractShell) typeToShell.get(new Integer(id));
-            
-            if(pythonShell != null){
+            AbstractShell pythonShell = typeToShell.get(new Integer(id));
+
+            if (pythonShell != null) {
                 try {
                     pythonShell.endIt();
                 } catch (Exception e) {
@@ -139,25 +140,24 @@ public abstract class AbstractShell {
         }
     }
 
-    
     /**
-     * stops all registered shells 
+     * stops all registered shells
      *
      */
-    public synchronized static void shutdownAllShells(){
-        synchronized(shells){
-            if(DebugSettings.DEBUG_CODE_COMPLETION){
+    public synchronized static void shutdownAllShells() {
+        synchronized (shells) {
+            if (DebugSettings.DEBUG_CODE_COMPLETION) {
                 Log.toLogFile("Shutting down all shells (for good)...", AbstractShell.class);
             }
 
             for (Iterator<Map<Integer, AbstractShell>> iter = shells.values().iterator(); iter.hasNext();) {
-                finishedForGood = true;  //we may no longer restart shells
-                
-                Map<Integer,AbstractShell> rel = (Map<Integer, AbstractShell>) iter.next();
-                if(rel != null){
+                finishedForGood = true; //we may no longer restart shells
+
+                Map<Integer, AbstractShell> rel = iter.next();
+                if (rel != null) {
                     for (Iterator<AbstractShell> iter2 = rel.values().iterator(); iter2.hasNext();) {
                         AbstractShell element = iter2.next();
-                        if(element != null){
+                        if (element != null) {
                             try {
                                 element.shutdown(); //shutdown
                             } catch (Exception e) {
@@ -170,59 +170,57 @@ public abstract class AbstractShell {
             shells.clear();
         }
     }
-    
-    
 
     /**
      * Restarts all the shells and clears any related cache.
-     * 
+     *
      * @return an error message if some exception happens in this process (an empty string means all went smoothly).
      */
-	public static String restartAllShells() {
-		String ret = "";
-        synchronized(shells){
-        	try {
-                if(DebugSettings.DEBUG_CODE_COMPLETION){
+    public static String restartAllShells() {
+        String ret = "";
+        synchronized (shells) {
+            try {
+                if (DebugSettings.DEBUG_CODE_COMPLETION) {
                     Log.toLogFile("Restarting all shells and clearing caches...", AbstractShell.class);
                 }
 
-				for(Map<Integer,AbstractShell> val:shells.values()){
-					for(AbstractShell val2:val.values()){
-					    if(val2 != null){
-					        val2.endIt();
-					    }
-					}
-					IInterpreterManager[] interpreterManagers = PydevPlugin.getAllInterpreterManagers();
-					for (IInterpreterManager iInterpreterManager : interpreterManagers) {
-					    if(iInterpreterManager == null){
-					        continue; //Should happen only on testing...
-					    }
-						try {
-							iInterpreterManager.clearCaches();
-						} catch (Exception e) {
-							Log.log(e);
-							ret += e.getMessage()+"\n";
-						}
-					}
-					//Clear the global modules cache!
-					ModulesManager.clearCache();
-				}
-			} catch (Exception e) {
-				Log.log(e);
-				ret += e.getMessage()+"\n";
-			}
+                for (Map<Integer, AbstractShell> val : shells.values()) {
+                    for (AbstractShell val2 : val.values()) {
+                        if (val2 != null) {
+                            val2.endIt();
+                        }
+                    }
+                    IInterpreterManager[] interpreterManagers = PydevPlugin.getAllInterpreterManagers();
+                    for (IInterpreterManager iInterpreterManager : interpreterManagers) {
+                        if (iInterpreterManager == null) {
+                            continue; //Should happen only on testing...
+                        }
+                        try {
+                            iInterpreterManager.clearCaches();
+                        } catch (Exception e) {
+                            Log.log(e);
+                            ret += e.getMessage() + "\n";
+                        }
+                    }
+                    //Clear the global modules cache!
+                    ModulesManager.clearCache();
+                }
+            } catch (Exception e) {
+                Log.log(e);
+                ret += e.getMessage() + "\n";
+            }
         }
         return ret;
-	}
+    }
 
     /**
      * @param interpreter the interpreter whose shell we want.
      * @return a map with the type of the shell mapping to the shell itself
      */
     private synchronized static Map<Integer, AbstractShell> getTypeToShellFromId(IInterpreterInfo interpreter) {
-        synchronized(shells){
+        synchronized (shells) {
             Map<Integer, AbstractShell> typeToShell = shells.get(interpreter.getExecutableOrJar());
-            
+
             if (typeToShell == null) {
                 typeToShell = new HashMap<Integer, AbstractShell>();
                 shells.put(interpreter.getExecutableOrJar(), typeToShell);
@@ -233,7 +231,7 @@ public abstract class AbstractShell {
 
     /**
      * register a shell and give it an id
-     * 
+     *
      * @param nature the nature (which has the information on the interpreter we want to used)
      * @param id the shell id
      * @see #COMPLETION_SHELL
@@ -242,7 +240,7 @@ public abstract class AbstractShell {
      * @param shell the shell to register
      */
     public synchronized static void putServerShell(IPythonNature nature, int id, AbstractShell shell) {
-        synchronized(shells){
+        synchronized (shells) {
             try {
                 Map<Integer, AbstractShell> typeToShell = getTypeToShellFromId(nature.getProjectInterpreter());
                 typeToShell.put(new Integer(id), shell);
@@ -252,82 +250,85 @@ public abstract class AbstractShell {
         }
     }
 
-
-    public synchronized static AbstractShell getServerShell(IPythonNature nature, int id) throws IOException, JDTNotAvailableException, CoreException, MisconfigurationException, PythonNatureWithoutProjectException{
+    public synchronized static AbstractShell getServerShell(IPythonNature nature, int id) throws IOException,
+            JDTNotAvailableException, CoreException, MisconfigurationException, PythonNatureWithoutProjectException {
         return getServerShell(nature.getProjectInterpreter(), nature.getInterpreterType(), id);
     }
-    
+
     /**
      * @param interpreter the interpreter that should create the shell
-     * 
+     *
      * @param relatedTo identifies to which kind of interpreter the shell should be related.
      * @see org.python.pydev.core.IPythonNature#INTERPRETER_TYPE_PYTHON
      * @see org.python.pydev.core.IPythonNature#INTERPRETER_TYPE_JYTHON
-     * 
+     *
      * @param a given id for the shell
      * @see #COMPLETION_SHELL
      * @see #OTHERS_SHELL
-     * 
+     *
      * @return the shell with the given id related to some nature
-     * 
+     *
      * @throws CoreException
      * @throws IOException
-     * @throws MisconfigurationException 
+     * @throws MisconfigurationException
      */
-    private synchronized static AbstractShell getServerShell(IInterpreterInfo interpreter, int relatedTo, int id) throws IOException, JDTNotAvailableException, CoreException, MisconfigurationException {
+    private synchronized static AbstractShell getServerShell(IInterpreterInfo interpreter, int relatedTo, int id)
+            throws IOException, JDTNotAvailableException, CoreException, MisconfigurationException {
         AbstractShell pythonShell = null;
-        synchronized(shells){
-            if(DebugSettings.DEBUG_CODE_COMPLETION){
+        synchronized (shells) {
+            if (DebugSettings.DEBUG_CODE_COMPLETION) {
                 Log.toLogFile("Synchronizing on shells...", AbstractShell.class);
             }
-            if(DebugSettings.DEBUG_CODE_COMPLETION){
+            if (DebugSettings.DEBUG_CODE_COMPLETION) {
                 String flavor;
-                switch(relatedTo){
-	                case IPythonNature.INTERPRETER_TYPE_JYTHON:
-	                	flavor = "Jython";
-	                	break;
-	                case IPythonNature.INTERPRETER_TYPE_IRONPYTHON:
-	                	flavor = "IronPython";
-	                	break;
-	                default:
-	                	flavor = "Python";
-                };
-				Log.toLogFile( "Getting shell related to:"+ flavor+
-                        " id:"+id+" interpreter: "+interpreter.getExecutableOrJar(), AbstractShell.class);
+                switch (relatedTo) {
+                    case IPythonNature.INTERPRETER_TYPE_JYTHON:
+                        flavor = "Jython";
+                        break;
+                    case IPythonNature.INTERPRETER_TYPE_IRONPYTHON:
+                        flavor = "IronPython";
+                        break;
+                    default:
+                        flavor = "Python";
+                }
+                ;
+                Log.toLogFile(
+                        "Getting shell related to:" + flavor + " id:" + id + " interpreter: "
+                                + interpreter.getExecutableOrJar(), AbstractShell.class);
             }
             Map<Integer, AbstractShell> typeToShell = getTypeToShellFromId(interpreter);
-            pythonShell = (AbstractShell) typeToShell.get(new Integer(id));
-            
-            if(pythonShell == null){
-                if(DebugSettings.DEBUG_CODE_COMPLETION){
+            pythonShell = typeToShell.get(new Integer(id));
+
+            if (pythonShell == null) {
+                if (DebugSettings.DEBUG_CODE_COMPLETION) {
                     Log.toLogFile("pythonShell == null", AbstractShell.class);
                 }
-                if(relatedTo == IPythonNature.INTERPRETER_TYPE_PYTHON){
+                if (relatedTo == IPythonNature.INTERPRETER_TYPE_PYTHON) {
                     pythonShell = new PythonShell();
-                    
-                }else if(relatedTo == IPythonNature.INTERPRETER_TYPE_JYTHON){
+
+                } else if (relatedTo == IPythonNature.INTERPRETER_TYPE_JYTHON) {
                     pythonShell = new JythonShell();
-                    
-                }else if(relatedTo == IPythonNature.INTERPRETER_TYPE_IRONPYTHON){
+
+                } else if (relatedTo == IPythonNature.INTERPRETER_TYPE_IRONPYTHON) {
                     pythonShell = new IronpythonShell();
-                    
-                }else{
+
+                } else {
                     throw new RuntimeException("unknown related id");
                 }
-                if(DebugSettings.DEBUG_CODE_COMPLETION){
+                if (DebugSettings.DEBUG_CODE_COMPLETION) {
                     Log.toLogFile("pythonShell.startIt()", AbstractShell.class);
                     Log.addLogLevel();
                 }
                 pythonShell.startIt(interpreter, AbstractShell.DEFAULT_SLEEP_BETWEEN_ATTEMPTS); //first start it
-                if(DebugSettings.DEBUG_CODE_COMPLETION){
+                if (DebugSettings.DEBUG_CODE_COMPLETION) {
                     Log.remLogLevel();
                     Log.toLogFile("Finished pythonShell.startIt()", AbstractShell.class);
                 }
-                
+
                 //then make it accessible
                 typeToShell.put(new Integer(id), pythonShell);
             }
-            
+
         }
         return pythonShell;
     }
@@ -352,26 +353,26 @@ public abstract class AbstractShell {
      * Server socket (accept connections).
      */
     protected ServerSocket serverSocket;
-    private ThreadStreamReader stdReader;
-    private ThreadStreamReader errReader;
 
-    
+    protected ServerSocketChannel serverSocketChannel;
+
     /**
      * Initialize given the file that points to the python server (execute it
      * with python).
-     *  
+     *
      * @param f file pointing to the python server
-     * 
+     *
      * @throws IOException
      * @throws CoreException
      */
     protected AbstractShell(File f) throws IOException, CoreException {
-        if(finishedForGood){
-            throw new RuntimeException("Shells are already finished for good, so, it is an invalid state to try to create a new shell.");
+        if (finishedForGood) {
+            throw new RuntimeException(
+                    "Shells are already finished for good, so, it is an invalid state to try to create a new shell.");
         }
-        
+
         serverFile = f;
-        if(!serverFile.exists()){
+        if (!serverFile.exists()) {
             throw new RuntimeException("Can't find python server file");
         }
     }
@@ -381,7 +382,7 @@ public abstract class AbstractShell {
      */
     protected synchronized void sleepALittle(int t) {
         try {
-            synchronized(this){
+            synchronized (this) {
                 wait(t); //millis
             }
         } catch (InterruptedException e) {
@@ -393,31 +394,32 @@ public abstract class AbstractShell {
      * can talk with the server.
      * @throws IOException
      * @throws CoreException
-     * @throws MisconfigurationException 
-     * @throws PythonNatureWithoutProjectException 
+     * @throws MisconfigurationException
+     * @throws PythonNatureWithoutProjectException
      */
-    /*package*/ synchronized void startIt(IPythonNature nature) throws IOException, JDTNotAvailableException, CoreException, MisconfigurationException, PythonNatureWithoutProjectException {
-        synchronized(this){
+    /*package*/synchronized void startIt(IPythonNature nature) throws IOException, JDTNotAvailableException,
+            CoreException, MisconfigurationException, PythonNatureWithoutProjectException {
+        synchronized (this) {
             this.startIt(nature.getProjectInterpreter(), AbstractShell.DEFAULT_SLEEP_BETWEEN_ATTEMPTS);
         }
     }
 
-
     /**
      * This method creates the python server process and starts the sockets, so that we
      * can talk with the server.
-     * 
+     *
      * @param milisSleep: time to wait after creating the process.
      * @throws IOException is some error happens creating the sockets - the process is terminated.
-     * @throws JDTNotAvailableException 
-     * @throws CoreException 
+     * @throws JDTNotAvailableException
      * @throws CoreException
-     * @throws MisconfigurationException 
+     * @throws CoreException
+     * @throws MisconfigurationException
      */
-    protected synchronized void startIt(IInterpreterInfo interpreter, int milisSleep) throws IOException, JDTNotAvailableException, CoreException, MisconfigurationException {
+    protected synchronized void startIt(IInterpreterInfo interpreter, int milisSleep) throws IOException,
+            JDTNotAvailableException, CoreException, MisconfigurationException {
         this.shellMillis = milisSleep;
         this.shellInterpreter = interpreter;
-        if(inStart || isConnected){
+        if (inStart || isConnected) {
             //it is already in the process of starting, so, if we are in another thread, just forget about it.
             return;
         }
@@ -430,7 +432,11 @@ public abstract class AbstractShell {
 
             try {
 
-                serverSocket = new ServerSocket(0); //read in this port
+                serverSocketChannel = ServerSocketChannel.open();
+                serverSocketChannel.configureBlocking(false);
+                serverSocketChannel.bind(new InetSocketAddress(0));
+
+                serverSocket = serverSocketChannel.socket();
                 int pRead = serverSocket.getLocalPort();
                 SocketUtil.checkValidPort(pRead);
                 int pWrite = SocketUtil.findUnusedLocalPorts(1)[0];
@@ -439,88 +445,99 @@ public abstract class AbstractShell {
                     endIt(); //end the current process
                 }
 
-                String execMsg = createServerProcess(interpreter, pWrite, pRead);
-                dbg("executing " + execMsg,1);
+                ProcessCreationInfo processInfo = createServerProcess(interpreter, pWrite, pRead);
+                dbg("executed: " + processInfo.getProcessLog(), 1);
 
-                sleepALittle(200);
-                String osName = System.getProperty("os.name");
+                sleepALittle(200); //Give it some time to warmup.
                 if (process == null) {
-                    String msg = "Error creating python process - got null process(" + execMsg + ") - os:" + osName;
+                    String msg = "Error creating python process - got null process.\n" + processInfo.getProcessLog();
                     dbg(msg, 1);
                     Log.log(msg);
                     throw new CoreException(PydevPlugin.makeStatus(IStatus.ERROR, msg, new Exception(msg)));
                 }
                 try {
                     int exitVal = process.exitValue(); //should throw exception saying that it still is not terminated...
-                    String msg = "Error creating python process - exited before creating sockets - exitValue = ("+ exitVal + ")(" + execMsg + ") - os:" + osName;
+                    String msg = "Error creating python process - exited before creating sockets - exitValue = ("
+                            + exitVal + ").\n" + processInfo.getProcessLog();
                     dbg(msg, 1);
                     Log.log(msg);
                     throw new CoreException(PydevPlugin.makeStatus(IStatus.ERROR, msg, new Exception(msg)));
                 } catch (IllegalThreadStateException e2) { //this is ok
                 }
 
-                dbg("afterCreateProcess ",1);
+                dbg("afterCreateProcess ", 1);
                 //ok, process validated, so, let's get its output and store it for further use.
-                afterCreateProcess();
 
                 boolean connected = false;
-                int attempts = 0;
+                int attempt = 0;
 
-                dbg("connecting... ",1);
+                dbg("connecting... ", 1);
                 sleepALittle(milisSleep);
                 socketToWrite = null;
                 int maxAttempts = PyCodeCompletionPreferencesPage.getNumberOfConnectionAttempts();
-                
-                dbg("attempts: "+attempts,1);
-                dbg("maxAttempts: "+maxAttempts,1);
-                dbg("finishedForGood: "+finishedForGood,1);
-                
-                while (!connected && attempts < maxAttempts && !finishedForGood) {
-                    attempts += 1;
-                    dbg("connecting attept..."+attempts,1);
+
+                dbg("maxAttempts: " + maxAttempts, 1);
+                dbg("finishedForGood: " + finishedForGood, 1);
+
+                while (!connected && attempt < maxAttempts && !finishedForGood) {
+                    attempt += 1;
+                    dbg("connecting attept..." + attempt, 1);
                     try {
-                        if (socketToWrite == null || socketToWrite.isConnected() == false) {
-                            socketToWrite = new Socket(LocalHost.getLocalHost(), pWrite); //we should write in this port
+                        if (socketToWrite == null) {
+                            socketToWrite = new Socket((String) null, pWrite); //we should write in this port
+                            socketToWrite.connect(new InetSocketAddress(0), 5000);
                         }
 
-                        if (socketToWrite != null || socketToWrite.isConnected()) {
-                            serverSocket.setSoTimeout(milisSleep * 2); //let's give it a higher timeout, as we're already half - connected
+                        if (socketToWrite != null) {
                             try {
-                                dbg("serverSocket.accept()! ",1);
-                                socketToRead = serverSocket.accept();
-                                dbg("socketToRead.setSoTimeout(5000) ",1);
-                                socketToRead.setSoTimeout(5000);
-                                connected = true;
-                                dbg("connected! ",1);
+                                dbg("serverSocket.accept()! ", 1);
+                                long initial = System.currentTimeMillis();
+                                SocketChannel accept = null;
+                                while (accept == null && System.currentTimeMillis() - initial < 3000) { //At most 3 seconds here as we already connected to the client
+                                    dbg("serverSocketChannel.accept(): waiting for python client to connect back to the eclipse java vm",
+                                            1);
+                                    accept = serverSocketChannel.accept();
+                                    if (accept == null) {
+                                        sleepALittle(800);
+                                    }
+                                }
+                                if (accept != null) {
+                                    socketToRead = accept.socket();
+                                    dbg("socketToRead.setSoTimeout(5000) ", 1);
+                                    socketToRead.setSoTimeout(5000); //let's give it a higher timeout, as we're already half - connected
+                                    connected = true;
+                                    dbg("connected! ", 1);
+                                } else {
+                                    String msg = "We were able to connect to the python client but it wasn't able to connect back to the eclipse java vm";
+                                    dbg(msg, 1);
+                                    Log.log(msg);
+                                }
                             } catch (SocketTimeoutException e) {
                                 //that's ok, timeout for waiting connection expired, let's check it again in the next loop
+                                dbg("SocketTimeoutException! ", 1);
                             }
                         }
                     } catch (IOException e1) {
-                        if (socketToWrite != null && socketToWrite.isConnected() == true) {
-                            String msg = "Attempt: " + attempts + " of " + maxAttempts + 
-                            " failed, trying again...(socketToWrite already binded)";
-                            
-                            dbg(msg,1);
-                            Log.log(IStatus.ERROR, msg, e1);
-                        }
-                        if (socketToWrite != null && !socketToWrite.isConnected() == true) {
-                            String msg = "Attempt: " + attempts + " of " + maxAttempts +
-                            " failed, trying again...(socketToWrite still not binded)";
-                            
-                            dbg(msg,1);
-                            Log.log(IStatus.ERROR, msg, e1);
-                        }
+                        dbg("IOException! ", 1);
                     }
 
                     //if not connected, let's sleep a little for another attempt
                     if (!connected) {
-                        sleepALittle(milisSleep);
+                        if (attempt > 1) {
+                            //Don't log first failed attempt.
+                            String msg = "Attempt: " + attempt + " of " + maxAttempts
+                                    + " failed, trying again...(socketToWrite connected: "
+                                    + (socketToWrite == null ? "still null" : socketToWrite.isConnected()) + ")";
+
+                            dbg(msg, 1);
+                            Log.log(msg);
+                            sleepALittle(milisSleep);
+                        }
                     }
                 }
 
                 if (!connected && !finishedForGood) {
-                    dbg("NOT connected ",1);
+                    dbg("NOT connected ", 1);
 
                     //what, after all this trouble we are still not connected????!?!?!?!
                     //let's communicate this to the user...
@@ -532,11 +549,11 @@ public abstract class AbstractShell {
                         isAlive = " - the process in still alive (killing it now)- ";
                         process.destroy();
                     }
+                    closeConn(); //make sure all connections are closed as we're not connected
 
-                    String output = getProcessOutput();
-                    String msg = "Error connecting to python process (" + execMsg + ") " +
-                    isAlive + " the output of the process is: " + output;
-                    
+                    String msg = "Error connecting to python process (most likely cause for failure is a firewall blocking communication or a misconfigured network).\n"
+                            + isAlive + "\n" + processInfo.getProcessLog();
+
                     RuntimeException exception = new RuntimeException(msg);
                     dbg(msg, 1);
                     Log.log(exception);
@@ -554,83 +571,50 @@ public abstract class AbstractShell {
         } finally {
             this.inStart = false;
         }
-        
-        
+
         //if it got here, everything went ok (otherwise we would have gotten an exception).
         isConnected = true;
     }
 
-
-
-    private synchronized void afterCreateProcess() {
-        try {
-            process.getOutputStream().close(); //we won't write to it...
-        } catch (IOException e2) {
-        }
-        
-        //will print things if we are debugging or just get it (and do nothing except emptying it)
-        stdReader = new ThreadStreamReader(process.getInputStream());
-        errReader = new ThreadStreamReader(process.getErrorStream());
-        
-        stdReader.setName("Shell reader (stdout)");
-        errReader.setName("Shell reader (stderr)");
-        
-        stdReader.start();
-        errReader.start();
-    }
-
-
-    /**
-     * @return the current output of the process
-     */
-    protected synchronized String getProcessOutput(){
-        try {
-            String output = "";
-            output += "Std output:\n" + stdReader.getContents();
-            output += "\n\nErr output:\n" + errReader.getContents();
-            return output;
-        } catch (Exception e) {
-            return "Unable to get output";
-        }
-    }
-
-
     /**
      * @param pWrite the port where we should write
      * @param pRead the port where we should read
-     * @return the command line that was used to create the process 
-     * 
+     * @return a tuple with:
+     *  - command line used to execute process
+     *  - environment used to execute process
+     *
      * @throws IOException
-     * @throws JDTNotAvailableException 
-     * @throws MisconfigurationException 
+     * @throws JDTNotAvailableException
+     * @throws MisconfigurationException
      */
-    protected abstract String createServerProcess(IInterpreterInfo interpreter, int pWrite, int pRead) throws IOException, JDTNotAvailableException, MisconfigurationException;
+    protected abstract ProcessCreationInfo createServerProcess(IInterpreterInfo interpreter, int pWrite, int pRead)
+            throws IOException, JDTNotAvailableException, MisconfigurationException;
 
     protected synchronized void communicateWork(String desc, IProgressMonitor monitor) {
-        if(monitor != null){
+        if (monitor != null) {
             monitor.setTaskName(desc);
             monitor.worked(1);
         }
     }
 
     public synchronized void clearSocket() throws IOException {
-    	long maxTime = System.currentTimeMillis()+(1000*50); //50 secs timeout
-    	
-        while(System.currentTimeMillis() < maxTime){ //clear until we get no message and timeout is not elapsed
+        long maxTime = System.currentTimeMillis() + (1000 * 50); //50 secs timeout
+
+        while (System.currentTimeMillis() < maxTime) { //clear until we get no message and timeout is not elapsed
             byte[] b = new byte[AbstractShell.BUFFER_SIZE];
-            if(this.socketToRead != null){
+            if (this.socketToRead != null) {
                 this.socketToRead.getInputStream().read(b);
-        
+
                 String s = new String(b);
-                s = s.replaceAll((char)0+"",""); //python sends this char as payload.
-                if(s.length() == 0){
+                s = s.replaceAll((char) 0 + "", ""); //python sends this char as payload.
+                if (s.length() == 0) {
                     return;
                 }
-            }else{
-            	//if we have no socket, simply return (nothing to clear)
-            	return;
+            } else {
+                //if we have no socket, simply return (nothing to clear)
+                return;
             }
-        }        
+        }
     }
 
     /**
@@ -639,22 +623,27 @@ public abstract class AbstractShell {
      * @throws IOException
      */
     public synchronized String read(IProgressMonitor monitor) throws IOException {
-        if(finishedForGood){
-            throw new RuntimeException("Shells are already finished for good, so, it is an invalid state to try to read from it.");
+        if (finishedForGood) {
+            throw new RuntimeException(
+                    "Shells are already finished for good, so, it is an invalid state to try to read from it.");
         }
-        if(inStart){
-            throw new RuntimeException("The shell is still not completely started, so, it is an invalid state to try to read from it..");
+        if (inStart) {
+            throw new RuntimeException(
+                    "The shell is still not completely started, so, it is an invalid state to try to read from it..");
         }
-        if(!isConnected){
-            throw new RuntimeException("The shell is still not connected, so, it is an invalid state to try to read from it..");
+        if (!isConnected) {
+            throw new RuntimeException(
+                    "The shell is still not connected, so, it is an invalid state to try to read from it..");
         }
-        if(isInRead){
-            throw new RuntimeException("The shell is already in read mode, so, it is an invalid state to try to read from it..");
+        if (isInRead) {
+            throw new RuntimeException(
+                    "The shell is already in read mode, so, it is an invalid state to try to read from it..");
         }
-        if(isInWrite){
-            throw new RuntimeException("The shell is already in write mode, so, it is an invalid state to try to read from it..");
+        if (isInWrite) {
+            throw new RuntimeException(
+                    "The shell is already in write mode, so, it is an invalid state to try to read from it..");
         }
-        
+
         isInRead = true;
 
         try {
@@ -721,7 +710,7 @@ public abstract class AbstractShell {
                 Log.log(IStatus.ERROR, ("ERROR WITH STRING:" + ret), e);
                 return "";
             }
-        } finally{
+        } finally {
             isInRead = false;
         }
     }
@@ -741,22 +730,27 @@ public abstract class AbstractShell {
      * @throws IOException
      */
     public synchronized void write(String str) throws IOException {
-        if(finishedForGood){
-            throw new RuntimeException("Shells are already finished for good, so, it is an invalid state to try to write to it.");
+        if (finishedForGood) {
+            throw new RuntimeException(
+                    "Shells are already finished for good, so, it is an invalid state to try to write to it.");
         }
-        if(inStart){
-            throw new RuntimeException("The shell is still not completely started, so, it is an invalid state to try to write to it.");
+        if (inStart) {
+            throw new RuntimeException(
+                    "The shell is still not completely started, so, it is an invalid state to try to write to it.");
         }
-        if(!isConnected){
-            throw new RuntimeException("The shell is still not connected, so, it is an invalid state to try to write to it.");
+        if (!isConnected) {
+            throw new RuntimeException(
+                    "The shell is still not connected, so, it is an invalid state to try to write to it.");
         }
-        if(isInRead){
-            throw new RuntimeException("The shell is already in read mode, so, it is an invalid state to try to write to it.");
+        if (isInRead) {
+            throw new RuntimeException(
+                    "The shell is already in read mode, so, it is an invalid state to try to write to it.");
         }
-        if(isInWrite){
-            throw new RuntimeException("The shell is already in write mode, so, it is an invalid state to try to write to it.");
+        if (isInWrite) {
+            throw new RuntimeException(
+                    "The shell is already in write mode, so, it is an invalid state to try to write to it.");
         }
-        
+
         isInWrite = true;
 
         //dbg("WRITING:"+str);
@@ -773,11 +767,11 @@ public abstract class AbstractShell {
      * @throws IOException
      */
     private synchronized void closeConn() throws IOException {
-//let's not send a message... just close the sockets and kill it
-//        try {
-//            write("@@KILL_SERVER_END@@");
-//        } catch (Exception e) {
-//        }
+        //let's not send a message... just close the sockets and kill it
+        //        try {
+        //            write("@@KILL_SERVER_END@@");
+        //        } catch (Exception e) {
+        //        }
         try {
             if (socketToWrite != null) {
                 socketToWrite.close();
@@ -785,7 +779,7 @@ public abstract class AbstractShell {
         } catch (Exception e) {
         }
         socketToWrite = null;
-        
+
         try {
             if (socketToRead != null) {
                 socketToRead.close();
@@ -793,7 +787,15 @@ public abstract class AbstractShell {
         } catch (Exception e) {
         }
         socketToRead = null;
-        
+
+        try {
+            if (serverSocketChannel != null) {
+                serverSocketChannel.close();
+            }
+        } catch (Exception e) {
+        }
+        serverSocketChannel = null;
+
         try {
             if (serverSocket != null) {
                 serverSocket.close();
@@ -811,13 +813,13 @@ public abstract class AbstractShell {
         socketToRead = null;
         socketToWrite = null;
         serverSocket = null;
-        if (process!= null){
+        serverSocketChannel = null;
+        if (process != null) {
             process.destroy();
             process = null;
         }
     }
 
-    
     /**
      * Kill our sub-process.
      * @throws IOException
@@ -831,20 +833,20 @@ public abstract class AbstractShell {
 
         //set that we are still not connected
         isConnected = false;
-        
-        if (process!= null){
+
+        if (process != null) {
             process.destroy();
             process = null;
         }
     }
 
-
     /**
      * @return list with tuples: new String[]{token, description}
      * @throws CoreException
      */
-    public synchronized Tuple<String, List<String[]>> getImportCompletions(String str, List<String> pythonpath) throws CoreException {
-        while(isInOperation){
+    public synchronized Tuple<String, List<String[]>> getImportCompletions(String str, List<String> pythonpath)
+            throws CoreException {
+        while (isInOperation) {
             sleepALittle(25);
         }
         isInOperation = true;
@@ -867,24 +869,24 @@ public abstract class AbstractShell {
      * @throws CoreException
      */
     public synchronized void changePythonPath(List<String> pythonpath) throws CoreException {
-        while(isInOperation){
+        while (isInOperation) {
             sleepALittle(25);
         }
         isInOperation = true;
         try {
-            internalChangePythonPath(pythonpath); 
+            internalChangePythonPath(pythonpath);
         } finally {
             isInOperation = false;
-        } 
+        }
     }
-
 
     /**
      * @param pythonpath
      */
     private void internalChangePythonPath(List<String> pythonpath) {
-        if(finishedForGood){
-            throw new RuntimeException("Shells are already finished for good, so, it is an invalid state to try to change its dir.");
+        if (finishedForGood) {
+            throw new RuntimeException(
+                    "Shells are already finished for good, so, it is an invalid state to try to change its dir.");
         }
         StringBuffer buffer = new StringBuffer();
         for (Iterator<String> iter = pythonpath.iterator(); iter.hasNext();) {
@@ -902,18 +904,18 @@ public abstract class AbstractShell {
     protected synchronized Tuple<String, List<String[]>> getTheCompletions(String str) throws CoreException {
         try {
             this.write(str);
-    
+
             return getCompletions();
         } catch (NullPointerException e) {
             //still not started...
             restartShell();
             return getInvalidCompletion();
-            
+
         } catch (Exception e) {
-            if(DebugSettings.DEBUG_CODE_COMPLETION){
+            if (DebugSettings.DEBUG_CODE_COMPLETION) {
                 Log.log(IStatus.ERROR, "ERROR getting completions.", e);
             }
-            
+
             restartShell();
             return getInvalidCompletion();
         }
@@ -921,14 +923,15 @@ public abstract class AbstractShell {
 
     /**
      * @throws CoreException
-     * 
+     *
      */
     public synchronized void restartShell() throws CoreException {
-        if(!isInRestart){// we don't want to end up in a loop here...
+        if (!isInRestart) {// we don't want to end up in a loop here...
             isInRestart = true;
             try {
                 if (finishedForGood) {
-                    throw new RuntimeException("Shells are already finished for good, so, it is an invalid state to try to restart a new shell.");
+                    throw new RuntimeException(
+                            "Shells are already finished for good, so, it is an invalid state to try to restart a new shell.");
                 }
 
                 try {
@@ -962,92 +965,89 @@ public abstract class AbstractShell {
     protected synchronized Tuple<String, List<String[]>> getCompletions() throws IOException {
         ArrayList<String[]> list = new ArrayList<String[]>();
         String read = this.read();
-		String string = read.replaceAll("\\(","").replaceAll("\\)","");
+        String string = read.replaceAll("\\(", "").replaceAll("\\)", "");
         StringTokenizer tokenizer = new StringTokenizer(string, ",");
-        
+
         //the first token is always the file for the module (no matter what)
         String file = "";
-        if(tokenizer.hasMoreTokens()){
+        if (tokenizer.hasMoreTokens()) {
             file = URLDecoder.decode(tokenizer.nextToken(), ENCODING_UTF_8);
-            while(tokenizer.hasMoreTokens()){
+            while (tokenizer.hasMoreTokens()) {
                 String token = URLDecoder.decode(tokenizer.nextToken(), ENCODING_UTF_8);
-                if(!tokenizer.hasMoreTokens()){
+                if (!tokenizer.hasMoreTokens()) {
                     return new Tuple<String, List<String[]>>(file, list);
                 }
                 String description = URLDecoder.decode(tokenizer.nextToken(), ENCODING_UTF_8);
-                
+
                 String args = "";
-                if(tokenizer.hasMoreTokens()){
+                if (tokenizer.hasMoreTokens()) {
                     args = URLDecoder.decode(tokenizer.nextToken(), ENCODING_UTF_8);
                 }
-                
+
                 String type = TYPE_UNKNOWN_STR;
-                if(tokenizer.hasMoreTokens()){
+                if (tokenizer.hasMoreTokens()) {
                     type = URLDecoder.decode(tokenizer.nextToken(), ENCODING_UTF_8);
                 }
-      
+
                 //dbg(token);
                 //dbg(description);
-    
-                if(!token.equals("ERROR:")){
-                    list.add(new String[]{token, description, args, type});
-                }else{
-                	if(DebugSettings.DEBUG_CODE_COMPLETION){
-                		Log.addLogLevel();
-                		try {
-							Log.toLogFile("Code completion shell error:", AbstractShell.class);
-							Log.toLogFile(token, AbstractShell.class);
-							Log.toLogFile(description, AbstractShell.class);
-							Log.toLogFile(args, AbstractShell.class);
-							Log.toLogFile(type, AbstractShell.class);
-						} finally {
-							Log.remLogLevel();
-						}
-                	}
+
+                if (!token.equals("ERROR:")) {
+                    list.add(new String[] { token, description, args, type });
+                } else {
+                    if (DebugSettings.DEBUG_CODE_COMPLETION) {
+                        Log.addLogLevel();
+                        try {
+                            Log.toLogFile("Code completion shell error:", AbstractShell.class);
+                            Log.toLogFile(token, AbstractShell.class);
+                            Log.toLogFile(description, AbstractShell.class);
+                            Log.toLogFile(args, AbstractShell.class);
+                            Log.toLogFile(type, AbstractShell.class);
+                        } finally {
+                            Log.remLogLevel();
+                        }
+                    }
                 }
-                
+
             }
         }
         return new Tuple<String, List<String[]>>(file, list);
     }
-
 
     /**
      * @param moduleName the name of the module where the token is defined
      * @param token the token we are looking for
      * @return the file where the token was defined, its line and its column (or null if it was not found)
      */
-    public synchronized Tuple<String[],int []> getLineCol(String moduleName, String token, List<String> pythonpath) {
-        while(isInOperation){
+    public synchronized Tuple<String[], int[]> getLineCol(String moduleName, String token, List<String> pythonpath) {
+        while (isInOperation) {
             sleepALittle(25);
         }
         isInOperation = true;
         try {
-            String str = moduleName+"."+token;
+            String str = moduleName + "." + token;
             internalChangePythonPath(pythonpath);
 
             try {
                 str = URLEncoder.encode(str, ENCODING_UTF_8);
-                Tuple<String,List<String[]>> theCompletions = this.getTheCompletions("@@SEARCH" + str + "\nEND@@");
-                
+                Tuple<String, List<String[]>> theCompletions = this.getTheCompletions("@@SEARCH" + str + "\nEND@@");
+
                 List<String[]> def = theCompletions.o2;
-                if(def.size() == 0){
+                if (def.size() == 0) {
                     return null;
                 }
 
                 String[] comps = def.get(0);
-                if(comps.length == 0){
+                if (comps.length == 0) {
                     return null;
                 }
-                    
+
                 int line = Integer.parseInt(comps[0]);
                 int col = Integer.parseInt(comps[1]);
-                
+
                 String foundAs = comps[2];
-                return new Tuple<String[], int[]>(
-                        new String[]{theCompletions.o1, foundAs}, 
-                        new int[]{line, col});
-                
+                return new Tuple<String[], int[]>(new String[] { theCompletions.o1, foundAs }, new int[] { line, col });
+
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -1055,6 +1055,5 @@ public abstract class AbstractShell {
             isInOperation = false;
         }
     }
-
 
 }

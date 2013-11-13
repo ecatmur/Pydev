@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -22,6 +22,7 @@ import org.eclipse.jface.text.contentassist.IContextInformationValidator;
 import org.python.pydev.core.docutils.ParsingUtils;
 import org.python.pydev.core.docutils.SyntaxErrorException;
 import org.python.pydev.core.log.Log;
+
 
 /**
  * Based on JavaParameterListValidator
@@ -135,86 +136,86 @@ public class PyContextInformationValidator implements IContextInformationValidat
         while (offset < end) {
             char curr = document.getChar(offset++);
             switch (curr) {
-            case '#':
-                if (offset < end) {
-                    // '#' comment: nothing to do anymore on this line
-                    offset = end;
-                }
-                break;
-            case '"':
-            case '\'':
-                int eaten = parsingUtils.eatLiterals(null, offset - 1) + 1;
-                if (eaten > offset) {
-                    offset = eaten;
-                }
-                break;
-            case '[':
-                if (considerNesting) {
-                    if (nestingMode == BRACKET || nestingMode == NONE) {
-                        nestingMode = BRACKET;
-                        nestingLevel++;
+                case '#':
+                    if (offset < end) {
+                        // '#' comment: nothing to do anymore on this line
+                        offset = end;
                     }
                     break;
-                }
-            case ']':
-                if (considerNesting) {
-                    if (nestingMode == BRACKET)
-                        if (--nestingLevel == 0)
-                            nestingMode = NONE;
-                    break;
-                }
-            case '(':
-                if (considerNesting) {
-                    if (nestingMode == ANGLE) {
-                        // generics heuristic failed
-                        nestingMode = PAREN;
-                        nestingLevel = 1;
-                    }
-                    if (nestingMode == PAREN || nestingMode == NONE) {
-                        nestingMode = PAREN;
-                        nestingLevel++;
+                case '"':
+                case '\'':
+                    int eaten = parsingUtils.eatLiterals(null, offset - 1) + 1;
+                    if (eaten > offset) {
+                        offset = eaten;
                     }
                     break;
-                }
-            case ')':
-                if (considerNesting) {
-                    if (nestingMode == PAREN)
-                        if (--nestingLevel == 0)
-                            nestingMode = NONE;
-                    break;
-                }
-            case '{':
-                if (considerNesting) {
-                    if (nestingMode == ANGLE) {
-                        // generics heuristic failed
-                        nestingMode = BRACE;
-                        nestingLevel = 1;
+                case '[':
+                    if (considerNesting) {
+                        if (nestingMode == BRACKET || nestingMode == NONE) {
+                            nestingMode = BRACKET;
+                            nestingLevel++;
+                        }
+                        break;
                     }
-                    if (nestingMode == BRACE || nestingMode == NONE) {
-                        nestingMode = BRACE;
-                        nestingLevel++;
+                case ']':
+                    if (considerNesting) {
+                        if (nestingMode == BRACKET)
+                            if (--nestingLevel == 0)
+                                nestingMode = NONE;
+                        break;
                     }
-                    break;
-                }
-            case '}':
-                if (considerNesting) {
-                    if (nestingMode == BRACE)
-                        if (--nestingLevel == 0)
-                            nestingMode = NONE;
-                    break;
-                }
+                case '(':
+                    if (considerNesting) {
+                        if (nestingMode == ANGLE) {
+                            // generics heuristic failed
+                            nestingMode = PAREN;
+                            nestingLevel = 1;
+                        }
+                        if (nestingMode == PAREN || nestingMode == NONE) {
+                            nestingMode = PAREN;
+                            nestingLevel++;
+                        }
+                        break;
+                    }
+                case ')':
+                    if (considerNesting) {
+                        if (nestingMode == PAREN)
+                            if (--nestingLevel == 0)
+                                nestingMode = NONE;
+                        break;
+                    }
+                case '{':
+                    if (considerNesting) {
+                        if (nestingMode == ANGLE) {
+                            // generics heuristic failed
+                            nestingMode = BRACE;
+                            nestingLevel = 1;
+                        }
+                        if (nestingMode == BRACE || nestingMode == NONE) {
+                            nestingMode = BRACE;
+                            nestingLevel++;
+                        }
+                        break;
+                    }
+                case '}':
+                    if (considerNesting) {
+                        if (nestingMode == BRACE)
+                            if (--nestingLevel == 0)
+                                nestingMode = NONE;
+                        break;
+                    }
 
-            default:
-                if (nestingLevel != 0)
-                    continue;
+                default:
+                    if (nestingLevel != 0)
+                        continue;
 
-                if (increments.indexOf(curr) >= 0) {
-                    ++charCount;
-                }
+                    if (increments.indexOf(curr) >= 0) {
+                        ++charCount;
+                    }
 
-                if (decrements.indexOf(curr) >= 0) {
-                    --charCount;
-                }
+                    if (decrements.indexOf(curr) >= 0) {
+                        --charCount;
+                    }
             }
         }
 

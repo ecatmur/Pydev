@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -12,19 +12,19 @@
 package org.python.pydev.editor.codecompletion.revisited.visitors;
 
 import org.python.pydev.core.ILocalScope;
-import org.python.pydev.core.structure.FastStack;
 import org.python.pydev.parser.jython.SimpleNode;
 import org.python.pydev.parser.jython.ast.ClassDef;
 import org.python.pydev.parser.jython.ast.FunctionDef;
 import org.python.pydev.parser.jython.ast.If;
 import org.python.pydev.parser.jython.ast.Module;
 import org.python.pydev.parser.visitors.NodeUtils;
+import org.python.pydev.shared_core.structure.FastStack;
 
 /**
  * @author Fabio Zadrozny
  */
 public class FindScopeVisitor extends AbstractVisitor {
-    
+
     /**
      * Stack of classes / methods representing the scope.
      */
@@ -34,17 +34,17 @@ public class FindScopeVisitor extends AbstractVisitor {
      * This is the scope.
      */
     public ILocalScope scope = new LocalScope(new FastStack<SimpleNode>(20));
-    
+
     /**
      * Variable to mark if we found scope.
      */
     protected boolean found = false;
-    
+
     /**
      * line to find
      */
     private int line;
-    
+
     /**
      * column to find
      */
@@ -53,19 +53,19 @@ public class FindScopeVisitor extends AbstractVisitor {
     /**
      * Only for subclasses
      */
-    protected FindScopeVisitor(){
-        
+    protected FindScopeVisitor() {
+
     }
-    
+
     /**
      * Constructor
      * 
      * @param line in ast coords (starts at 1)
      * @param col in ast coords (starts at 1)
      */
-    public FindScopeVisitor(int line, int col){
-       this.line = line;
-       this.col = col;
+    public FindScopeVisitor(int line, int col) {
+        this.line = line;
+        this.col = col;
     }
 
     /**
@@ -73,17 +73,17 @@ public class FindScopeVisitor extends AbstractVisitor {
      */
     protected Object unhandled_node(SimpleNode node) throws Exception {
         //the line passed in starts at 1 and the lines for the visitor nodes start at 0
-        if(! found && !(node instanceof Module)){
-            if(line <= node.beginLine ){
+        if (!found && !(node instanceof Module)) {
+            if (line <= node.beginLine) {
                 //scope is locked at this time.
                 found = true;
                 int original = scope.getIfMainLine();
                 scope = new LocalScope((FastStack<SimpleNode>) this.stackScope.createCopy());
                 scope.setIfMainLine(original);
             }
-        }else{
-            if(scope.getScopeEndLine() == -1 && line < node.beginLine && col >= node.beginColumn){
-                scope.setScopeEndLine(node.beginLine); 
+        } else {
+            if (scope.getScopeEndLine() == -1 && line < node.beginLine && col >= node.beginColumn) {
+                scope.setScopeEndLine(node.beginLine);
             }
         }
         return node;
@@ -95,7 +95,7 @@ public class FindScopeVisitor extends AbstractVisitor {
     public void traverse(SimpleNode node) throws Exception {
         node.traverse(this);
     }
-    
+
     /**
      * @see org.python.pydev.parser.jython.ast.VisitorBase#visitIf(org.python.pydev.parser.jython.ast.If)
      */
@@ -109,29 +109,28 @@ public class FindScopeVisitor extends AbstractVisitor {
      */
     protected void checkIfMainNode(If node) {
         boolean isIfMainNode = NodeUtils.isIfMAinNode(node);
-        if(isIfMainNode){
+        if (isIfMainNode) {
             scope.setIfMainLine(node.beginLine);
         }
     }
 
-    
     /**
      * @see org.python.pydev.parser.jython.ast.VisitorBase#visitClassDef(org.python.pydev.parser.jython.ast.ClassDef)
      */
     public Object visitClassDef(ClassDef node) throws Exception {
-        if(!found){
+        if (!found) {
             stackScope.push(node);
             node.traverse(this);
             stackScope.pop();
         }
         return null;
     }
-    
+
     /**
      * @see org.python.pydev.parser.jython.ast.VisitorBase#visitFunctionDef(org.python.pydev.parser.jython.ast.FunctionDef)
      */
     public Object visitFunctionDef(FunctionDef node) throws Exception {
-        if(!found){
+        if (!found) {
             stackScope.push(node);
             node.traverse(this);
             stackScope.pop();

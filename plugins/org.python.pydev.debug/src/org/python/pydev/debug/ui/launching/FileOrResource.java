@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -41,7 +41,7 @@ public class FileOrResource {
      */
     public static FileOrResource[] createArray(IResource[] array) {
         FileOrResource[] ret = new FileOrResource[array.length];
-        for (int i=0;i<array.length;i++) {
+        for (int i = 0; i < array.length; i++) {
             ret[i] = new FileOrResource(array[i]);
         }
         return ret;
@@ -53,7 +53,7 @@ public class FileOrResource {
      */
     public static IResource[] createIResourceArray(FileOrResource[] array) {
         IResource[] ret = new IResource[array.length];
-        for (int i=0;i<array.length;i++) {
+        for (int i = 0; i < array.length; i++) {
             ret[i] = array[i].resource;
         }
         return ret;

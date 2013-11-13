@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -111,7 +111,7 @@ public abstract class WorkspaceAction extends SelectionListenerAction {
      * @param monitor a progress monitor
      * @return The result of the execution
      */
-    final IStatus execute(List resources, IProgressMonitor monitor) {
+    final IStatus execute(List<IResource> resources, IProgressMonitor monitor) {
         MultiStatus errors = null;
         //1FTIMQN: ITPCORE:WIN - clients required to do too much iteration work
         if (shouldPerformResourcePruning()) {
@@ -124,14 +124,13 @@ public abstract class WorkspaceAction extends SelectionListenerAction {
         // call setTaskName as its the only was to assure the task name is
         // set in the monitor (see bug 31824)
         monitor.setTaskName(getOperationMessage());
-        Iterator resourcesEnum = resources.iterator();
+        Iterator<IResource> resourcesEnum = resources.iterator();
         try {
             while (resourcesEnum.hasNext()) {
-                IResource resource = (IResource) resourcesEnum.next();
+                IResource resource = resourcesEnum.next();
                 try {
                     // 1FV0B3Y: ITPUI:ALL - sub progress monitors granularity issues
-                    invokeOperation(resource, new SubProgressMonitor(monitor,
-                            1000));
+                    invokeOperation(resource, new SubProgressMonitor(monitor, 1000));
                 } catch (CoreException e) {
                     errors = recordError(errors, e);
                 }
@@ -219,8 +218,7 @@ public abstract class WorkspaceAction extends SelectionListenerAction {
      * 
      * @since 3.1
      */
-    protected abstract void invokeOperation(IResource resource, IProgressMonitor monitor)
-            throws CoreException;
+    protected abstract void invokeOperation(IResource resource, IProgressMonitor monitor) throws CoreException;
 
     /**
      * Returns whether the given resource is a descendent of any of the resources
@@ -231,11 +229,9 @@ public abstract class WorkspaceAction extends SelectionListenerAction {
      * @return <code>true</code> if <code>child</code> is a descendent of any of the
      *   elements of <code>resources</code>
      */
-    boolean isDescendent(List resources, IResource child) {
+    boolean isDescendent(List<IResource> resources, IResource child) {
         IResource parent = child.getParent();
-        return parent != null
-                && (resources.contains(parent) || isDescendent(resources,
-                        parent));
+        return parent != null && (resources.contains(parent) || isDescendent(resources, parent));
     }
 
     /**
@@ -248,12 +244,11 @@ public abstract class WorkspaceAction extends SelectionListenerAction {
      *      after pruning. 
      * @see #shouldPerformResourcePruning
      */
-    @SuppressWarnings("unchecked")
-    List pruneResources(List resourceCollection) {
-        List prunedList = new ArrayList(resourceCollection);
-        Iterator elementsEnum = prunedList.iterator();
+    List<IResource> pruneResources(List<IResource> resourceCollection) {
+        List<IResource> prunedList = new ArrayList<IResource>(resourceCollection);
+        Iterator<IResource> elementsEnum = prunedList.iterator();
         while (elementsEnum.hasNext()) {
-            IResource currentResource = (IResource) elementsEnum.next();
+            IResource currentResource = elementsEnum.next();
             if (isDescendent(prunedList, currentResource)) {
                 elementsEnum.remove(); //Removes currentResource
             }
@@ -269,8 +264,7 @@ public abstract class WorkspaceAction extends SelectionListenerAction {
      */
     MultiStatus recordError(MultiStatus errors, CoreException error) {
         if (errors == null) {
-            errors = new MultiStatus(IDEWorkbenchPlugin.IDE_WORKBENCH,
-                    IStatus.ERROR, getProblemsMessage(), null);
+            errors = new MultiStatus(IDEWorkbenchPlugin.IDE_WORKBENCH, IStatus.ERROR, getProblemsMessage(), null);
         }
         errors.merge(error.getStatus());
         return errors;
@@ -300,9 +294,9 @@ public abstract class WorkspaceAction extends SelectionListenerAction {
             return;
         } catch (InvocationTargetException e) {
             // we catch CoreException in execute(), but unexpected runtime exceptions or errors may still occur
-            String msg = NLS.bind(IDEWorkbenchMessages.WorkspaceAction_logTitle, getClass().getName(), e.getTargetException());
-            IDEWorkbenchPlugin.log(msg, StatusUtil.newStatus(IStatus.ERROR,
-                    msg, e.getTargetException()));
+            String msg = NLS.bind(IDEWorkbenchMessages.WorkspaceAction_logTitle, getClass().getName(),
+                    e.getTargetException());
+            IDEWorkbenchPlugin.log(msg, StatusUtil.newStatus(IStatus.ERROR, msg, e.getTargetException()));
             displayError(e.getTargetException().getMessage());
         }
         // If errors occurred, open an Error dialog & build a multi status error for it
@@ -343,8 +337,8 @@ public abstract class WorkspaceAction extends SelectionListenerAction {
         if (!super.updateSelection(selection) || selection.isEmpty()) {
             return false;
         }
-        for (Iterator i = getSelectedResources().iterator(); i.hasNext();) {
-            IResource r = (IResource) i.next();
+        for (Iterator<IResource> i = getSelectedResources().iterator(); i.hasNext();) {
+            IResource r = i.next();
             if (!r.isAccessible()) {
                 return false;
             }
@@ -360,8 +354,8 @@ public abstract class WorkspaceAction extends SelectionListenerAction {
      *
      * @return list of resource elements (element type: <code>IResource</code>)
      */
-    protected List getActionResources() {
-        return getSelectedResources();
+    protected List<IResource> getActionResources() {
+        return (List<IResource>) getSelectedResources();
     }
 
     /**
@@ -371,9 +365,9 @@ public abstract class WorkspaceAction extends SelectionListenerAction {
      * <code>null</code> if there isn't one.
      */
     public void runInBackground(ISchedulingRule rule) {
-        runInBackground(rule, (Object []) null);
+        runInBackground(rule, (Object[]) null);
     }
- 
+
     /**
      * Run the action in the background rather than with the
      * progress dialog.
@@ -386,12 +380,12 @@ public abstract class WorkspaceAction extends SelectionListenerAction {
      */
     public void runInBackground(ISchedulingRule rule, Object jobFamily) {
         if (jobFamily == null) {
-            runInBackground(rule, (Object []) null);
+            runInBackground(rule, (Object[]) null);
         } else {
-            runInBackground(rule, new Object[] {jobFamily});
+            runInBackground(rule, new Object[] { jobFamily });
         }
     }
-    
+
     /**
      * Run the action in the background rather than with the
      * progress dialog.
@@ -402,12 +396,11 @@ public abstract class WorkspaceAction extends SelectionListenerAction {
      * 
      * @since 3.1
      */
-    @SuppressWarnings("unchecked")
-    public void runInBackground(ISchedulingRule rule, final Object [] jobFamilies) {
+    public void runInBackground(ISchedulingRule rule, final Object[] jobFamilies) {
         //obtain a copy of the selected resources before the job is forked
-        final List resources = new ArrayList(getActionResources());
+        final List<IResource> resources = new ArrayList<IResource>(getActionResources());
         Job job = new WorkspaceJob(removeMnemonics(getText())) {
-            
+
             /* (non-Javadoc)
              * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
              */
@@ -422,7 +415,7 @@ public abstract class WorkspaceAction extends SelectionListenerAction {
                 }
                 return false;
             }
-            
+
             /* (non-Javadoc)
              * @see org.eclipse.core.resources.WorkspaceJob#runInWorkspace(org.eclipse.core.runtime.IProgressMonitor)
              */

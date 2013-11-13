@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -25,23 +25,23 @@ public class ChooseInterpreterManager {
      * 
      * TODO: Instead of choosing always python as default if both are available, ask the user (and save that info).
      */
-    public static IInterpreterManager chooseInterpreterManager(){
+    public static IInterpreterManager chooseInterpreterManager() {
         IInterpreterManager manager = PydevPlugin.getPythonInterpreterManager();
-        if(manager.isConfigured()){
+        if (manager.isConfigured()) {
             return manager;
         }
-        
+
         manager = PydevPlugin.getJythonInterpreterManager();
-        if(manager.isConfigured()){
+        if (manager.isConfigured()) {
             return manager;
         }
-        
+
         manager = PydevPlugin.getIronpythonInterpreterManager();
-        if(manager.isConfigured()){
+        if (manager.isConfigured()) {
             return manager;
         }
-        
+
         return null;
     }
-    
+
 }

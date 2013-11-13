@@ -1,3 +1,19 @@
+/******************************************************************************
+* Copyright (C) 2006-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Dennis Hunziker
+*     Ueli Kistler
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /* 
  * Copyright (C) 2006, 2007  Dennis Hunziker, Ueli Kistler
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
@@ -33,11 +49,11 @@ public class LocalVarRenameVisitor extends VisitorBase {
     }
 
     public void visit(SimpleNode node) throws Exception {
-        if(node == null){
+        if (node == null) {
             return;
         }
 
-        if(nodeHelper.isFunctionOrClassDef(node)){
+        if (nodeHelper.isFunctionOrClassDef(node)) {
             return;
         }
 
@@ -46,14 +62,14 @@ public class LocalVarRenameVisitor extends VisitorBase {
 
     @Override
     public void traverse(SimpleNode node) throws Exception {
-        if(node != null){
+        if (node != null) {
             node.traverse(this);
         }
     }
 
     @Override
     public Object visitName(Name node) throws Exception {
-        if(renameMap.containsKey(node.id)){
+        if (renameMap.containsKey(node.id)) {
             node.id = renameMap.get(node.id);
         }
         return null;
@@ -61,7 +77,7 @@ public class LocalVarRenameVisitor extends VisitorBase {
 
     @Override
     public Object visitNameTok(NameTok node) throws Exception {
-        if(renameMap.containsKey(node.id)){
+        if (renameMap.containsKey(node.id)) {
             node.id = renameMap.get(node.id);
         }
         return null;
@@ -88,7 +104,7 @@ public class LocalVarRenameVisitor extends VisitorBase {
     }
 
     private void visit(SimpleNode[] nodes) throws Exception {
-        for(SimpleNode node:nodes){
+        for (SimpleNode node : nodes) {
             visit(node);
         }
     }

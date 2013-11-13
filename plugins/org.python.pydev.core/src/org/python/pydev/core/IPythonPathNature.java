@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -17,6 +17,7 @@ import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.python.pydev.shared_core.structure.OrderedMap;
 
 /**
  * @author Fabio Zadrozny
@@ -83,6 +84,7 @@ public interface IPythonPathNature {
      * @throws CoreException
      */
     public String getProjectExternalSourcePath(boolean replaceVariables) throws CoreException;
+
     public List<String> getProjectExternalSourcePathAsList(boolean replaceVariables) throws CoreException;
 
     /**
@@ -92,6 +94,16 @@ public interface IPythonPathNature {
      * @throws CoreException
      */
     public Set<String> getProjectSourcePathSet(boolean replaceVariables) throws CoreException;
+
+    /**
+     * This is a method akin to getProjectSourcePathSet, but it will return an ordered map where
+     * we map the version with variables resolved to the version without variables resolved.
+     * 
+     * It should be used when doing some PYTHONPATH manipulation based on the current values, so,
+     * we can keep the values with the variables when doing some operation while being able to check
+     * for the resolved paths to check if some item should be actually added or not.
+     */
+    public OrderedMap<String, String> getProjectSourcePathResolvedToUnresolvedMap() throws CoreException;
 
     /**
      * Can be called to force the cleaning of the caches (needed when the nature is rebuilt)
@@ -117,21 +129,20 @@ public interface IPythonPathNature {
     /**
      * Same as getVariableSubstitution(true);
      */
-    public Map<String, String> getVariableSubstitution() throws CoreException, MisconfigurationException, PythonNatureWithoutProjectException;
-    
+    public Map<String, String> getVariableSubstitution() throws CoreException, MisconfigurationException,
+            PythonNatureWithoutProjectException;
+
     /**
      * @param addInterpreterInfoSubstitutions if true the substitutions in the interpreter will also be added.
      * Otherwise, only the substitutions from this nature will be returned.
      */
-    public Map<String, String> getVariableSubstitution(boolean addInterpreterInfoSubstitutions) throws CoreException, MisconfigurationException, PythonNatureWithoutProjectException;
+    public Map<String, String> getVariableSubstitution(boolean addInterpreterInfoSubstitutions) throws CoreException,
+            MisconfigurationException, PythonNatureWithoutProjectException;
 
-    
     /**
      * The nature that contains this pythonpath nature.
      * @return
      */
     public IPythonNature getNature();
 
-    
-    
 }

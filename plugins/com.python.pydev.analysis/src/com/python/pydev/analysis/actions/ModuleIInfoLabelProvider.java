@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -9,7 +9,7 @@ package com.python.pydev.analysis.actions;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.python.pydev.core.log.Log;
-import org.python.pydev.core.structure.FastStringBuffer;
+import org.python.pydev.shared_core.string.FastStringBuffer;
 
 import com.python.pydev.analysis.AnalysisPlugin;
 import com.python.pydev.analysis.additionalinfo.AdditionalProjectInterpreterInfo;
@@ -57,7 +57,8 @@ public final class ModuleIInfoLabelProvider extends LabelProvider {
         int pathLen;
         if (path != null && (pathLen = path.length()) > 0) {
             int suffixLen = suffix != null ? suffix.length() + 5 : 0;
-            FastStringBuffer buf = new FastStringBuffer(info.getDeclaringModuleName(), pathLen + 5 + suffixLen).append("/").append(path);
+            FastStringBuffer buf = new FastStringBuffer(info.getDeclaringModuleName(), pathLen + 5 + suffixLen).append(
+                    "/").append(path);
             if (suffix != null) {
                 return buf.append("   (").append(suffix).append(")").toString();
             }
@@ -66,7 +67,8 @@ public final class ModuleIInfoLabelProvider extends LabelProvider {
 
         String declaringModuleName = info.getDeclaringModuleName();
         if (suffix != null) {
-            return new FastStringBuffer(declaringModuleName, suffix.length() + 6).append("   (").append(suffix).append(")").toString();
+            return new FastStringBuffer(declaringModuleName, suffix.length() + 6).append("   (").append(suffix)
+                    .append(")").toString();
         }
         return declaringModuleName;
     }

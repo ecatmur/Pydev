@@ -1,4 +1,5 @@
 package org.python.pydev.navigator.properties;
+
 /*******************************************************************************
  * Copyright (c) 2000, 2006 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -150,14 +151,14 @@ public class StringMatcherSimple {
             }
         }
 
-        ArrayList temp = new ArrayList();
+        ArrayList<String> temp = new ArrayList<String>();
 
         int pos = 0;
         StringBuffer buf = new StringBuffer();
         while (pos < patternLength) {
             char c = pattern.charAt(pos++);
             switch (c) {
-                case '\\' :
+                case '\\':
                     if (pos >= patternLength) {
                         buf.append(c);
                     } else {
@@ -172,7 +173,7 @@ public class StringMatcherSimple {
                         }
                     }
                     break;
-                case '*' :
+                case '*':
                     if (buf.length() > 0) {
                         /* new segment */
                         temp.add(buf.toString());
@@ -180,11 +181,11 @@ public class StringMatcherSimple {
                         buf.setLength(0);
                     }
                     break;
-                case '?' :
+                case '?':
                     /* append special character representing single match wildcard */
                     buf.append(SINGLE_WILD_CARD);
                     break;
-                default :
+                default:
                     buf.append(c);
             }
         }
@@ -194,7 +195,7 @@ public class StringMatcherSimple {
             temp.add(buf.toString());
             bound += buf.length();
         }
-        segments = (String[]) temp.toArray(new String[temp.size()]);
+        segments = temp.toArray(new String[temp.size()]);
     }
 
     /**

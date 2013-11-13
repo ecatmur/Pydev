@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -9,7 +9,7 @@ package org.python.pydev.ui.wizards.gettingstarted;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
-public class GettingStartedPage extends AbstractNewProjectPage{
+public class GettingStartedPage extends AbstractNewProjectPage {
 
     private Label generalInfo;
 
@@ -19,9 +19,8 @@ public class GettingStartedPage extends AbstractNewProjectPage{
 
     public void createControl(Composite parent) {
         generalInfo = new Label(parent, 0);
-        generalInfo.setText(
-                "The first step in configuring Pydev is properly configuring your interpreter.\n" +
-                "To do so, please bla, bla bla...");
+        generalInfo.setText("The first step in configuring Pydev is properly configuring your interpreter.\n"
+                + "To do so, please bla, bla bla...");
     }
 
 }

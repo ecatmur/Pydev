@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -8,7 +8,7 @@
  * @author: fabioz
  * Created: January 2004
  */
- 
+
 package org.python.pydev.editor.actions;
 
 import java.util.HashSet;
@@ -21,12 +21,10 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorActionDelegate;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
-import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
@@ -35,8 +33,9 @@ import org.eclipse.ui.texteditor.ITextEditorExtension;
 import org.eclipse.ui.texteditor.ITextEditorExtension2;
 import org.python.pydev.core.docutils.PySelection;
 import org.python.pydev.core.log.Log;
-import org.python.pydev.core.structure.FastStringBuffer;
 import org.python.pydev.editor.PyEdit;
+import org.python.pydev.shared_ui.EditorUtils;
+import org.python.pydev.shared_ui.actions.BaseAction;
 
 /**
  * @author Fabio Zadrozny
@@ -46,36 +45,14 @@ import org.python.pydev.editor.PyEdit;
  * Subclasses should implement run(IAction action) method.
  */
 public abstract class PyAction extends Action implements IEditorActionDelegate {
-	
-	protected PyAction() {
-		super();
-	}
 
-	protected PyAction(String text, int style){
-		super(text, style);
-	}
-	
-    public static Shell getShell() {
-        IWorkbenchWindow activeWorkbenchWindow = getActiveWorkbenchWindow();
-        if(activeWorkbenchWindow == null){
-            Log.log("Error. Not currently with thread access (so, there is no activeWorkbenchWindow available)");
-            return null;
-        }
-        return activeWorkbenchWindow.getShell();
+    protected PyAction() {
+        super();
     }
 
-    /**
-     * @return the active workbench window or null if it's not available.
-     */
-	public static IWorkbenchWindow getActiveWorkbenchWindow() {
-		IWorkbench workbench = PlatformUI.getWorkbench();
-		if(workbench == null){
-		    return null;
-		}
-        IWorkbenchWindow activeWorkbenchWindow = workbench.getActiveWorkbenchWindow();
-		return activeWorkbenchWindow;
-	}
-    
+    protected PyAction(String text, int style) {
+        super(text, style);
+    }
 
     // Always points to the current editor
     protected volatile IEditorPart targetEditor;
@@ -83,7 +60,7 @@ public abstract class PyAction extends Action implements IEditorActionDelegate {
     public void setEditor(IEditorPart targetEditor) {
         this.targetEditor = targetEditor;
     }
-    
+
     /**
      * This is an IEditorActionDelegate override
      */
@@ -98,10 +75,10 @@ public abstract class PyAction extends Action implements IEditorActionDelegate {
         action.setEnabled(true);
     }
 
-    public static String getDelimiter(IDocument doc){
+    public static String getDelimiter(IDocument doc) {
         return PySelection.getDelimiter(doc);
     }
-    
+
     /**
      * This function returns the text editor.
      */
@@ -109,7 +86,7 @@ public abstract class PyAction extends Action implements IEditorActionDelegate {
         if (targetEditor instanceof ITextEditor) {
             return (ITextEditor) targetEditor;
         } else {
-            throw new RuntimeException("Expecting text editor. Found:"+targetEditor.getClass().getName());
+            throw new RuntimeException("Expecting text editor. Found:" + targetEditor.getClass().getName());
         }
     }
 
@@ -120,32 +97,18 @@ public abstract class PyAction extends Action implements IEditorActionDelegate {
         if (targetEditor instanceof PyEdit) {
             return (PyEdit) targetEditor;
         } else {
-            throw new RuntimeException("Expecting PyEdit editor. Found:"+targetEditor.getClass().getName());
+            throw new RuntimeException("Expecting PyEdit editor. Found:" + targetEditor.getClass().getName());
         }
     }
-    
-    
+
     /**
      * @return true if the contents of the editor may be changed. Clients MUST call this before actually
      * modifying the editor.
      */
-	protected boolean canModifyEditor() {
-		ITextEditor editor = getTextEditor();
-		
-		if (editor instanceof ITextEditorExtension2) {
-			return ((ITextEditorExtension2) editor).isEditorInputModifiable();
-			
-		} else if (editor instanceof ITextEditorExtension) {
-			return !((ITextEditorExtension) editor).isEditorInputReadOnly();
-			
-		} else if (editor != null) {
-			return editor.isEditable();
-			
-		} 
-
-		//If we don't have the editor, let's just say it's ok (working on document).
-		return true;
-	}
+    protected boolean canModifyEditor() {
+        ITextEditor editor = getTextEditor();
+        return BaseAction.canModifyEditor(editor);
+    }
 
     /**
      * Helper for setting caret
@@ -166,8 +129,9 @@ public abstract class PyAction extends Action implements IEditorActionDelegate {
             IRegion region = doc.getLineInformationOfOffset(cursorOffset);
             int offset = region.getOffset();
             String src = doc.get(offset, region.getLength());
-            if ("".equals(src))
+            if ("".equals(src)) {
                 return;
+            }
             int i = 0;
             while (i < src.length()) {
                 if (!Character.isWhitespace(src.charAt(i))) {
@@ -182,7 +146,6 @@ public abstract class PyAction extends Action implements IEditorActionDelegate {
         }
     }
 
-
     /**
      * Returns the position of the last non whitespace char in the current line.
      * @param doc
@@ -192,8 +155,7 @@ public abstract class PyAction extends Action implements IEditorActionDelegate {
      * 
      * @throws BadLocationException
      */
-    protected int getLastCharPosition(IDocument doc, int cursorOffset)
-        throws BadLocationException {
+    protected int getLastCharPosition(IDocument doc, int cursorOffset) throws BadLocationException {
         IRegion region;
         region = doc.getLineInformationOfOffset(cursorOffset);
         int offset = region.getOffset();
@@ -201,15 +163,15 @@ public abstract class PyAction extends Action implements IEditorActionDelegate {
 
         int i = src.length();
         boolean breaked = false;
-        while (i > 0 ) {
+        while (i > 0) {
             i--;
             //we have to break if we find a character that is not a whitespace or a tab.
-            if (   Character.isWhitespace(src.charAt(i)) == false && src.charAt(i) != '\t'  ) {
+            if (Character.isWhitespace(src.charAt(i)) == false && src.charAt(i) != '\t') {
                 breaked = true;
                 break;
             }
         }
-        if (!breaked){
+        if (!breaked) {
             i--;
         }
         return (offset + i);
@@ -264,14 +226,13 @@ public abstract class PyAction extends Action implements IEditorActionDelegate {
      * Beep...humm... yeah....beep....ehehheheh
      */
     protected static void beep(Exception e) {
-        try{
+        try {
             PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getDisplay().beep();
-        }catch(IllegalStateException x){
+        } catch (Throwable x) {
             //ignore, workbench has still not been created
         }
         Log.log(e);
     }
-
 
     /**
      * 
@@ -279,7 +240,7 @@ public abstract class PyAction extends Action implements IEditorActionDelegate {
     public static String getLineWithoutComments(String sel) {
         return sel.replaceAll("#.*", "");
     }
-    
+
     /**
      * 
      */
@@ -287,65 +248,8 @@ public abstract class PyAction extends Action implements IEditorActionDelegate {
         return getLineWithoutComments(ps.getCursorLineContents());
     }
 
-
-    /**
-     * Counts the number of occurences of a certain character in a string.
-     * 
-     * @param line the string to search in
-     * @param c the character to search for
-     * @return an integer (int) representing the number of occurences of this character
-     */
-    public static int countChars(char c, String line) {
-        int ret = 0;
-        int len = line.length();
-        for (int i = 0; i < len; i++) {
-            if(line.charAt(i) == c){
-                ret += 1;
-            }
-        }
-        return ret;
-    }
-    
-    /**
-     * Counts the number of occurences of a certain character in a string.
-     * 
-     * @param line the string to search in
-     * @param c the character to search for
-     * @return an integer (int) representing the number of occurences of this character
-     */
-    public static int countChars(char c, StringBuffer line) {
-        int ret = 0;
-        int len = line.length();
-        for (int i = 0; i < len; i++) {
-            if(line.charAt(i) == c){
-                ret += 1;
-            }
-        }
-        return ret;
-    }
-    
-    /**
-     * Counts the number of occurences of a certain character in a string.
-     * 
-     * @param line the string to search in
-     * @param c the character to search for
-     * @return an integer (int) representing the number of occurences of this character
-     */
-    public static int countChars(char c, FastStringBuffer line) {
-        int ret = 0;
-        int len = line.length();
-        for (int i = 0; i < len; i++) {
-            if(line.charAt(i) == c){
-                ret += 1;
-            }
-        }
-        return ret;
-    }
-    
-
-
-    public static String lowerChar(String s, int pos){
-        char[] ds = s.toCharArray(); 
+    public static String lowerChar(String s, int pos) {
+        char[] ds = s.toCharArray();
         ds[pos] = Character.toLowerCase(ds[pos]);
         return new String(ds);
     }
@@ -357,50 +261,50 @@ public abstract class PyAction extends Action implements IEditorActionDelegate {
      */
     public static boolean stillInTok(String string, int j) {
         char c = string.charAt(j);
-    
-        return c != '\n' && c != '\r' && c != ' ' && c != '.' && c != '(' && c != ')' && c != ',' && c != ']' && c != '[' && c != '#';
-    }
 
+        return c != '\n' && c != '\r' && c != ' ' && c != '.' && c != '(' && c != ')' && c != ',' && c != ']'
+                && c != '[' && c != '#' && c != '\'' && c != '"';
+    }
 
     /**
      * @param ps the selection that contains the document
      */
     protected void revealSelEndLine(PySelection ps) {
         // Put cursor at the first area of the selection
-        int docLen = ps.getDoc().getLength()-1;
+        int docLen = ps.getDoc().getLength() - 1;
         IRegion endLine = ps.getEndLine();
-        if(endLine != null){
+        if (endLine != null) {
             int curOffset = endLine.getOffset();
-            getTextEditor().selectAndReveal(curOffset<docLen?curOffset:docLen, 0);
+            getTextEditor().selectAndReveal(curOffset < docLen ? curOffset : docLen, 0);
         }
     }
-    
+
     /**
      * @return a set with the currently opened files in the PyEdit editors.
      */
-    public static Set<IFile> getOpenFiles(){
+    public static Set<IFile> getOpenFiles() {
         Set<IFile> ret = new HashSet<IFile>();
-        IWorkbenchWindow activeWorkbenchWindow = getActiveWorkbenchWindow();
-        if(activeWorkbenchWindow == null){
+        IWorkbenchWindow activeWorkbenchWindow = EditorUtils.getActiveWorkbenchWindow();
+        if (activeWorkbenchWindow == null) {
             return ret;
         }
-        
+
         IWorkbenchPage[] pages = activeWorkbenchWindow.getPages();
         for (int i = 0; i < pages.length; i++) {
             IEditorReference[] editorReferences = pages[i].getEditorReferences();
 
             for (int j = 0; j < editorReferences.length; j++) {
                 IEditorReference iEditorReference = editorReferences[j];
-                if(!PyEdit.EDITOR_ID.equals(iEditorReference.getId())){
+                if (!PyEdit.EDITOR_ID.equals(iEditorReference.getId())) {
                     continue; //Only PyDev editors...
                 }
                 try {
                     IEditorInput editorInput = iEditorReference.getEditorInput();
-                    if(editorInput == null){
+                    if (editorInput == null) {
                         continue;
                     }
                     IFile file = (IFile) editorInput.getAdapter(IFile.class);
-                    if(file != null){
+                    if (file != null) {
                         ret.add(file);
                     }
                 } catch (Exception e1) {
@@ -410,5 +314,5 @@ public abstract class PyAction extends Action implements IEditorActionDelegate {
         }
         return ret;
     }
-    
+
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -29,9 +29,9 @@ public class NameIterator implements Iterator<ASTEntry> {
     }
 
     private void setNext() {
-        while(nodesIt.hasNext()){
+        while (nodesIt.hasNext()) {
             ASTEntry entry = nodesIt.next();
-            if(entry.node instanceof Name || entry.node instanceof NameTok){
+            if (entry.node instanceof Name || entry.node instanceof NameTok) {
                 next = entry;
                 return;
             }

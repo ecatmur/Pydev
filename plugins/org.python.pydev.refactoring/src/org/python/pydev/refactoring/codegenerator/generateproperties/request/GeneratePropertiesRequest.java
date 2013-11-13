@@ -1,3 +1,19 @@
+/******************************************************************************
+* Copyright (C) 2006-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Dennis Hunziker
+*     Ueli Kistler
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /* 
  * Copyright (C) 2006, 2007  Dennis Hunziker, Ueli Kistler
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
@@ -33,8 +49,8 @@ public class GeneratePropertiesRequest implements IRefactoringRequest {
     private NodeHelper nodeHelper;
     private final AdapterPrefs adapterPrefs;
 
-    public GeneratePropertiesRequest(
-            IClassDefAdapter classAdapter, INodeAdapter attributeAdapter, List<PropertyTextAdapter> properties, int offsetMethodStrategy, int offsetPropertyStrategy,
+    public GeneratePropertiesRequest(IClassDefAdapter classAdapter, INodeAdapter attributeAdapter,
+            List<PropertyTextAdapter> properties, int offsetMethodStrategy, int offsetPropertyStrategy,
             int accessModifier, AdapterPrefs adapterPrefs) {
         this.state = new SelectionState();
         this.classAdapter = classAdapter;
@@ -48,26 +64,26 @@ public class GeneratePropertiesRequest implements IRefactoringRequest {
     }
 
     private void initialize(List<PropertyTextAdapter> properties) {
-        for(PropertyTextAdapter propertyAdapter:properties){
-            switch(propertyAdapter.getType()){
-            case (PropertyTextAdapter.GETTER):
-                state.addSelection(SelectionState.GETTER);
-                break;
-            case (PropertyTextAdapter.SETTER):
-                state.addSelection(SelectionState.SETTER);
-                break;
-            case (PropertyTextAdapter.DELETE):
-                state.addSelection(SelectionState.DELETE);
-                break;
-            case (PropertyTextAdapter.DOCSTRING):
-                state.addSelection(SelectionState.DOCSTRING);
-                break;
-            default:
-                break;
+        for (PropertyTextAdapter propertyAdapter : properties) {
+            switch (propertyAdapter.getType()) {
+                case (PropertyTextAdapter.GETTER):
+                    state.addSelection(SelectionState.GETTER);
+                    break;
+                case (PropertyTextAdapter.SETTER):
+                    state.addSelection(SelectionState.SETTER);
+                    break;
+                case (PropertyTextAdapter.DELETE):
+                    state.addSelection(SelectionState.DELETE);
+                    break;
+                case (PropertyTextAdapter.DOCSTRING):
+                    state.addSelection(SelectionState.DOCSTRING);
+                    break;
+                default:
+                    break;
             }
         }
     }
-    
+
     public AdapterPrefs getAdapterPrefs() {
         return adapterPrefs;
     }
@@ -103,18 +119,17 @@ public class GeneratePropertiesRequest implements IRefactoringRequest {
      * @return for example "set_an_attribute" or "setAnAttribute"
      */
     public static String getAccessorName(String accessType, String attributeName) {
-        accessType += "_"+attributeName;
+        accessType += "_" + attributeName;
         int useMethodsCamelCase = PyCodeStylePreferencesPage.useMethodsCamelCase();
-        if(useMethodsCamelCase == PyCodeStylePreferencesPage.METHODS_FORMAT_CAMELCASE_FIRST_LOWER){
+        if (useMethodsCamelCase == PyCodeStylePreferencesPage.METHODS_FORMAT_CAMELCASE_FIRST_LOWER) {
             return StringUtils.asStyleCamelCaseFirstLower(accessType);
         }
-        if(useMethodsCamelCase == PyCodeStylePreferencesPage.METHODS_FORMAT_CAMELCASE_FIRST_UPPER){
+        if (useMethodsCamelCase == PyCodeStylePreferencesPage.METHODS_FORMAT_CAMELCASE_FIRST_UPPER) {
             return StringUtils.asStyleCamelCaseFirstUpper(accessType);
         }
         //default is underscore
         return StringUtils.asStyleLowercaseUnderscores(accessType);
-        
+
     }
-    
 
 }

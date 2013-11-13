@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -11,16 +11,17 @@ import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.contentassist.IContextInformationValidator;
 import org.python.pydev.editor.IPySyntaxHighlightingAndCodeCompletionEditor;
 
-public class PythonStringCompletionProcessor extends PythonCompletionProcessor{
+public class PythonStringCompletionProcessor extends PythonCompletionProcessor {
 
-    public PythonStringCompletionProcessor(IPySyntaxHighlightingAndCodeCompletionEditor edit, PyContentAssistant pyContentAssistant) {
+    public PythonStringCompletionProcessor(IPySyntaxHighlightingAndCodeCompletionEditor edit,
+            PyContentAssistant pyContentAssistant) {
         super(edit, pyContentAssistant);
     }
-    
+
     @Override
     public char[] getCompletionProposalAutoActivationCharacters() {
         //no auto-activation within strings.
-        return new char[]{'@'};
+        return new char[] { '@' };
     }
 
     protected IPyCodeCompletion getCodeCompletionEngine() {
@@ -32,7 +33,7 @@ public class PythonStringCompletionProcessor extends PythonCompletionProcessor{
      * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#getContextInformationValidator()
      */
     public IContextInformationValidator getContextInformationValidator() {
-        return new IContextInformationValidator(){
+        return new IContextInformationValidator() {
 
             public void install(IContextInformation info, ITextViewer viewer, int offset) {
             }
@@ -40,12 +41,12 @@ public class PythonStringCompletionProcessor extends PythonCompletionProcessor{
             public boolean isContextInformationValid(int offset) {
                 return true;
             }
-            
+
         };
     }
-    
+
     public IContextInformation[] computeContextInformation(ITextViewer viewer, int documentOffset) {
-        return new IContextInformation[]{};
+        return new IContextInformation[] {};
     }
 
 }

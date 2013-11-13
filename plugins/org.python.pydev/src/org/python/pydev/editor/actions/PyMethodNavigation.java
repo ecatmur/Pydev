@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -38,28 +38,28 @@ public abstract class PyMethodNavigation extends PyAction {
         ITextSelection selection = (ITextSelection) pyEdit.getSelectionProvider().getSelection();
 
         boolean searchForward = getSearchForward();
-        
+
         int startLine = selection.getStartLine();
-        
+
         //we want to start searching in the line before/after the line we're in.
-        if(searchForward){
+        if (searchForward) {
             startLine += 1;
-        }else{
-            startLine -=1;
+        } else {
+            startLine -= 1;
         }
         stmtType goHere = FastParser.firstClassOrFunction(doc, startLine, searchForward, pyEdit.isCythonFile());
-        
+
         NameTok node = getNameNode(goHere);
-        if(node != null){
+        if (node != null) {
             //ok, somewhere to go
             pyEdit.revealModelNode(node);
-            
-        }else{
+
+        } else {
             //no place specified until now... let's try to see if we should go to the start or end of the file
-            if(searchForward){
+            if (searchForward) {
                 pyEdit.selectAndReveal(doc.getLength(), 0);
-                
-            }else{
+
+            } else {
                 pyEdit.selectAndReveal(0, 0);
             }
         }
@@ -76,18 +76,17 @@ public abstract class PyMethodNavigation extends PyAction {
      */
     protected NameTok getNameNode(stmtType defNode) {
         NameTok node = null;
-        if(defNode != null){
-            if(defNode instanceof ClassDef){
+        if (defNode != null) {
+            if (defNode instanceof ClassDef) {
                 ClassDef def = (ClassDef) defNode;
                 node = (NameTok) def.name;
             }
-            if(defNode instanceof FunctionDef){
+            if (defNode instanceof FunctionDef) {
                 FunctionDef def = (FunctionDef) defNode;
                 node = (NameTok) def.name;
             }
         }
         return node;
     }
-
 
 }

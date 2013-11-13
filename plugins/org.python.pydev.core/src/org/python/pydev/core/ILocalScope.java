@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -14,7 +14,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import org.python.pydev.core.structure.FastStack;
+import org.python.pydev.shared_core.structure.FastStack;
 
 public interface ILocalScope {
 
@@ -50,7 +50,7 @@ public interface ILocalScope {
      * @return the scope stack with simple nodes
      * @note SimpleNode is not declared because we only have it in the parser (and not in the local scope)
      */
-    public FastStack /*<SimpleNode>*/ getScopeStack();
+    public FastStack /*<SimpleNode>*/getScopeStack();
 
     /**
      * @return the list of tokens that are part of the interface for some local variable.
@@ -66,12 +66,12 @@ public interface ILocalScope {
     /**
      * @return Iterator for the nodes in the scope (starting with the last to the first -- or from the inner to the outer)
      */
-    public Iterator /*<SimpleNode>*/ iterator();
+    public Iterator /*<SimpleNode>*/iterator();
 
     /**
      * @return the class definition found previously in the scope
      */
-    public Object /*ClassDef*/ getClassDef();
+    public Object /*ClassDef*/getClassDef();
 
     public int getScopeEndLine();
 
@@ -87,6 +87,8 @@ public interface ILocalScope {
      * @return a list of Strings with the new activation token that we should look for instead of the old activation token
      * if we're able to find an assert isinstance(xxx, SomeClass) -- which in this case would return SomeClass.
      * Or null if it's not able to find such a statement.
+     * 
+     * Also can check other things (such as docstrings).
      */
     public List<String> getPossibleClassesForActivationToken(String activationToken);
 }

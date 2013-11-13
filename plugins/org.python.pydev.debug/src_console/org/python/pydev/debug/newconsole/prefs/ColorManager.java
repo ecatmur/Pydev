@@ -1,11 +1,10 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
  */
 package org.python.pydev.debug.newconsole.prefs;
-
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -18,38 +17,36 @@ import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
-import org.python.pydev.core.ExtensionHelper;
-import org.python.pydev.core.docutils.StringUtils;
 import org.python.pydev.debug.core.PydevDebugPlugin;
 import org.python.pydev.debug.newconsole.PydevConsoleConstants;
-import org.python.pydev.plugin.preferences.IPydevPreferencesProvider;
+import org.python.pydev.shared_core.SharedCorePlugin;
+import org.python.pydev.shared_core.string.StringUtils;
 
 /**
  * Generic color manager.
  */
-public class ColorManager {    
-    
+public class ColorManager {
+
     private static ColorManager fgColorManager;
-    
+
     /**
      * Singleton
      */
     private ColorManager() {
     }
-    
+
     public static ColorManager getDefault() {
         if (fgColorManager == null) {
-            fgColorManager= new ColorManager();
+            fgColorManager = new ColorManager();
         }
         return fgColorManager;
     }
-    
+
     /**
      * Cache for colors
      */
-    protected Map<RGB, Color> fColorTable= new HashMap<RGB, Color>(10);
-    
-    
+    protected Map<RGB, Color> fColorTable = new HashMap<RGB, Color>(10);
+
     public static final RGB dimBlack = new RGB(0.00f, 0.00f, 0.00f);
     public static final RGB dimRed = new RGB(0.000f, 1.000f, 0.502f);
     public static final RGB dimGreen = new RGB(0.333f, 1.000f, 0.502f);
@@ -58,7 +55,7 @@ public class ColorManager {
     public static final RGB dimMagenta = new RGB(0.833f, 1.000f, 0.502f);
     public static final RGB dimCyan = new RGB(0.500f, 1.000f, 0.502f);
     public static final RGB dimWhite = new RGB(0.000f, 0.000f, 0.753f);
-    
+
     public static final RGB brightBlack = new RGB(0.000f, 0.000f, 0.502f);
     public static final RGB brightRed = new RGB(0.000f, 1.000f, 1.000f);
     public static final RGB brightGreen = new RGB(0.333f, 1.000f, 1.000f);
@@ -70,11 +67,11 @@ public class ColorManager {
 
     /**
      * Receives a string such as:
-     * 
+     *
      * <ESC>[{attr1};...;{attrn}m
-     * 
+     *
      * Where {attr1}...{attrn} are numbers so that:
-     * 
+     *
      * Foreground Colors
      * 30  Black
      * 31  Red
@@ -84,7 +81,7 @@ public class ColorManager {
      * 35  Magenta
      * 36  Cyan
      * 37  White
-     * 
+     *
      * Background Colors
      * 40  Black
      * 41  Red
@@ -94,31 +91,31 @@ public class ColorManager {
      * 45  Magenta
      * 46  Cyan
      * 47  White
-     * 
+     *
      * If 0;30 is received, it means a 'dim' version of black, if 1;30 is received, it means a 'bright' version is used.
-     * 
+     *
      * If [0m is received, the attributes are reset (and null may be returned in this case).
-     * 
+     *
      * Reference: http://graphcomp.com/info/specs/ansi_col.html
      */
     public TextAttribute getAnsiTextAttribute(String str, TextAttribute prevAttribute, TextAttribute resetAttribute) {
-        if(str.startsWith("[")){
+        if (str.startsWith("[")) {
             str = str.substring(1);
         }
         int foundM = str.indexOf('m');
-        if(foundM == -1){
+        if (foundM == -1) {
             return prevAttribute;
         }
         str = str.substring(0, foundM);
-        
-        if(str.equals("0")){
+
+        if (str.equals("0")) {
             return resetAttribute;
         }
-        
+
         boolean bright = false;
         Color foreground = null;
         Color background = null;
-        
+
         List<String> split = StringUtils.split(str, ';');
         for (String string : split) {
             try {
@@ -127,64 +124,61 @@ public class ColorManager {
                     case 0:
                         bright = false;
                         break;
-                        
+
                     case 1:
                         bright = true;
                         break;
-                        
-                        
+
                     case 30://  Black
-                        foreground = getColor(bright?brightBlack:dimBlack);
+                        foreground = getColor(bright ? brightBlack : dimBlack);
                         break;
                     case 31://  Red
-                        foreground = getColor(bright?brightRed:dimRed);
+                        foreground = getColor(bright ? brightRed : dimRed);
                         break;
                     case 32://  Green
-                        foreground = getColor(bright?brightGreen:dimGreen);
+                        foreground = getColor(bright ? brightGreen : dimGreen);
                         break;
                     case 33://  Yellow
-                        foreground = getColor(bright?brightYellow:dimYellow);
+                        foreground = getColor(bright ? brightYellow : dimYellow);
                         break;
                     case 34://  Blue
-                        foreground = getColor(bright?brightBlue:dimBlue);
+                        foreground = getColor(bright ? brightBlue : dimBlue);
                         break;
                     case 35://  Magenta
-                        foreground = getColor(bright?brightMagenta:dimMagenta);
+                        foreground = getColor(bright ? brightMagenta : dimMagenta);
                         break;
                     case 36://  Cyan
-                        foreground = getColor(bright?brightCyan:dimCyan);
+                        foreground = getColor(bright ? brightCyan : dimCyan);
                         break;
                     case 37://  White
-                        foreground = getColor(bright?brightWhite:dimWhite);
-                        break;
-                        
-                        
-                    case 40://  Black
-                        background = getColor(bright?brightBlack:dimBlack);
-                        break;
-                    case 41://  Red
-                        background = getColor(bright?brightRed:dimRed);
-                        break;
-                    case 42://  Green
-                        background = getColor(bright?brightGreen:dimGreen);
-                        break;
-                    case 43://  Yellow
-                        background = getColor(bright?brightYellow:dimYellow);
-                        break;
-                    case 44://  Blue
-                        background = getColor(bright?brightBlue:dimBlue);
-                        break;
-                    case 45://  Magenta
-                        background = getColor(bright?brightMagenta:dimMagenta);
-                        break;
-                    case 46://  Cyan
-                        background = getColor(bright?brightCyan:dimCyan);
-                        break;
-                    case 47://  White
-                        background = getColor(bright?brightWhite:dimWhite);
+                        foreground = getColor(bright ? brightWhite : dimWhite);
                         break;
 
-    
+                    case 40://  Black
+                        background = getColor(bright ? brightBlack : dimBlack);
+                        break;
+                    case 41://  Red
+                        background = getColor(bright ? brightRed : dimRed);
+                        break;
+                    case 42://  Green
+                        background = getColor(bright ? brightGreen : dimGreen);
+                        break;
+                    case 43://  Yellow
+                        background = getColor(bright ? brightYellow : dimYellow);
+                        break;
+                    case 44://  Blue
+                        background = getColor(bright ? brightBlue : dimBlue);
+                        break;
+                    case 45://  Magenta
+                        background = getColor(bright ? brightMagenta : dimMagenta);
+                        break;
+                    case 46://  Cyan
+                        background = getColor(bright ? brightCyan : dimCyan);
+                        break;
+                    case 47://  White
+                        background = getColor(bright ? brightWhite : dimWhite);
+                        break;
+
                     default:
                         break;
                 }
@@ -192,162 +186,104 @@ public class ColorManager {
                 //ignore
             }
         }
-        
-        return new TextAttribute(
-                foreground!=null?foreground:prevAttribute.getForeground(), 
-                background!=null?background:prevAttribute.getBackground(), 
-                prevAttribute.getStyle()
-                );
+
+        return new TextAttribute(foreground != null ? foreground : prevAttribute.getForeground(),
+                background != null ? background : prevAttribute.getBackground(), prevAttribute.getStyle());
     }
 
-    
     public Color getColor(RGB rgb) {
-        Color color= fColorTable.get(rgb);
+        Color color = fColorTable.get(rgb);
         if (color == null) {
-            color= new Color(Display.getCurrent(), rgb);
+            color = new Color(Display.getCurrent(), rgb);
             fColorTable.put(rgb, color);
         }
         return color;
     }
-    
+
     public void dispose() {
-        Iterator<Color> e= fColorTable.values().iterator();
-        while (e.hasNext())
+        Iterator<Color> e = fColorTable.values().iterator();
+        while (e.hasNext()) {
             e.next().dispose();
+        }
     }
-    
+
     /**
-     * 
+     *
      * @param type: see constants at {@link PydevConsoleConstants}
      * @return a color to be used.
      */
     private Color getPreferenceColor(String type) {
-        PydevDebugPlugin plugin = PydevDebugPlugin.getDefault();
-        if(plugin == null){
+        if (SharedCorePlugin.inTestMode()) {
             return null;
         }
+        PydevDebugPlugin plugin = PydevDebugPlugin.getDefault();
         IPreferenceStore preferenceStore = plugin.getPreferenceStore();
         return getColor(PreferenceConverter.getColor(preferenceStore, type));
     }
 
-    
-    
     //Note that to update the code below, the install.py of this plugin should be run.
-    
+
     /*[[[cog
     import cog
-    
+
     template = '''
-    @SuppressWarnings("unchecked")
     public TextAttribute get%sTextAttribute() {
-        List<IPydevPreferencesProvider> participants = ExtensionHelper.getParticipants(ExtensionHelper.PYDEV_PREFERENCES_PROVIDER);
-        for (IPydevPreferencesProvider iPydevPreferencesProvider : participants) {
-            TextAttribute textAttribute = iPydevPreferencesProvider.get%sTextAttribute();
-            if(textAttribute != null){
-                return textAttribute;
-            }
-        }
         Color color = getPreferenceColor(PydevConsoleConstants.%s_COLOR);
         return new TextAttribute(color, null, 0);
     }'''
-    
+
     for s in (
         'console_error', 'console_output', 'console_input', 'console_prompt'):
-        
-        cog.outl(template % (s.title().replace('_', ''), s.title().replace('_', ''), s.upper()))
+
+        cog.outl(template % (s.title().replace('_', ''), s.upper()))
 
     ]]]*/
 
-    @SuppressWarnings("unchecked")
     public TextAttribute getConsoleErrorTextAttribute() {
-        List<IPydevPreferencesProvider> participants = ExtensionHelper.getParticipants(ExtensionHelper.PYDEV_PREFERENCES_PROVIDER);
-        for (IPydevPreferencesProvider iPydevPreferencesProvider : participants) {
-            TextAttribute textAttribute = iPydevPreferencesProvider.getConsoleErrorTextAttribute();
-            if(textAttribute != null){
-                return textAttribute;
-            }
-        }
         Color color = getPreferenceColor(PydevConsoleConstants.CONSOLE_ERROR_COLOR);
         return new TextAttribute(color, null, 0);
     }
 
-    @SuppressWarnings("unchecked")
     public TextAttribute getConsoleOutputTextAttribute() {
-        List<IPydevPreferencesProvider> participants = ExtensionHelper.getParticipants(ExtensionHelper.PYDEV_PREFERENCES_PROVIDER);
-        for (IPydevPreferencesProvider iPydevPreferencesProvider : participants) {
-            TextAttribute textAttribute = iPydevPreferencesProvider.getConsoleOutputTextAttribute();
-            if(textAttribute != null){
-                return textAttribute;
-            }
-        }
         Color color = getPreferenceColor(PydevConsoleConstants.CONSOLE_OUTPUT_COLOR);
         return new TextAttribute(color, null, 0);
     }
 
-    @SuppressWarnings("unchecked")
     public TextAttribute getConsoleInputTextAttribute() {
-        List<IPydevPreferencesProvider> participants = ExtensionHelper.getParticipants(ExtensionHelper.PYDEV_PREFERENCES_PROVIDER);
-        for (IPydevPreferencesProvider iPydevPreferencesProvider : participants) {
-            TextAttribute textAttribute = iPydevPreferencesProvider.getConsoleInputTextAttribute();
-            if(textAttribute != null){
-                return textAttribute;
-            }
-        }
         Color color = getPreferenceColor(PydevConsoleConstants.CONSOLE_INPUT_COLOR);
         return new TextAttribute(color, null, 0);
     }
 
-    @SuppressWarnings("unchecked")
     public TextAttribute getConsolePromptTextAttribute() {
-        List<IPydevPreferencesProvider> participants = ExtensionHelper.getParticipants(ExtensionHelper.PYDEV_PREFERENCES_PROVIDER);
-        for (IPydevPreferencesProvider iPydevPreferencesProvider : participants) {
-            TextAttribute textAttribute = iPydevPreferencesProvider.getConsolePromptTextAttribute();
-            if(textAttribute != null){
-                return textAttribute;
-            }
-        }
         Color color = getPreferenceColor(PydevConsoleConstants.CONSOLE_PROMPT_COLOR);
         return new TextAttribute(color, null, 0);
     }
+
     //[[[end]]]
-    
-    @SuppressWarnings("unchecked")
+
     public Color getConsoleBackgroundColor() {
-    	List<IPydevPreferencesProvider> participants = ExtensionHelper.getParticipants(ExtensionHelper.PYDEV_PREFERENCES_PROVIDER);
-    	for (IPydevPreferencesProvider iPydevPreferencesProvider : participants) {
-    		RGB textAttribute = iPydevPreferencesProvider.getConsoleBackgroundRGB();
-    		if(textAttribute != null){
-    			return getColor(textAttribute);
-    		}
-    	}
-    	Color color = getPreferenceColor(PydevConsoleConstants.CONSOLE_BACKGROUND_COLOR);
-    	return color;
+        Color color = getPreferenceColor(PydevConsoleConstants.CONSOLE_BACKGROUND_COLOR);
+        return color;
     }
-    
-    @SuppressWarnings("unchecked")
+
+    /**
+     * Default background color for debug console is set to light gray so that
+     * the user is able to quickly differentiate between a REPL window and the
+     * existing console window
+     *
+     * @return
+     */
+    public Color getDebugConsoleBackgroundColor() {
+        Color color = getPreferenceColor(PydevConsoleConstants.DEBUG_CONSOLE_BACKGROUND_COLOR);
+        return color;
+    }
+
     public TextAttribute getHyperlinkTextAttribute() {
-        List<IPydevPreferencesProvider> participants = ExtensionHelper.getParticipants(ExtensionHelper.PYDEV_PREFERENCES_PROVIDER);
-        for (IPydevPreferencesProvider iPydevPreferencesProvider : participants) {
-            TextAttribute textAttribute = iPydevPreferencesProvider.getHyperlinkTextAttribute();
-            if(textAttribute != null){
-                return textAttribute;
-            }
-        }
         return null; //use default
     }
-    
-    @SuppressWarnings("unchecked")
+
     public TextAttribute getForegroundTextAttribute() {
-        List<IPydevPreferencesProvider> participants = ExtensionHelper.getParticipants(ExtensionHelper.PYDEV_PREFERENCES_PROVIDER);
-        for (IPydevPreferencesProvider iPydevPreferencesProvider : participants) {
-            TextAttribute textAttribute = iPydevPreferencesProvider.getCodeTextAttribute();
-            if(textAttribute != null){
-                return textAttribute;
-            }
-        }
         return null; //use default
     }
 
 }
-
-

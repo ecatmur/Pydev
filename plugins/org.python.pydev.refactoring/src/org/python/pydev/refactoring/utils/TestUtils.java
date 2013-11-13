@@ -1,3 +1,17 @@
+/******************************************************************************
+* Copyright (C) 2007-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /*
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
  *
@@ -40,21 +54,21 @@ public final class TestUtils {
 
         int beginLine = 0;
 
-        for(String line:lines){
+        for (String line : lines) {
             beginLine += 1;
 
             line = line.trim();
             int pos = line.indexOf("##");
-            if(pos < 0){
+            if (pos < 0) {
                 continue;
             }
 
             StringTokenizer tok = new StringTokenizer(line.substring(pos + 2));
             String test = tok.nextToken();
 
-            if("exit".equals(test)){
+            if ("exit".equals(test)) {
                 break;
-            }else if("type".equals(test)){
+            } else if ("type".equals(test)) {
                 String type = tok.nextToken();
                 String expr = line.substring(0, line.indexOf("##")).trim();
 
@@ -82,10 +96,10 @@ public final class TestUtils {
         List<Integer> positions = new LinkedList<Integer>();
         String text = input;
 
-        while(true){
+        while (true) {
             int index = text.indexOf(CURSOR);
 
-            if(index < 0){
+            if (index < 0) {
                 break;
             }
 

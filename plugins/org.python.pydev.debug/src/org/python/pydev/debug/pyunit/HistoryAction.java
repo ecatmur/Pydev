@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -18,28 +18,28 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
 import org.python.pydev.plugin.PydevPlugin;
-import org.python.pydev.ui.UIConstants;
+import org.python.pydev.shared_ui.UIConstants;
 
-public class HistoryAction extends Action{
-    
-    public static interface IActionsMenu{
+public class HistoryAction extends Action {
+
+    public static interface IActionsMenu {
 
         void add(IAction action);
-        
+
     }
 
-    public class HistoryMenuCreator implements IMenuCreator{
-        
+    public class HistoryMenuCreator implements IMenuCreator {
+
         private Menu fMenu;
 
         public HistoryMenuCreator() {
-            
+
         }
 
         public void dispose() {
             if (fMenu != null) {
                 fMenu.dispose();
-                fMenu= null;
+                fMenu = null;
             }
         }
 
@@ -47,21 +47,21 @@ public class HistoryAction extends Action{
             if (fMenu != null) {
                 fMenu.dispose();
             }
-            
-            final MenuManager manager= new MenuManager();
+
+            final MenuManager manager = new MenuManager();
             manager.setRemoveAllWhenShown(true);
             manager.addMenuListener(new IMenuListener() {
                 public void menuAboutToShow(final IMenuManager manager2) {
                     fillMenuManager(new IActionsMenu() {
-                        
+
                         public void add(IAction action) {
                             manager2.add(action);
-                            
+
                         }
                     });
                 }
             });
-            fMenu= manager.createContextMenu(parent);
+            fMenu = manager.createContextMenu(parent);
 
             return fMenu;
         }
@@ -71,11 +71,11 @@ public class HistoryAction extends Action{
         }
 
         public void fillMenuManager(IActionsMenu actionsMenu) {
-            if(view == null){
+            if (view == null) {
                 return;
             }
             PyUnitView pyUnitView = view.get();
-            if(pyUnitView == null){
+            if (pyUnitView == null) {
                 return;
             }
             PyUnitTestRun currentTestRun = pyUnitView.getCurrentTestRun();
@@ -91,8 +91,8 @@ public class HistoryAction extends Action{
     }
 
     private WeakReference<PyUnitView> view;
-    
-    public HistoryAction(PyUnitView view){
+
+    public HistoryAction(PyUnitView view) {
         this.view = new WeakReference<PyUnitView>(view);
         setMenuCreator(new HistoryMenuCreator());
         setToolTipText("Test Run History");

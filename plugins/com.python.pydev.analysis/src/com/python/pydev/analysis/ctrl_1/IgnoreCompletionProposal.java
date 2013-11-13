@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -16,18 +16,20 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.python.pydev.core.log.Log;
 import org.python.pydev.editor.PyEdit;
-import org.python.pydev.editor.codecompletion.PyCompletionProposal;
+import org.python.pydev.shared_ui.proposals.PyCompletionProposal;
 
 public class IgnoreCompletionProposal extends PyCompletionProposal {
 
     private PyEdit edit;
 
-    public IgnoreCompletionProposal(String replacementString, int replacementOffset, int replacementLength, int cursorPosition, Image image, String displayString, IContextInformation contextInformation, String additionalProposalInfo, int priority, PyEdit edit) {
-        super(replacementString, replacementOffset, replacementLength, cursorPosition, image, displayString, contextInformation, additionalProposalInfo, priority);
+    public IgnoreCompletionProposal(String replacementString, int replacementOffset, int replacementLength,
+            int cursorPosition, Image image, String displayString, IContextInformation contextInformation,
+            String additionalProposalInfo, int priority, PyEdit edit) {
+        super(replacementString, replacementOffset, replacementLength, cursorPosition, image, displayString,
+                contextInformation, additionalProposalInfo, priority);
         this.edit = edit;
-        
     }
-    
+
     @Override
     public void apply(IDocument document) {
         try {
@@ -35,12 +37,14 @@ public class IgnoreCompletionProposal extends PyCompletionProposal {
             document.replace(fReplacementOffset, fReplacementLength, fReplacementString);
 
             //ok, after doing it, let's call for a reparse
-            edit.getParser().forceReparse();
+            if (edit != null) {
+                edit.getParser().forceReparse();
+            }
         } catch (BadLocationException x) {
             Log.log(x);
         }
     }
-    
+
     @Override
     public Point getSelection(IDocument document) {
         return new Point(fCursorPosition, 0); //don't move the cursor

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -11,9 +11,9 @@
 package org.python.pydev.debug.model.remote;
 
 import org.eclipse.core.runtime.IStatus;
-import org.python.pydev.core.structure.FastStringBuffer;
 import org.python.pydev.debug.core.PydevDebugPlugin;
 import org.python.pydev.debug.model.AbstractDebugTarget;
+import org.python.pydev.shared_core.string.FastStringBuffer;
 
 /**
  * Superclass of all debugger commands.
@@ -38,7 +38,7 @@ import org.python.pydev.debug.model.AbstractDebugTarget;
  * 
  */
 public abstract class AbstractDebuggerCommand {
-    
+
     static public final int CMD_RUN = 101;
     static public final int CMD_LIST_THREADS = 102;
     static public final int CMD_THREAD_CREATED = 103;
@@ -63,15 +63,17 @@ public abstract class AbstractDebuggerCommand {
     static public final int CMD_SET_PY_EXCEPTION = 122;
     static public final int CMD_GET_FILE_CONTENTS = 123;
     static public final int CMD_SET_PROPERTY_TRACE = 124;
+    static public final int CMD_EVALUATE_CONSOLE_EXPRESSION = 126;
+    static public final int CMD_RUN_CUSTOM_OPERATION = 127;
     static public final int CMD_ERROR = 901;
     static public final int CMD_VERSION = 501;
     static public final int CMD_RETURN = 502;
     static public final int CMD_GET_TASKLETS = 503;
-    
+
     protected AbstractDebugTarget target;
     protected ICommandResponseListener responseListener;
     int sequence;
-    
+
     public AbstractDebuggerCommand(AbstractDebugTarget debugger) {
         this.target = debugger;
         this.responseListener = null;
@@ -81,19 +83,19 @@ public abstract class AbstractDebuggerCommand {
     public void setCompletionListener(ICommandResponseListener listener) {
         this.responseListener = listener;
     }
-    
+
     /**
      * @return outgoing message
      */
     public abstract String getOutgoing();
-    
+
     /**
      * Notification right before the command is sent.
      * If subclassed, call super()
      */
     public void aboutToSend() {
         // if we need a response, put me on the waiting queue
-        if (needResponse()){
+        if (needResponse()) {
             target.addToResponseQueue(this);
         }
     }
@@ -106,45 +108,47 @@ public abstract class AbstractDebuggerCommand {
     public boolean needResponse() {
         return false;
     }
-    
+
     /**
      * returns Sequence # 
      */
     public final int getSequence() {
         return sequence;
     }
-    
+
     /**
      * Called when command completes, if needResponse was true
      */
     public final void processResponse(int cmdCode, String payload) {
-        if (cmdCode / 100  == 9){
-            processErrorResponse(cmdCode, payload);    
-        }else{
+        if (cmdCode / 100 == 9) {
+            processErrorResponse(cmdCode, payload);
+        } else {
             processOKResponse(cmdCode, payload);
         }
-        
-        if (responseListener != null){
+
+        if (responseListener != null) {
             responseListener.commandComplete(this);
         }
     }
-    
+
     /**
      * notification of the response to the command.
      * You'll get either processResponse or processErrorResponse
      */
     public void processOKResponse(int cmdCode, String payload) {
-        PydevDebugPlugin.log(IStatus.ERROR, "Debugger command ignored response " + getClass().toString() + payload, null);
+        PydevDebugPlugin.log(IStatus.ERROR, "Debugger command ignored response " + getClass().toString() + payload,
+                null);
     }
-    
+
     /**
      * notification of the response to the command.
      * You'll get either processResponse or processErrorResponse
      */
     public void processErrorResponse(int cmdCode, String payload) {
-        PydevDebugPlugin.log(IStatus.ERROR, "Debugger command ignored error response " + getClass().toString() + payload, null);
+        PydevDebugPlugin.log(IStatus.ERROR, "Debugger command ignored error response " + getClass().toString()
+                + payload, null);
     }
-    
+
     public static String makeCommand(int code, int sequence, String payload) {
         FastStringBuffer s = new FastStringBuffer(payload.length() + 20);
         s.append(code);

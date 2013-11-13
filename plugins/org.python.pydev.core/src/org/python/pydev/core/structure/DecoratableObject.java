@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -18,12 +18,12 @@ public class DecoratableObject {
      * the request.
      */
     private Map<String, Object> additionalRefactoringInfo;
-    
+
     /**
      * Only initialize on request
      */
     private Map<String, Object> getAdditionalRefactoringInfo() {
-        if(additionalRefactoringInfo == null){
+        if (additionalRefactoringInfo == null) {
             additionalRefactoringInfo = new HashMap<String, Object>();
         }
         return additionalRefactoringInfo;
@@ -36,18 +36,18 @@ public class DecoratableObject {
      * is currently no value for the given key
      * @return the additional info (if available) or the default specified
      */
-    public Object getAdditionalInfo(String key, Object defaultValue){
+    public Object getAdditionalInfo(String key, Object defaultValue) {
         Object val = this.getAdditionalRefactoringInfo().get(key);
-        if(val == null){
+        if (val == null) {
             return defaultValue;
         }
         return val;
     }
-    
+
     /**
      * Set some value for some additional info for this request.
      */
-    public void setAdditionalInfo(String key, Object value){
+    public void setAdditionalInfo(String key, Object value) {
         this.getAdditionalRefactoringInfo().put(key, value);
     }
 

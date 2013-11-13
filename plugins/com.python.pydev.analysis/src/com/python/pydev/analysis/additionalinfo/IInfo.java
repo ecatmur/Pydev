@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -24,7 +24,7 @@ public interface IInfo extends Comparable<IInfo> {
      * Cannot be null.
      */
     String getDeclaringModuleName();
-    
+
     /**
      * @return the path within the module to the name. E.g.: When we have:
      * class Test:
@@ -36,32 +36,32 @@ public interface IInfo extends Comparable<IInfo> {
      * This field may be null!
      */
     String getPath();
-    
+
     /**
      * The type when it is a class with import
      */
     int CLASS_WITH_IMPORT_TYPE = 1;
-    
+
     /**
      * The type when it is a method with import
      */
     int METHOD_WITH_IMPORT_TYPE = 2;
-    
+
     /**
      * The type when it is an assign
      */
     int ATTRIBUTE_WITH_IMPORT_TYPE = 3;
-    
+
     /**
      * The type when it is a name
      */
     int NAME_WITH_IMPORT_TYPE = 4;
-    
+
     /**
      * The type when it is a module
      */
     int MOD_IMPORT_TYPE = 5;
-    
+
     /**
      * @return the type of the information we are holding (given constants)
      */

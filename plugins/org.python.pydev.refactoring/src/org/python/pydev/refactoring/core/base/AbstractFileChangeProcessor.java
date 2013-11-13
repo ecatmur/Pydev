@@ -1,3 +1,19 @@
+/******************************************************************************
+* Copyright (C) 2006-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Dennis Hunziker
+*     Ueli Kistler
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /* 
  * Copyright (C) 2006, 2007  Dennis Hunziker, Ueli Kistler
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
@@ -22,7 +38,7 @@ import org.python.pydev.refactoring.core.request.IRefactoringRequest;
 import org.python.pydev.refactoring.core.request.IRequestProcessor;
 
 public abstract class AbstractFileChangeProcessor<T extends IRefactoringRequest> implements IChangeProcessor {
-	
+
     private TextChange change;
     private MultiTextEdit multiEdit;
     private String name;
@@ -39,13 +55,12 @@ public abstract class AbstractFileChangeProcessor<T extends IRefactoringRequest>
     protected abstract void processEdit() throws MisconfigurationException;
 
     public Change createChange() throws MisconfigurationException {
-        if(info.getSourceFile() != null){
+        if (info.getSourceFile() != null) {
             change = new PyTextFileChange(name, info.getSourceFile());
-        }else{
+        } else {
             // Not insisting on a source file makes testing easier.
             change = PyDocumentChange.create(name, info.getDocument());
-            
-            
+
         }
         multiEdit = new MultiTextEdit();
         change.setEdit(this.multiEdit);
@@ -77,7 +92,7 @@ public abstract class AbstractFileChangeProcessor<T extends IRefactoringRequest>
         TextEditGroup group = new TextEditGroup(message);
         addGroup(group);
 
-        for(AbstractTextEdit edit:edits){
+        for (AbstractTextEdit edit : edits) {
             registerEditInGroup(edit, group);
         }
     }

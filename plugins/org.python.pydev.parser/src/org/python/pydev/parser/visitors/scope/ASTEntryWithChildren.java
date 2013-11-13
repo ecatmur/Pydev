@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -14,11 +14,11 @@ import java.util.List;
 
 import org.python.pydev.parser.jython.SimpleNode;
 
-public class ASTEntryWithChildren extends ASTEntry{
+public class ASTEntryWithChildren extends ASTEntry {
 
     public List<ASTEntryWithChildren> children;
-    
-    public ASTEntryWithChildren(ASTEntryWithChildren parent){
+
+    public ASTEntryWithChildren(ASTEntryWithChildren parent) {
         super(parent);
     }
 
@@ -27,7 +27,7 @@ public class ASTEntryWithChildren extends ASTEntry{
     }
 
     public ASTEntryWithChildren[] getChildren() {
-        if(children == null){
+        if (children == null) {
             return null;
         }
         return children.toArray(new ASTEntryWithChildren[children.size()]);

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -20,11 +20,10 @@ public class PyCalltipsContextInformationTest extends TestCase {
         super.tearDown();
     }
 
-    
     public void testCalltips() throws Exception {
         PyCalltipsContextInformation info = new PyCalltipsContextInformation("(a, b)", 7);
         PyContextInformationValidator validator = new PyContextInformationValidator();
-        
+
         Document doc = new Document("callIt(a, b)");
         validator.install(info, doc, -1);
         assertTrue(!validator.isContextInformationValid(0));
@@ -32,12 +31,10 @@ public class PyCalltipsContextInformationTest extends TestCase {
         assertTrue(validator.isContextInformationValid(7));
         assertTrue(validator.isContextInformationValid(11));
         assertTrue(!validator.isContextInformationValid(12));
-        
+
         doc = new Document("callIt(param1, param2");
         validator.install(info, doc, -1);
         assertTrue(validator.isContextInformationValid(12));
-        
-        
-        
+
     }
 }

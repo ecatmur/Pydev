@@ -1,3 +1,19 @@
+/******************************************************************************
+* Copyright (C) 2006-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Dennis Hunziker
+*     Ueli Kistler
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /* 
  * Copyright (C) 2006, 2007  Dennis Hunziker, Ueli Kistler
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
@@ -31,7 +47,8 @@ public class ClassDefAdapterFromTokens implements IClassDefAdapter {
     private ModuleAdapter module;
     private List<FunctionDefAdapter> cache;
 
-    public ClassDefAdapterFromTokens(ModuleAdapter module, String parentName, List<IToken> tokens, AdapterPrefs adapterPrefs) {
+    public ClassDefAdapterFromTokens(ModuleAdapter module, String parentName, List<IToken> tokens,
+            AdapterPrefs adapterPrefs) {
         this.module = module;
         this.parentName = parentName;
         this.tokens = tokens;
@@ -63,30 +80,32 @@ public class ClassDefAdapterFromTokens implements IClassDefAdapter {
     }
 
     public synchronized List<FunctionDefAdapter> getFunctionsInitFiltered() {
-        if(cache == null){
+        if (cache == null) {
             cache = new ArrayList<FunctionDefAdapter>();
-            for(IToken tok:this.tokens){
-                if(tok.getType() == IToken.TYPE_FUNCTION || tok.getType() == IToken.TYPE_BUILTIN || tok.getType() == IToken.TYPE_UNKNOWN){
+            for (IToken tok : this.tokens) {
+                if (tok.getType() == IToken.TYPE_FUNCTION || tok.getType() == IToken.TYPE_BUILTIN
+                        || tok.getType() == IToken.TYPE_UNKNOWN) {
                     String args = tok.getArgs();
-    
+
                     List<exprType> arguments = new ArrayList<exprType>();
                     boolean useAnyArgs = false;
-                    if(args.length() > 0){
+                    if (args.length() > 0) {
                         StringTokenizer strTok = new StringTokenizer(args, "( ,)");
-                        if(!strTok.hasMoreTokens()){
+                        if (!strTok.hasMoreTokens()) {
                             useAnyArgs = true;
-                        }else{
-                            while(strTok.hasMoreTokens()){
+                        } else {
+                            while (strTok.hasMoreTokens()) {
                                 String nextArg = strTok.nextToken();
                                 arguments.add(new Name(nextArg, Name.Load, false));
                             }
                         }
-                    }else{
+                    } else {
                         useAnyArgs = true;
                     }
-    
-                    argumentsType functionArguments = new argumentsType(arguments.toArray(new exprType[0]), null, null, null, null, null, null, null, null, null);
-                    if(useAnyArgs){
+
+                    argumentsType functionArguments = new argumentsType(arguments.toArray(new exprType[0]), null, null,
+                            null, null, null, null, null, null, null);
+                    if (useAnyArgs) {
                         Name name = new Name("self", Name.Store, false);
                         name.addSpecial(new SpecialStr(",", -1, -1), true);
                         functionArguments.args = new exprType[] { name };
@@ -94,7 +113,9 @@ public class ClassDefAdapterFromTokens implements IClassDefAdapter {
                         functionArguments.kwarg = new NameTok("kwargs", NameTok.KwArg);
                     }
                     //                System.out.println(tok.getRepresentation()+tok.getArgs());
-                    FunctionDef functionDef = new FunctionDef(new NameTok(tok.getRepresentation(), NameTok.FunctionName), functionArguments, null, null, null);
+                    FunctionDef functionDef = new FunctionDef(
+                            new NameTok(tok.getRepresentation(), NameTok.FunctionName), functionArguments, null, null,
+                            null);
                     cache.add(new FunctionDefAdapter(this.getModule(), null, functionDef, adapterPrefs));
                 }
             }

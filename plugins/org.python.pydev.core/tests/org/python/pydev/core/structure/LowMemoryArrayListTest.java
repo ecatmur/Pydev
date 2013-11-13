@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -9,6 +9,8 @@ package org.python.pydev.core.structure;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+
+import org.python.pydev.shared_core.structure.LowMemoryArrayList;
 
 import junit.framework.TestCase;
 
@@ -45,7 +47,6 @@ public class LowMemoryArrayListTest extends TestCase {
         assertTrue(array.indexOf(new Integer(5)) < 0);
         assertTrue(array.lastIndexOf(new Integer(5)) < 0);
 
-
         array.remove(1);
         array.remove(1);
 
@@ -79,33 +80,33 @@ public class LowMemoryArrayListTest extends TestCase {
 
         assertTrue(al.remove(null));
         assertTrue(al.remove("string"));
-        
+
         List<Integer> asList = Arrays.asList(1, 2);
-        
+
         al = new LowMemoryArrayList();
         Iterator iterator = al.iterator();
         assertTrue(!iterator.hasNext());
-        
+
         al.addAll(asList);
         al.addAll(asList);
         assertEquals(1, al.get(0));
         assertEquals(2, al.get(1));
         assertEquals(1, al.get(2));
         assertEquals(2, al.get(3));
-        
+
         iterator = al.iterator();
         assertTrue(iterator.hasNext());
         assertEquals(1, iterator.next());
-        
+
         assertTrue(iterator.hasNext());
         assertEquals(2, iterator.next());
-        
+
         assertTrue(iterator.hasNext());
         assertEquals(1, iterator.next());
-        
+
         assertTrue(iterator.hasNext());
         assertEquals(2, iterator.next());
-        
+
         assertTrue(!iterator.hasNext());
     }
 }

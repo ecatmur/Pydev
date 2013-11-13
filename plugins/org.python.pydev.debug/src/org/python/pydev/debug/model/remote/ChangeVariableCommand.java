@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -11,7 +11,6 @@
 package org.python.pydev.debug.model.remote;
 
 import org.python.pydev.debug.model.AbstractDebugTarget;
-
 
 /**
  * ChangeVariable network command.
@@ -33,7 +32,7 @@ public class ChangeVariableCommand extends AbstractDebuggerCommand {
     }
 
     public String getOutgoing() {
-        return makeCommand(getCommandId(), sequence, locator+"\t"+expression);
+        return makeCommand(getCommandId(), sequence, locator + "\t" + expression);
     }
 
     public boolean needResponse() {
@@ -43,6 +42,5 @@ public class ChangeVariableCommand extends AbstractDebuggerCommand {
     protected int getCommandId() {
         return CMD_CHANGE_VARIABLE;
     }
-    
-}
 
+}

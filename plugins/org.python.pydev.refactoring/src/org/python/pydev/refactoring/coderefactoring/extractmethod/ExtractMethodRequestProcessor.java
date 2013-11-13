@@ -1,3 +1,19 @@
+/******************************************************************************
+* Copyright (C) 2006-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Dennis Hunziker
+*     Ueli Kistler
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /* 
  * Copyright (C) 2006, 2007  Dennis Hunziker, Ueli Kistler
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
@@ -42,11 +58,13 @@ public class ExtractMethodRequestProcessor implements IRequestProcessor<ExtractM
 
     private AdapterPrefs adapterPrefs;
 
-    public ExtractMethodRequestProcessor(AbstractScopeNode<?> scopeAdapter, ModuleAdapter parsedSelection, ModuleAdapter module, ITextSelection selection) {
+    public ExtractMethodRequestProcessor(AbstractScopeNode<?> scopeAdapter, ModuleAdapter parsedSelection,
+            ModuleAdapter module, ITextSelection selection) {
         initProcessor(scopeAdapter, parsedSelection, module, selection);
     }
 
-    public void initProcessor(AbstractScopeNode<?> scopeAdapter, ModuleAdapter parsedSelection, ModuleAdapter module, ITextSelection selection) {
+    public void initProcessor(AbstractScopeNode<?> scopeAdapter, ModuleAdapter parsedSelection, ModuleAdapter module,
+            ITextSelection selection) {
         this.methodName = "pepticMethod";
         this.scopeAdapter = scopeAdapter;
         this.selection = selection;
@@ -62,7 +80,7 @@ public class ExtractMethodRequestProcessor implements IRequestProcessor<ExtractM
     }
 
     private void initRenamedMap() {
-        for(String variable:deducer.getParameters()){
+        for (String variable : deducer.getParameters()) {
             this.renameMap.put(variable, variable);
         }
 
@@ -90,16 +108,8 @@ public class ExtractMethodRequestProcessor implements IRequestProcessor<ExtractM
 
     public List<ExtractMethodRequest> getRefactoringRequests() {
         List<ExtractMethodRequest> requests = new ArrayList<ExtractMethodRequest>();
-        requests.add(new ExtractMethodRequest(
-                this.methodName, 
-                this.selection, 
-                this.scopeAdapter, 
-                this.parsedSelection, 
-                parameterOrder, 
-                deducer.getReturns(), 
-                this.renameMap, 
-                this.offsetStrategy,
-                this.adapterPrefs));
+        requests.add(new ExtractMethodRequest(this.methodName, this.selection, this.scopeAdapter, this.parsedSelection,
+                parameterOrder, deducer.getReturns(), this.renameMap, this.offsetStrategy, this.adapterPrefs));
         return requests;
     }
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -26,35 +26,35 @@ import org.python.pydev.builder.PyDevBuilderVisitor;
 import org.python.pydev.core.IPythonNature;
 import org.python.pydev.core.docutils.StringUtils;
 import org.python.pydev.core.log.Log;
-import org.python.pydev.core.structure.FastStringBuffer;
 import org.python.pydev.editor.codecompletion.revisited.PythonPathHelper;
 import org.python.pydev.editorinput.PySourceLocatorBase;
 import org.python.pydev.plugin.nature.PythonNature;
+import org.python.pydev.shared_core.callbacks.ICallback0;
+import org.python.pydev.shared_core.string.FastStringBuffer;
 import org.python.pydev.ui.filetypes.FileTypesPreferencesPage;
 
-public class PycHandlerBuilderVisitor extends PyDevBuilderVisitor{
-    
+public class PycHandlerBuilderVisitor extends PyDevBuilderVisitor {
+
     /**
      * Job that actually deletes the files.
      */
     private static final class PycDeleteJob extends WorkspaceJob {
         public PycDeleteJob() {
             super("Delete .pyc/$py.class files");
-            
+
         }
 
         private final List<IFile> files = new ArrayList<IFile>();
-        
+
         private final Object lock = new Object();
 
-        private void addFilesToDelete(IFile[] files){
+        private void addFilesToDelete(IFile[] files) {
             synchronized (lock) {
-                for(IFile f: files){
+                for (IFile f : files) {
                     this.files.add(f);
                 }
             }
         }
-        
 
         @Override
         public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
@@ -65,8 +65,8 @@ public class PycHandlerBuilderVisitor extends PyDevBuilderVisitor{
             }
             monitor.beginTask("Delete .pyc/$py.class files", currentFilesToDelete.length);
             try {
-                
-                for(final IFile workspaceFile : currentFilesToDelete){
+
+                for (final IFile workspaceFile : currentFilesToDelete) {
                     if (workspaceFile != null && workspaceFile.exists()) {
                         try {
                             workspaceFile.delete(true, monitor);
@@ -82,34 +82,31 @@ public class PycHandlerBuilderVisitor extends PyDevBuilderVisitor{
             return Status.OK_STATUS;
         }
 
-
     }
-    
+
     private static final PycDeleteJob pycDeleteJob = new PycDeleteJob();
 
     private static final PySourceLocatorBase locator = new PySourceLocatorBase();
-    
+
     private int pycDeleteHandling;
-    
 
     @Override
     public void visitingWillStart(IProgressMonitor monitor, boolean isFullBuild, IPythonNature nature) {
         super.visitingWillStart(monitor, isFullBuild, nature);
         pycDeleteHandling = PyDevBuilderPrefPage.getPycDeleteHandling();
     }
-    
+
     @Override
-    public void visitChangedResource(IResource resource, IDocument document, IProgressMonitor monitor) {
+    public void visitChangedResource(IResource resource, ICallback0<IDocument> document, IProgressMonitor monitor) {
         //Ignore: for pyc files we only care about their addition.
     }
-    
-    
+
     /**
      * When a .pyc/$py.class file is found, we remove it if it doesn't have the correspondent .py or .pyw class.
      */
     @Override
-    public void visitAddedResource(IResource resource, IDocument document, IProgressMonitor monitor) {
-        switch(pycDeleteHandling){
+    public void visitAddedResource(IResource resource, ICallback0<IDocument> document, IProgressMonitor monitor) {
+        switch (pycDeleteHandling) {
             case PyDevBuilderPrefPage.PYC_NEVER_DELETE:
                 //See: never delete!
                 return;
@@ -119,41 +116,41 @@ public class PycHandlerBuilderVisitor extends PyDevBuilderVisitor{
             case PyDevBuilderPrefPage.PYC_ALWAYS_DELETE:
                 //keep on going
         }
-        
+
         final String loc = resource.getLocation().toOSString();
-        if(loc != null && (loc.endsWith(".pyc") || loc.endsWith("$py.class"))){
+        if (loc != null && (loc.endsWith(".pyc") || loc.endsWith("$py.class"))) {
             String dotPyLoc = null;
-            
+
             final FastStringBuffer buf = new FastStringBuffer(StringUtils.stripExtension(loc), 8);
-            for(String ext: FileTypesPreferencesPage.getDottedValidSourceFiles()){
+            for (String ext : FileTypesPreferencesPage.getDottedValidSourceFiles()) {
                 buf.append(ext);
                 final String bufStr = buf.toString();
                 File file = new File(bufStr);
-                if(dotPyLoc == null){
+                if (dotPyLoc == null) {
                     dotPyLoc = bufStr;
                 }
-                if(file.exists()){
+                if (file.exists()) {
                     markAsDerived(resource);
                     return;
                 }
                 buf.deleteLastChars(ext.length());
             }
-            
+
             //this is needed because this method might be called alone (not in the grouper that checks
             //if it is in the pythonpath before)
             //
             //this happens only when a .pyc file is found... if it was a .py file, this would not be needed (as is the
             //case in the visit removed resource)
             IPythonNature nature = PythonNature.getPythonNature(resource);
-            if(nature == null){
+            if (nature == null) {
                 markAsDerived(resource);
                 return;
             }
-            try{
-                if(!nature.isResourceInPythonpathProjectSources(dotPyLoc, false)){
+            try {
+                if (!nature.isResourceInPythonpathProjectSources(dotPyLoc, false)) {
                     return; // we only analyze resources that are source folders (not external folders)
                 }
-            }catch(Exception e){
+            } catch (Exception e) {
                 Log.log(e);
                 return;
             }
@@ -163,7 +160,6 @@ public class PycHandlerBuilderVisitor extends PyDevBuilderVisitor{
         }
     }
 
-    
     /**
      * We must mark .pyc files as derived.
      * @param resource the resource to be marked as derived.
@@ -176,46 +172,43 @@ public class PycHandlerBuilderVisitor extends PyDevBuilderVisitor{
         }
     }
 
-    
     /**
      * When a .py file is removed (which is what we check for), we go on and remove the .pyc file too.
      */
     @Override
-    public void visitRemovedResource(IResource resource, IDocument document, IProgressMonitor monitor) {
-        switch(pycDeleteHandling){
+    public void visitRemovedResource(IResource resource, ICallback0<IDocument> document, IProgressMonitor monitor) {
+        switch (pycDeleteHandling) {
             case PyDevBuilderPrefPage.PYC_NEVER_DELETE:
                 //See: never delete!
                 return;
         }
 
-        
         String loc = resource.getLocation().toOSString();
-        if(PythonPathHelper.isValidSourceFile(loc)){
+        if (PythonPathHelper.isValidSourceFile(loc)) {
             String withoutExt = StringUtils.stripExtension(loc);
-            deletePycFile(withoutExt+".pyc");
-            deletePycFile(withoutExt+"$py.class");
+            deletePycFile(withoutExt + ".pyc");
+            deletePycFile(withoutExt + "$py.class");
         }
     }
-    
 
     /**
      * Deletes .pyc files
      */
     private void deletePycFile(String loc) {
-        if(loc.endsWith(".pyc") || loc.endsWith("$py.class")){
+        if (loc.endsWith(".pyc") || loc.endsWith("$py.class")) {
             try {
                 File file = new File(loc);
-                
+
                 //remove all: file and links
                 final IFile[] files = locator.getWorkspaceFiles(file);
-                
-                if(files == null || files.length == 0){
-                    return ;
+
+                if (files == null || files.length == 0) {
+                    return;
                 }
 
                 pycDeleteJob.addFilesToDelete(files);
                 pycDeleteJob.schedule(200);
-                
+
             } catch (Exception e) {
                 Log.log(e);
             }

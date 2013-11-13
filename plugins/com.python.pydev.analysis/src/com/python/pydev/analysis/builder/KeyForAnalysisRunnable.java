@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -17,7 +17,7 @@ package com.python.pydev.analysis.builder;
  * @author Fabio
  */
 public class KeyForAnalysisRunnable {
-    
+
     public final String projectName;
     public final String moduleName;
 
@@ -25,8 +25,7 @@ public class KeyForAnalysisRunnable {
         this.projectName = projectName;
         this.moduleName = moduleName;
     }
-    
-    
+
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -34,8 +33,7 @@ public class KeyForAnalysisRunnable {
         result = prime * result + ((projectName == null) ? 0 : projectName.hashCode());
         return result;
     }
-    
-    
+
     public boolean equals(Object obj) {
         if (this == obj)
             return true;

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -18,7 +18,7 @@ import org.eclipse.swt.graphics.Image;
 /**
  * @author Fabio Zadrozny
  */
-public interface IToken extends Serializable, Comparable{
+public interface IToken extends Serializable, Comparable {
 
     /**
      * Type for unknown.
@@ -76,12 +76,20 @@ public interface IToken extends Serializable, Comparable{
      * 'foo' and 'bar' would be generated with this type
      */
     public static final int TYPE_OBJECT_FOUND_INTERFACE = 10;
-    
+    /**
+     * Type for IPython (used to decide the icon)
+     */
+    public static final int TYPE_IPYTHON = 11;
+    /**
+     * Type for IPython Magics (used to decide the icon and sort order)
+     */
+    public static final int TYPE_IPYTHON_MAGIC = 12;
+
     /**
      * @return the type for this token
      */
     public int getType();
-    
+
     /**
      * 
      * @return the representation of this token.
@@ -93,10 +101,15 @@ public interface IToken extends Serializable, Comparable{
      * import testcase            (return testcase)
      */
     public String getRepresentation();
+
     public String getDocStr();
+
     public void setDocStr(String docStr);
+
     public String getArgs();
+
     public void setArgs(String args);
+
     public String getParentPackage();
 
     /**
@@ -112,7 +125,7 @@ public interface IToken extends Serializable, Comparable{
      * 
      * if not decorating would return the same as above without 'test'
      */
-//    public String getOriginalRep(boolean decorateWithModule);
+    //    public String getOriginalRep(boolean decorateWithModule);
 
     /**
      * @param baseModule this is the module base to discover from where should it be made relative 
@@ -126,21 +139,23 @@ public interface IToken extends Serializable, Comparable{
      * Same as relative from "."
      */
     public String getAsAbsoluteImport();
-    
+
     /**
      * Constant to indicate that it was not possible to know in which line the
      * token was defined.
      */
     public static final int UNDEFINED = -1;
+
     /**
      * @return the line where this token was defined
      */
     public int getLineDefinition();
+
     /**
      * @return the col where this token was defined
      */
     public int getColDefinition();
-    
+
     /**
      * @return whether the token we have wrapped is an import
      */
@@ -150,12 +165,12 @@ public interface IToken extends Serializable, Comparable{
      * @return whether this token defined as part of "from ... import ..."
      */
     public boolean isImportFrom();
-    
+
     /**
      * @return whether the token we have wrapped is a wild import
      */
     public boolean isWildImport();
-    
+
     /**
      * @return the original representation (useful for imports)
      * e.g.: if it was import coilib.Exceptions as Exceptions, would return coilib.Exceptions
@@ -170,7 +185,7 @@ public interface IToken extends Serializable, Comparable{
      * e.g.: if it was import from coilib.test import Exceptions, it would return coilib.test
      */
     public String getOriginalWithoutRep();
-    
+
     /**
      * @return
      */

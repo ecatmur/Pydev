@@ -1,3 +1,19 @@
+/******************************************************************************
+* Copyright (C) 2006-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Dennis Hunziker
+*     Ueli Kistler
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /* 
  * Copyright (C) 2006, 2007  Dennis Hunziker, Ueli Kistler
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
@@ -41,19 +57,19 @@ public class TableCellEditorListener extends Observable implements Listener {
         editor.grabHorizontal = true;
 
         Rectangle clientArea = table.getClientArea();
-        if(table.getSelection().length != 1){
+        if (table.getSelection().length != 1) {
             return;
         }
 
         Rectangle bounds = table.getSelection()[0].getBounds();
         Point pt = new Point(bounds.x, bounds.y);
         int index = table.getTopIndex();
-        while(index < table.getItemCount()){
+        while (index < table.getItemCount()) {
             boolean visible = false;
             final SimpleTableItem item = (SimpleTableItem) table.getItem(index);
-            for(int i = 0; i < table.getColumnCount(); i++){
+            for (int i = 0; i < table.getColumnCount(); i++) {
                 Rectangle rect = item.getBounds(i);
-                if(rect.contains(pt)){
+                if (rect.contains(pt)) {
 
                     final Text text = new Text(table, SWT.NONE);
                     Listener textListener = new TextListener(item, text);
@@ -67,11 +83,11 @@ public class TableCellEditorListener extends Observable implements Listener {
                     text.setFocus();
                     return;
                 }
-                if(!visible && rect.intersects(clientArea)){
+                if (!visible && rect.intersects(clientArea)) {
                     visible = true;
                 }
             }
-            if(!visible){
+            if (!visible) {
                 return;
             }
             index++;
@@ -89,18 +105,18 @@ public class TableCellEditorListener extends Observable implements Listener {
         }
 
         public void handleEvent(final Event e) {
-            if(e.type == SWT.FocusOut){
+            if (e.type == SWT.FocusOut) {
                 tableItem.setText(text.getText());
                 text.dispose();
                 table.setFocus();
-            }else if(e.type == SWT.Traverse){
-                if(e.detail == SWT.TRAVERSE_RETURN){
+            } else if (e.type == SWT.Traverse) {
+                if (e.detail == SWT.TRAVERSE_RETURN) {
                     tableItem.setText(text.getText());
                     e.doit = true;
                 }
-                if(e.detail == SWT.TRAVERSE_RETURN || e.detail == SWT.TRAVERSE_ESCAPE){
+                if (e.detail == SWT.TRAVERSE_RETURN || e.detail == SWT.TRAVERSE_ESCAPE) {
                     text.dispose();
-                    if(e.detail == SWT.TRAVERSE_ESCAPE){
+                    if (e.detail == SWT.TRAVERSE_ESCAPE) {
                         e.doit = false;
                     }
                 }

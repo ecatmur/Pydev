@@ -1,3 +1,19 @@
+/******************************************************************************
+* Copyright (C) 2006-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Dennis Hunziker
+*     Ueli Kistler
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /* 
  * Copyright (C) 2006, 2007  Dennis Hunziker, Ueli Kistler
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
@@ -49,8 +65,8 @@ public class GeneratePropertiesRequestProcessor implements IRequestProcessor<Gen
     private List<TreeAttributeNode> getAttributes() {
         List<TreeAttributeNode> attrs = new ArrayList<TreeAttributeNode>();
 
-        for(Object elem:checked){
-            if(elem instanceof TreeAttributeNode){
+        for (Object elem : checked) {
+            if (elem instanceof TreeAttributeNode) {
                 attrs.add((TreeAttributeNode) elem);
             }
         }
@@ -61,10 +77,10 @@ public class GeneratePropertiesRequestProcessor implements IRequestProcessor<Gen
     private List<PropertyTextAdapter> getProperties(TreeAttributeNode attr) {
         List<PropertyTextAdapter> props = new ArrayList<PropertyTextAdapter>();
 
-        for(Object elem:checked){
-            if(elem instanceof TreeNodeSimple){
+        for (Object elem : checked) {
+            if (elem instanceof TreeNodeSimple) {
                 TreeNodeSimple<? extends INodeAdapter> propertyNode = (TreeNodeSimple<?>) elem;
-                if(propertyNode.getParent() == attr){
+                if (propertyNode.getParent() == attr) {
                     props.add((PropertyTextAdapter) propertyNode.getAdapter());
                 }
             }
@@ -82,9 +98,9 @@ public class GeneratePropertiesRequestProcessor implements IRequestProcessor<Gen
     private List<GeneratePropertiesRequest> generateRequests() {
         List<GeneratePropertiesRequest> requests = new ArrayList<GeneratePropertiesRequest>();
 
-        for(TreeAttributeNode elem:getAttributes()){
+        for (TreeAttributeNode elem : getAttributes()) {
             GeneratePropertiesRequest request = extractRequest(elem);
-            if(request != null){
+            if (request != null) {
                 requests.add(request);
             }
         }
@@ -93,12 +109,11 @@ public class GeneratePropertiesRequestProcessor implements IRequestProcessor<Gen
     }
 
     private GeneratePropertiesRequest extractRequest(TreeAttributeNode attr) {
-        if(attr.getParent() != null && attr.getParent() instanceof TreeClassNode){
+        if (attr.getParent() != null && attr.getParent() instanceof TreeClassNode) {
             TreeClassNode classNode = (TreeClassNode) attr.getParent();
 
-            return new GeneratePropertiesRequest(
-                    classNode.getAdapter(), attr.getAdapter(), getProperties(attr), offsetMethodStrategy, 
-                    offsetPropertyStrategy, accessModifier, adapterPrefs);
+            return new GeneratePropertiesRequest(classNode.getAdapter(), attr.getAdapter(), getProperties(attr),
+                    offsetMethodStrategy, offsetPropertyStrategy, accessModifier, adapterPrefs);
         }
         return null;
     }

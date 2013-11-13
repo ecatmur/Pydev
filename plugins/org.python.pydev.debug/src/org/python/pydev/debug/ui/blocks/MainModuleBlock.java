@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -7,6 +7,8 @@
 package org.python.pydev.debug.ui.blocks;
 
 import java.io.File;
+import java.net.URI;
+import java.util.ArrayList;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -15,7 +17,6 @@ import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.ui.AbstractLaunchConfigurationTab;
@@ -37,6 +38,8 @@ import org.python.pydev.core.docutils.StringSubstitution;
 import org.python.pydev.core.docutils.StringUtils;
 import org.python.pydev.core.log.Log;
 import org.python.pydev.debug.core.Constants;
+import org.python.pydev.debug.ui.launching.FileOrResource;
+import org.python.pydev.debug.ui.launching.LaunchConfigurationCreator;
 import org.python.pydev.plugin.nature.PythonNature;
 import org.python.pydev.ui.dialogs.PythonModulePickerDialog;
 
@@ -49,6 +52,7 @@ public class MainModuleBlock extends AbstractLaunchConfigurationTab {
     private Button fMainModuleBrowseButton;
     private String fProjectName;
     private ModifyListener fProjectModifyListener;
+    private boolean fUnitTesting;
 
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#createControl(org.eclipse.swt.widgets.Composite)
@@ -60,12 +64,12 @@ public class MainModuleBlock extends AbstractLaunchConfigurationTab {
         setControl(group);
         GridLayout topLayout = new GridLayout();
         topLayout.numColumns = 2;
-        group.setLayout(topLayout);    
+        group.setLayout(topLayout);
         GridData gd = new GridData(GridData.FILL_HORIZONTAL);
         group.setLayoutData(gd);
         group.setFont(font);
-        group.setText("Main Module"); 
-        
+        group.setText("Main Module");
+
         fMainModuleText = new Text(group, SWT.SINGLE | SWT.BORDER);
         gd = new GridData(GridData.FILL_HORIZONTAL);
         fMainModuleText.setLayoutData(gd);
@@ -74,46 +78,65 @@ public class MainModuleBlock extends AbstractLaunchConfigurationTab {
             public void modifyText(ModifyEvent evt) {
                 updateLaunchConfigurationDialog();
             }
-        });    
+        });
 
         final Composite lParent = parent;
         fMainModuleBrowseButton = createPushButton(group, "Browse...", null);
-        fMainModuleBrowseButton.setText("Browse");
-        
+
         // On button click, this displays the python module picker dialog.
         fMainModuleBrowseButton.addSelectionListener(new SelectionAdapter() {
+            @Override
             public void widgetSelected(SelectionEvent e) {
                 IWorkspace workspace = ResourcesPlugin.getWorkspace();
-                IFile currentFile = getMainModuleFile();
+                IResource[] currentResources = getMainModuleResources();
                 IResource resource = workspace.getRoot().findMember(fProjectName);
 
                 if (resource instanceof IProject) {
                     IProject project = (IProject) resource;
-                    PythonModulePickerDialog dialog = new PythonModulePickerDialog(
-                            lParent.getShell(), 
-                            "Main Module",
-                            "Choose Python module which starts execution",
-                            project);
-                    
+                    String title, message;
+                    if (!fUnitTesting) {
+                        title = "Main Module";
+                        message = "Choose Python module which starts execution";
+                    }
+                    else
+                    {
+                        title = "Main Modules";
+                        message = "Choose Python module(s) and/or package(s) to test";
+                    }
+                    PythonModulePickerDialog dialog = new PythonModulePickerDialog(lParent.getShell(), title,
+                            message, project, fUnitTesting);
+
                     // Fixed request 1407469: main module browse button forgets path                    
-                    dialog.setInitialSelection(currentFile);
+                    if (currentResources != null) {
+                        dialog.setInitialSelections(currentResources);
+                    }
 
                     int result = dialog.open();
                     if (result == PythonModulePickerDialog.OK) {
                         Object results[] = dialog.getResult();
-                        if (   (results != null) 
-                            && (results.length > 0)
-                            && (results[0] instanceof IFile)) {
-                            IFile file = (IFile) results[0];
-                            IPath path = file.getFullPath();
-                            String containerName = path.makeRelative().toString();
-                            fMainModuleText.setText("${workspace_loc:" + containerName + "}");
+                        if ((results != null) && (results.length > 0)) {
+
+                            ArrayList<IResource> r_results = new ArrayList<IResource>();
+
+                            for (int i = 0; i < results.length; i++) {
+                                if (results[i] instanceof IResource) {
+                                    if (results[i] instanceof IFile) {
+                                        r_results.add((IFile) results[i]);
+                                    }
+                                    else {
+                                        r_results.add((IResource) results[i]);
+                                    }
+                                }
+                            }
+                            fMainModuleText.setText(LaunchConfigurationCreator.getDefaultLocation(
+                                    FileOrResource.createArray(r_results.toArray(new IResource[r_results.size()])),
+                                    true));
                         }
                     }
                 }
             }
         });
-        
+
         // Create a ModifyListener, used to listen for project modifications in the ProjectBlock. 
         // This assumes that the Project is in a Text control...
         fProjectModifyListener = new ModifyListener() {
@@ -126,17 +149,16 @@ public class MainModuleBlock extends AbstractLaunchConfigurationTab {
                     IResource resource = workspace.getRoot().findMember(fProjectName);
 
                     boolean enabled = false;
-                    if (   (resource != null)
-                        && (resource instanceof IProject)) {
+                    if ((resource != null) && (resource instanceof IProject)) {
                         IProject project = (IProject) resource;
                         PythonNature nature = PythonNature.getPythonNature(project);
                         enabled = (nature != null);
                     }
-                    
+
                     fMainModuleBrowseButton.setEnabled(enabled);
                 }
             }
-        };        
+        };
     }
 
     /*
@@ -154,20 +176,32 @@ public class MainModuleBlock extends AbstractLaunchConfigurationTab {
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#initializeFrom(org.eclipse.debug.core.ILaunchConfiguration)
      */
     public void initializeFrom(ILaunchConfiguration configuration) {
-        
+
         // Initialize the location field
         String location = "";
-        try {            
+        try {
             location = configuration.getAttribute(Constants.ATTR_LOCATION, "");
-        } catch(CoreException e) { }
+        } catch (CoreException e) {
+        }
         fMainModuleText.setText(location);
-        
+
         // Obtain a copy of the project name (not displayed)
         String projectName = "";
-        try {            
+        try {
             projectName = configuration.getAttribute(Constants.ATTR_PROJECT, "");
-        } catch(CoreException e) { }
+        } catch (CoreException e) {
+        }
         fProjectName = projectName;
+
+        try {
+            String identifier = configuration.getType().getIdentifier(); //configuration.getType().getIdentifier();
+            fUnitTesting = (identifier.equals(Constants.ID_PYTHON_UNITTEST_LAUNCH_CONFIGURATION_TYPE)
+                    || identifier.equals(Constants.ID_JYTHON_UNITTEST_LAUNCH_CONFIGURATION_TYPE)
+                    || identifier.equals(Constants.ID_IRONPYTHON_UNITTEST_LAUNCH_CONFIGURATION_TYPE)
+                    || identifier.equals(Constants.ID_PYTHON_COVERAGE_LAUNCH_CONFIGURATION_TYPE));
+        } catch (CoreException e) {
+            setErrorMessage("Unable to resolve location");
+        }
     }
 
     /*
@@ -177,7 +211,7 @@ public class MainModuleBlock extends AbstractLaunchConfigurationTab {
     public void performApply(ILaunchConfigurationWorkingCopy configuration) {
         String value = fMainModuleText.getText().trim();
         setAttribute(configuration, Constants.ATTR_LOCATION, value);
-        configuration.setMappedResources(new IResource[]{getMainModuleFile()});
+        configuration.setMappedResources(getMainModuleResources());
     }
 
     /*
@@ -195,39 +229,50 @@ public class MainModuleBlock extends AbstractLaunchConfigurationTab {
      * 
      * @return The main module file. 
      */
-    private IFile getMainModuleFile() {
+    private IResource[] getMainModuleResources() {
         String path = fMainModuleText.getText();
-        IFile file = null;
+        ArrayList<IResource> res_list = new ArrayList<IResource>();
         if (path.length() > 0) {
             IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-            
+
             StringSubstitution stringSubstitution = getStringSubstitution(root);
             try {
-                path = stringSubstitution.performStringSubstitution(path, false);
-                IFile[] files = root.findFilesForLocationURI(new File(path).toURI());
-                if (files.length > 0) {
-                    file = files[0];
+                //may have multiple files selected for the run for unittest and code-coverage
+                for (String loc : StringUtils.splitAndRemoveEmptyTrimmed(path, '|')) {
+                    String onepath = stringSubstitution.performStringSubstitution(loc, false);
+                    URI uri = new File(onepath).toURI();
+                    IFile[] tfiles = root.findFilesForLocationURI(uri);
+                    if (tfiles.length > 0) {
+                        res_list.add(tfiles[0]);
+                        continue;
+                    }
+                    IResource[] tres = root.findContainersForLocationURI(uri);
+                    if (tres.length > 0) {
+                        res_list.add(tres[0]);
+                    }
                 }
-            } 
-            catch (CoreException e) {
+            } catch (CoreException e) {
                 Log.log(e);
             }
-                
+
         }
-        return file;
+        if (res_list.isEmpty()) {
+            return null;
+        }
+        return res_list.toArray(new IResource[res_list.size()]);
     }
 
     /**
      * @param root the workspace root.
      * @return an object capable on making string substitutions based on variables in the project and in the workspace.
      */
-    public StringSubstitution getStringSubstitution(IWorkspaceRoot root){
+    public StringSubstitution getStringSubstitution(IWorkspaceRoot root) {
         IResource resource = root.findMember(fProjectName);
         IPythonNature nature = null;
         if (resource instanceof IProject) {
             nature = PythonNature.getPythonNature(resource);
         }
-        
+
         StringSubstitution stringSubstitution = new StringSubstitution(nature);
         return stringSubstitution;
     }
@@ -240,62 +285,60 @@ public class MainModuleBlock extends AbstractLaunchConfigurationTab {
      * @param value Value to set 
      */
     private void setAttribute(ILaunchConfigurationWorkingCopy configuration, String name, String value) {
-        if (value == null || value.length() == 0){
+        if (value == null || value.length() == 0) {
             configuration.setAttribute(name, (String) null);
-        }else{
+        } else {
             configuration.setAttribute(name, value);
         }
     }
-    
+
     /*
      * (non-Javadoc)
      * @see org.eclipse.debug.ui.AbstractLaunchConfigurationTab#isValid(org.eclipse.debug.core.ILaunchConfiguration)
      */
-     @Override
+    @Override
     public boolean isValid(ILaunchConfiguration launchConfig) {
         boolean result = super.isValid(launchConfig);
-        
+
         if (result) {
             setMessage(null);
             setErrorMessage(null);
-            
+
             IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
             StringSubstitution stringSubstitution = getStringSubstitution(root);
 
             String location = fMainModuleText.getText();
             try {
-                
-                String identifier = launchConfig.getType().getIdentifier();
-                if(
-                    identifier.equals(Constants.ID_PYTHON_UNITTEST_LAUNCH_CONFIGURATION_TYPE) || 
-                    identifier.equals(Constants.ID_JYTHON_UNITTEST_LAUNCH_CONFIGURATION_TYPE) ||
-                    identifier.equals(Constants.ID_IRONPYTHON_UNITTEST_LAUNCH_CONFIGURATION_TYPE) || 
-                    identifier.equals(Constants.ID_PYTHON_COVERAGE_LAUNCH_CONFIGURATION_TYPE)){
-                    
+
+                if (fUnitTesting) {
+
                     //may have  multiple files selected for the run for unitest and code-coverage
-                    for(String loc:StringUtils.splitAndRemoveEmptyTrimmed(location, '|')){
+                    for (String loc : StringUtils.splitAndRemoveEmptyTrimmed(location, '|')) {
                         String expandedLocation = stringSubstitution.performStringSubstitution(loc);
                         File file = new File(expandedLocation);
-                        if(!file.exists()){
-                            setErrorMessage(StringUtils.format("The file \"%s\" does not exist.", file));
+                        if (!file.exists()) {
+                            setErrorMessage(org.python.pydev.shared_core.string.StringUtils.format(
+                                    "The file \"%s\" does not exist.", file));
                             result = false;
                             break;
                         }
-                        
+
                     }
-                }else{
+                } else {
                     String expandedLocation = stringSubstitution.performStringSubstitution(location);
                     File file = new File(expandedLocation);
-                    if(!file.exists()){
-                        setErrorMessage(StringUtils.format("The file \"%s\" does not exist.", file));
+                    if (!file.exists()) {
+                        setErrorMessage(org.python.pydev.shared_core.string.StringUtils.format(
+                                "The file \"%s\" does not exist.", file));
                         result = false;
-                        
-                    }else if(!file.isFile()) {
-                        setErrorMessage(StringUtils.format("The file \"%s\" does not actually map to a file.", file));
+
+                    } else if (!file.isFile()) {
+                        setErrorMessage(org.python.pydev.shared_core.string.StringUtils.format(
+                                "The file \"%s\" does not actually map to a file.", file));
                         result = false;
                     }
                 }
-                
+
             } catch (CoreException e) {
                 setErrorMessage("Unable to resolve location");
                 result = false;
@@ -303,7 +346,6 @@ public class MainModuleBlock extends AbstractLaunchConfigurationTab {
         }
         return result;
     }
-     
 
     /**
      * Obtain a listener, used to detect changes of the currently selected project

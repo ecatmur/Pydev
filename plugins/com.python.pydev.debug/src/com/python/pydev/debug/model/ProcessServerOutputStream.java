@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -14,9 +14,9 @@ import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.debug.ui.DebugUITools;
 import org.python.pydev.core.ExtensionHelper;
-import org.python.pydev.core.docutils.StringUtils;
 import org.python.pydev.debug.core.IConsoleInputListener;
 import org.python.pydev.debug.model.AbstractDebugTarget;
+import org.python.pydev.shared_core.string.StringUtils;
 
 /**
  * This is the output stream for the remote debugger.
@@ -24,7 +24,7 @@ import org.python.pydev.debug.model.AbstractDebugTarget;
  * When a new line is entered in the console for the remote debugger, it will pass that for the
  * debug console input listeners.
  */
-public final class ProcessServerOutputStream extends ByteArrayOutputStream{
+public final class ProcessServerOutputStream extends ByteArrayOutputStream {
 
     final List<IConsoleInputListener> participants;
 
@@ -34,19 +34,19 @@ public final class ProcessServerOutputStream extends ByteArrayOutputStream{
     }
 
     @Override
-    public synchronized void write(int b){
+    public synchronized void write(int b) {
         super.write(b);
         this.checkFinishedLine();
     }
 
     @Override
-    public synchronized void write(byte b[], int off, int len){
+    public synchronized void write(byte b[], int off, int len) {
         super.write(b, off, len);
         this.checkFinishedLine();
     }
 
     @Override
-    public void write(byte b[]) throws IOException{
+    public void write(byte b[]) throws IOException {
         super.write(b);
         this.checkFinishedLine();
     }
@@ -54,19 +54,19 @@ public final class ProcessServerOutputStream extends ByteArrayOutputStream{
     /**
      * Checks if the last thing entered was a new line, and if it was, notifies clients about it.
      */
-    private void checkFinishedLine(){
+    private void checkFinishedLine() {
         String s = this.toString();
         this.reset();
         char c;
-        if(s.length() > 0 && ((c = s.charAt(s.length() - 1)) == '\n' || c == '\r')){
+        if (s.length() > 0 && ((c = s.charAt(s.length() - 1)) == '\n' || c == '\r')) {
             IAdaptable context = DebugUITools.getDebugContext();
-            if(context != null){
+            if (context != null) {
                 s = StringUtils.rightTrim(s);
                 Object adapter = context.getAdapter(IDebugTarget.class);
-                if(adapter instanceof AbstractDebugTarget){
+                if (adapter instanceof AbstractDebugTarget) {
                     AbstractDebugTarget target = (AbstractDebugTarget) adapter;
-    
-                    for(IConsoleInputListener listener:participants){
+
+                    for (IConsoleInputListener listener : participants) {
                         listener.newLineReceived(s, target);
                     }
                 }

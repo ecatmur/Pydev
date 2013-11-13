@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -16,13 +16,13 @@ import org.python.pydev.core.IPythonPathNature;
 import org.python.pydev.core.log.Log;
 import org.python.pydev.customizations.common.CustomizationCommons;
 
+
 /**
  * Test to check if a given container can be run from google app engine.
  * 
  * @author Fabio
  */
-public class AppEnginePropertyTester extends PropertyTester{
-
+public class AppEnginePropertyTester extends PropertyTester {
 
     /**
      * Expected value is ignored.
@@ -32,37 +32,38 @@ public class AppEnginePropertyTester extends PropertyTester{
      */
     public boolean test(Object receiver, String property, Object[] args, Object expectedValue) {
         IContainer container = CustomizationCommons.getContainerFromObject(receiver);
-        if(container == null){
+        if (container == null) {
             return false;
         }
-        
+
         IPythonPathNature nature = CustomizationCommons.getPythonPathNatureFromObject(receiver);
-        if(nature == null){
+        if (nature == null) {
             return false;
         }
-        
+
         //dev_appserver.py [options] <application root>
         //
         //Application root must be the path to the application to run in this server.
         //Must contain a valid app.yaml or app.yml file.
         IFile file = container.getFile(new Path("app.yaml"));
-        if(file == null || !file.exists()){
+        if (file == null || !file.exists()) {
             file = container.getFile(new Path("app.yml"));
-            if(file == null || !file.exists()){
+            if (file == null || !file.exists()) {
                 return false;
             }
         }
-        
-        try{
+
+        try {
             Map<String, String> variableSubstitution = nature.getVariableSubstitution();
             //Only consider a google app engine a project that has a google app engine variable!
-            if(variableSubstitution != null && variableSubstitution.containsKey(AppEngineConstants.GOOGLE_APP_ENGINE_VARIABLE)){
+            if (variableSubstitution != null
+                    && variableSubstitution.containsKey(AppEngineConstants.GOOGLE_APP_ENGINE_VARIABLE)) {
                 return true;
             }
-        }catch(Exception e){
+        } catch (Exception e) {
             Log.log(e);
         }
-     
+
         return false;
     }
 

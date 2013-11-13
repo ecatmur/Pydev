@@ -1,3 +1,19 @@
+/******************************************************************************
+* Copyright (C) 2006-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Dennis Hunziker
+*     Ueli Kistler
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /* 
  * Copyright (C) 2006, 2007  Dennis Hunziker, Ueli Kistler
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
@@ -47,10 +63,10 @@ public class ClassDefAdapterFromClassDef implements IClassDefAdapter {
     }
 
     public FunctionDefAdapter getFirstInit() {
-        for(stmtType b:this.classDef.body){
-            if(b instanceof FunctionDef){
+        for (stmtType b : this.classDef.body) {
+            if (b instanceof FunctionDef) {
                 FunctionDef functionDef = (FunctionDef) b;
-                if(((NameTok) functionDef.name).id.equals("__init__")){
+                if (((NameTok) functionDef.name).id.equals("__init__")) {
                     return new FunctionDefAdapter(module, null, (FunctionDef) b, adapterPrefs);
                 }
             }
@@ -60,8 +76,8 @@ public class ClassDefAdapterFromClassDef implements IClassDefAdapter {
 
     public List<FunctionDefAdapter> getFunctions() {
         ArrayList<FunctionDefAdapter> ret = new ArrayList<FunctionDefAdapter>();
-        for(stmtType b:this.classDef.body){
-            if(b instanceof FunctionDef){
+        for (stmtType b : this.classDef.body) {
+            if (b instanceof FunctionDef) {
                 ret.add(new FunctionDefAdapter(module, null, (FunctionDef) b, adapterPrefs));
             }
         }
@@ -70,10 +86,10 @@ public class ClassDefAdapterFromClassDef implements IClassDefAdapter {
 
     public List<FunctionDefAdapter> getFunctionsInitFiltered() {
         ArrayList<FunctionDefAdapter> ret = new ArrayList<FunctionDefAdapter>();
-        for(stmtType b:this.classDef.body){
-            if(b instanceof FunctionDef){
+        for (stmtType b : this.classDef.body) {
+            if (b instanceof FunctionDef) {
                 FunctionDef functionDef = (FunctionDef) b;
-                if(((NameTok) functionDef.name).id.equals("__init__")){
+                if (((NameTok) functionDef.name).id.equals("__init__")) {
                     continue;
                 }
                 ret.add(new FunctionDefAdapter(module, null, functionDef, adapterPrefs));

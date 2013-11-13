@@ -1,3 +1,19 @@
+/******************************************************************************
+* Copyright (C) 2006-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Dennis Hunziker
+*     Ueli Kistler
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /* 
  * Copyright (C) 2006, 2007  Dennis Hunziker, Ueli Kistler
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
@@ -19,6 +35,7 @@ import org.python.pydev.parser.visitors.FindLastLineVisitor;
 import org.python.pydev.parser.visitors.NodeUtils;
 import org.python.pydev.refactoring.ast.adapters.IASTNodeAdapter;
 
+
 public class BeginOffset extends AbstractOffsetStrategy {
 
     public BeginOffset(IASTNodeAdapter<? extends SimpleNode> adapter, IDocument doc, AdapterPrefs adapterPrefs) {
@@ -27,38 +44,39 @@ public class BeginOffset extends AbstractOffsetStrategy {
 
     protected int getLine() {
         SimpleNode node = adapter.getASTNode();
-        if(nodeHelper.isClassDef(node)){
+        if (nodeHelper.isClassDef(node)) {
             ClassDef classNode = (ClassDef) node;
             Str strNode = NodeUtils.getNodeDocStringNode(node);
 
-            if(strNode != null){
+            if (strNode != null) {
                 return NodeUtils.getLineEnd(strNode);
             }
 
             FindLastLineVisitor findLastLineVisitor = new FindLastLineVisitor();
-            try{
+            try {
                 classNode.name.accept(findLastLineVisitor);
-                if(classNode.bases != null){
-                    for(SimpleNode n:classNode.bases){
+                if (classNode.bases != null) {
+                    for (SimpleNode n : classNode.bases) {
                         n.accept(findLastLineVisitor);
                     }
                 }
                 SimpleNode lastNode = findLastLineVisitor.getLastNode();
                 ISpecialStr lastSpecialStr = findLastLineVisitor.getLastSpecialStr();
-                if(lastSpecialStr != null && (lastSpecialStr.toString().equals(":") || lastSpecialStr.toString().equals(")"))){
+                if (lastSpecialStr != null
+                        && (lastSpecialStr.toString().equals(":") || lastSpecialStr.toString().equals(")"))) {
                     // it was an from xxx import (euheon, utehon)
                     return lastSpecialStr.getBeginLine();
-                }else{
-                    return lastNode.beginLine ;
+                } else {
+                    return lastNode.beginLine;
                 }
-            }catch(Exception e){
+            } catch (Exception e) {
                 Log.log(e);
             }
 
         }
 
-        int startLine = adapter.getNodeFirstLine()-1;
-        if(startLine < 0){
+        int startLine = adapter.getNodeFirstLine() - 1;
+        if (startLine < 0) {
             startLine = 0;
         }
         return startLine;

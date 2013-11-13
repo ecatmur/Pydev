@@ -1,3 +1,19 @@
+/******************************************************************************
+* Copyright (C) 2006-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Dennis Hunziker
+*     Ueli Kistler
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /* 
  * Copyright (C) 2006, 2007  Dennis Hunziker, Ueli Kistler
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
@@ -36,13 +52,14 @@ public class ExtractMethodPage extends PyDevInputWizardPage {
     }
 
     public void setupComposite() {
-        if(extractComposite != null){
+        if (extractComposite != null) {
             extractComposite.dispose();
             extractComposite = null;
         }
         boolean hasArguments = getRequestProcessor().getDeducer().getParameters().size() > 0;
 
-        extractComposite = new ExtractMethodComposite(this, parent, hasArguments, getRequestProcessor().getScopeAdapter());
+        extractComposite = new ExtractMethodComposite(this, parent, hasArguments, getRequestProcessor()
+                .getScopeAdapter());
 
         extractComposite.registerListeners(this);
         updateArgumentTable();
@@ -53,7 +70,7 @@ public class ExtractMethodPage extends PyDevInputWizardPage {
     }
 
     public void updateArgumentTable() {
-        if(extractComposite != null && extractComposite.getArgumentsTable() != null){
+        if (extractComposite != null && extractComposite.getArgumentsTable() != null) {
             extractComposite.initTable(getRequestProcessor().getDeducer().getParameters());
         }
     }
@@ -67,7 +84,7 @@ public class ExtractMethodPage extends PyDevInputWizardPage {
         setErrorMessage(null);
         extractComposite.validate();
         setPageComplete(getErrorMessage() == null);
-        if(isPageComplete()){
+        if (isPageComplete()) {
             applySettings();
         }
     }
@@ -76,11 +93,11 @@ public class ExtractMethodPage extends PyDevInputWizardPage {
         this.getRequestProcessor().setMethodName(extractComposite.getFunctionName());
         this.getRequestProcessor().setOffsetStrategy(extractComposite.getOffsetStrategy());
 
-        if(extractComposite.getArgumentsTable() != null){
+        if (extractComposite.getArgumentsTable() != null) {
             List<String> parameterOrder = new ArrayList<String>();
             Map<String, String> parameterMap = new HashMap<String, String>();
-            for(TableItem item:extractComposite.getArgumentsTable().getItems()){
-                if(item instanceof SimpleTableItem){
+            for (TableItem item : extractComposite.getArgumentsTable().getItems()) {
+                if (item instanceof SimpleTableItem) {
                     SimpleTableItem tableItem = (SimpleTableItem) item;
                     parameterMap.put(tableItem.getOriginalName(), tableItem.getText());
                     parameterOrder.add(tableItem.getOriginalName());

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -20,10 +20,10 @@ import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.ui.IDebugUIConstants;
 import org.python.pydev.core.IInterpreterManager;
-import org.python.pydev.core.REF;
-import org.python.pydev.core.structure.FastStringBuffer;
 import org.python.pydev.debug.core.Constants;
 import org.python.pydev.debug.core.PydevDebugPlugin;
+import org.python.pydev.shared_core.io.FileUtils;
+import org.python.pydev.shared_core.string.FastStringBuffer;
 
 /**
  * A utility class that creates new {@link ILaunchConfiguration}s.
@@ -48,16 +48,16 @@ public abstract class LaunchConfigurationCreator {
             }
 
             String loc;
-            if(r.resource != null){
-    
+            if (r.resource != null) {
+
                 if (makeRelative) {
                     IStringVariableManager varManager = VariablesPlugin.getDefault().getStringVariableManager();
                     loc = makeFileRelativeToWorkspace(r.resource, varManager);
-                }else {
+                } else {
                     loc = r.resource.getLocation().toOSString();
-                } 
-            }else{
-                loc = REF.getFileAbsolutePath(r.file.getAbsolutePath());
+                }
+            } else {
+                loc = FileUtils.getFileAbsolutePath(r.file.getAbsolutePath());
             }
             buffer.append(loc);
         }
@@ -67,8 +67,7 @@ public abstract class LaunchConfigurationCreator {
     public static ILaunchConfigurationWorkingCopy createDefaultLaunchConfiguration(FileOrResource[] resource,
             String launchConfigurationType, String location, IInterpreterManager pythonInterpreterManager,
             String projName) throws CoreException {
-        return createDefaultLaunchConfiguration(
-                resource, launchConfigurationType, location, pythonInterpreterManager,
+        return createDefaultLaunchConfiguration(resource, launchConfigurationType, location, pythonInterpreterManager,
                 projName, null, "", true);
     }
 
@@ -104,28 +103,28 @@ public abstract class LaunchConfigurationCreator {
                 if (resourceNames.length() > 0) {
                     resourceNames.append(" - ");
                 }
-                if(r.resource != null){
+                if (r.resource != null) {
                     resourceNames.append(r.resource.getName());
-                }else{
+                } else {
                     resourceNames.append(r.file.getName());
                 }
             }
             buffer.append(resourceNames);
             name = buffer.toString().trim();
 
-            if(resource[0].resource != null){
+            if (resource[0].resource != null) {
                 // Build the working directory to a path relative to the workspace_loc
                 baseDirectory = resource[0].resource.getFullPath().removeLastSegments(1).makeRelative().toString();
                 baseDirectory = varManager.generateVariableExpression("workspace_loc", baseDirectory);
-    
+
                 // Build the location to a path relative to the workspace_loc
                 moduleFile = makeFileRelativeToWorkspace(resource, varManager);
                 resourceType = resource[0].resource.getType();
-            }else{
-                baseDirectory = REF.getFileAbsolutePath(resource[0].file.getParentFile());
-                
+            } else {
+                baseDirectory = FileUtils.getFileAbsolutePath(resource[0].file.getParentFile());
+
                 // Build the location to a path relative to the workspace_loc
-                moduleFile = REF.getFileAbsolutePath(resource[0].file);
+                moduleFile = FileUtils.getFileAbsolutePath(resource[0].file);
                 resourceType = IResource.FILE;
             }
         } else {
@@ -153,7 +152,7 @@ public abstract class LaunchConfigurationCreator {
         workingCopy.setAttribute(IDebugUIConstants.ATTR_LAUNCH_IN_BACKGROUND, captureOutput);
         workingCopy.setAttribute(DebugPlugin.ATTR_CAPTURE_OUTPUT, captureOutput);
 
-        if(resource[0].resource != null){
+        if (resource[0].resource != null) {
             workingCopy.setMappedResources(FileOrResource.createIResourceArray(resource));
         }
         return workingCopy;
@@ -166,10 +165,10 @@ public abstract class LaunchConfigurationCreator {
                 moduleFile.append("|");
             }
 
-            if(r.resource != null){
+            if (r.resource != null) {
                 moduleFile.append(makeFileRelativeToWorkspace(r.resource, varManager));
-            }else{
-                moduleFile.append(REF.getFileAbsolutePath(r.file));
+            } else {
+                moduleFile.append(FileUtils.getFileAbsolutePath(r.file));
             }
         }
         return moduleFile.toString();

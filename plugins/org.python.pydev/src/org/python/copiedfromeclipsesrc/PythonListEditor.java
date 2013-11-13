@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -31,10 +31,11 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.swt.widgets.Widget;
-import org.python.pydev.core.Tuple;
 import org.python.pydev.core.log.Log;
 import org.python.pydev.plugin.PydevPlugin;
-import org.python.pydev.ui.UIConstants;
+import org.python.pydev.shared_core.structure.Tuple;
+import org.python.pydev.shared_ui.UIConstants;
+import org.python.pydev.ui.pythonpathconf.InterpreterConfigHelpers;
 
 /**
  * An abstract field editor that manages a list of input values. The editor displays a list containing the values, buttons for adding and
@@ -64,11 +65,16 @@ public abstract class PythonListEditor extends FieldEditor {
      * The Add button.
      */
     private Button addButton;
-    
+
     /**
-     * The Auto-config button.
+     * The Quick Auto config button.
      */
     protected Button autoConfigButton;
+
+    /**
+     * The Avanced Auto config button.
+     */
+    protected Button advAutoConfigButton;
 
     /**
      * The Remove button.
@@ -99,7 +105,7 @@ public abstract class PythonListEditor extends FieldEditor {
      * Creates a new list field editor
      */
     protected PythonListEditor() {
-        if(USE_ICONS){
+        if (USE_ICONS) {
             imageInterpreter = PydevPlugin.getImageCache().get(UIConstants.PY_INTERPRETER_ICON);
         }
     }
@@ -118,49 +124,36 @@ public abstract class PythonListEditor extends FieldEditor {
     }
 
     /**
-     * Notifies that the Add button has been pressed.
+     * Notifies that one of the Config buttons (or Add) has been pressed.
+     * 
+     * @param configType the type of configuration to use when creating the new interpreter.
      */
-    public void autoConfigPressed() {
-        Tuple<String, String> input = getNewInputObject(true);
-        if(input != null){
-            addNewInput(input.o1, input.o2);
-        }
-    }
-    
-    /**
-     * Notifies that the Add button has been pressed.
-     */
-    protected void addPressed() {
-        Tuple<String, String> input = getNewInputObject(false);
-        if(input != null){
-            addNewInput(input.o1, input.o2);
-        }
-    }
-
-    
-    private void addNewInput(String name, String executable) {
-        if (name != null && executable != null) {
-            setPresentsDefaultValue(false);
-            TreeItem item = createInterpreterItem(name, executable);
-            try{
-                treeWithInterpreters.setSelection(item);
-            }catch(Exception e){
-                Log.log(e);
+    public void addPressed(int configType) {
+        Tuple<String, String> input = getNewInputObject(configType);
+        if (input != null) {
+            if (input.o1 != null && input.o2 != null) {
+                setPresentsDefaultValue(false);
+                TreeItem item = createInterpreterItem(input.o1, input.o2);
+                try {
+                    treeWithInterpreters.setSelection(item);
+                } catch (Exception e) {
+                    Log.log(e);
+                }
+                selectionChanged();
+                this.updateTree();
             }
-            selectionChanged();
-            this.updateTree();
         }
     }
 
     protected abstract void updateTree();
 
-	/**
+    /**
      * Adds a new tree item to the interpreter tree.
      * @return 
      */
     protected TreeItem createInterpreterItem(String name, String executable) {
         TreeItem item = new TreeItem(treeWithInterpreters, SWT.NULL);
-        item.setText(new String[]{name, executable});
+        item.setText(new String[] { name, executable });
         item.setImage(this.imageInterpreter);
         return item;
     }
@@ -181,17 +174,22 @@ public abstract class PythonListEditor extends FieldEditor {
      */
     private void createButtons(Composite box) {
         addButton = createPushButton(box, "ListEditor.add");//$NON-NLS-1$
-        autoConfigButton = createPushButton(box, "Auto Config");//$NON-NLS-1$
+        autoConfigButton = createPushButton(box,
+                InterpreterConfigHelpers.CONFIG_NAMES[InterpreterConfigHelpers.CONFIG_AUTO]);
+        advAutoConfigButton = createPushButton(box,
+                InterpreterConfigHelpers.CONFIG_NAMES[InterpreterConfigHelpers.CONFIG_ADV_AUTO]);
         removeButton = createPushButton(box, "ListEditor.remove");//$NON-NLS-1$
         upButton = createPushButton(box, "ListEditor.up");//$NON-NLS-1$
         downButton = createPushButton(box, "ListEditor.down");//$NON-NLS-1$
+        advAutoConfigButton
+                .setToolTipText("Choose from a list of valid interpreters, and select the folders to be in the SYSTEM pythonpath.");
     }
 
     /**
      * This method is not longer used!
      */
-    protected String createList(String[] items){
-        throw new RuntimeException("doLoad/doStore should be overridden (so that it's not needed)"); 
+    protected String createList(String[] items) {
+        throw new RuntimeException("doLoad/doStore should be overridden (so that it's not needed)");
     }
 
     /**
@@ -206,7 +204,7 @@ public abstract class PythonListEditor extends FieldEditor {
         button.setText(JFaceResources.getString(key));
         button.setFont(parent.getFont());
         GridData data = new GridData(GridData.FILL_HORIZONTAL);
-//        data.heightHint = convertVerticalDLUsToPixels(button, IDialogConstants.BUTTON_HEIGHT);
+        //        data.heightHint = convertVerticalDLUsToPixels(button, IDialogConstants.BUTTON_HEIGHT);
         int widthHint = convertHorizontalDLUsToPixels(button, IDialogConstants.BUTTON_WIDTH);
         data.widthHint = Math.max(widthHint, button.computeSize(SWT.DEFAULT, SWT.DEFAULT, true).x);
         button.setLayoutData(data);
@@ -222,9 +220,11 @@ public abstract class PythonListEditor extends FieldEditor {
             public void widgetSelected(SelectionEvent event) {
                 Widget widget = event.widget;
                 if (widget == addButton) {
-                    addPressed();
+                    addPressed(InterpreterConfigHelpers.CONFIG_MANUAL);
                 } else if (widget == autoConfigButton) {
-                    autoConfigPressed();
+                    addPressed(InterpreterConfigHelpers.CONFIG_AUTO);
+                } else if (widget == advAutoConfigButton) {
+                    addPressed(InterpreterConfigHelpers.CONFIG_ADV_AUTO);
                 } else if (widget == removeButton) {
                     removePressed();
                 } else if (widget == upButton) {
@@ -323,7 +323,7 @@ public abstract class PythonListEditor extends FieldEditor {
     public Tree getListControl(Composite parent) {
         if (treeWithInterpreters == null) {
             treeWithInterpreters = new Tree(parent, SWT.BORDER | SWT.SINGLE | SWT.V_SCROLL | SWT.H_SCROLL);
-            
+
             treeWithInterpreters.setHeaderVisible(true);
             TreeColumn column1 = new TreeColumn(treeWithInterpreters, SWT.LEFT);
             column1.setText("Name");
@@ -331,8 +331,7 @@ public abstract class PythonListEditor extends FieldEditor {
             TreeColumn column2 = new TreeColumn(treeWithInterpreters, SWT.LEFT);
             column2.setText("Location");
             column2.setWidth(200);
-            
-            
+
             treeWithInterpreters.setFont(parent.getFont());
             treeWithInterpreters.addSelectionListener(getSelectionListener());
             treeWithInterpreters.addDisposeListener(new DisposeListener() {
@@ -354,7 +353,7 @@ public abstract class PythonListEditor extends FieldEditor {
      * 
      * @return the name and executable of the new item
      */
-    protected abstract Tuple<String, String> getNewInputObject(boolean autoConfig);
+    protected abstract Tuple<String, String> getNewInputObject(int configType);
 
     /*
      * (non-Javadoc) Method declared on FieldEditor.
@@ -391,7 +390,7 @@ public abstract class PythonListEditor extends FieldEditor {
     /**
      * This method is no longer used.
      */
-    protected String[] parseString(String stringList){
+    protected String[] parseString(String stringList) {
         throw new RuntimeException("doLoad/doStore should be overridden (so that it's not needed)");
     }
 
@@ -402,15 +401,15 @@ public abstract class PythonListEditor extends FieldEditor {
         setPresentsDefaultValue(false);
         TreeItem[] selection = treeWithInterpreters.getSelection();
         if (selection != null && selection.length > 0) {
-            for(TreeItem t:selection){
+            for (TreeItem t : selection) {
                 disposeOfTreeItem(t);
             }
             selectionChanged();
             updateTree();
         }
     }
-    
-    protected void disposeOfTreeItem(TreeItem t){
+
+    protected void disposeOfTreeItem(TreeItem t) {
         t.dispose();
     }
 
@@ -426,7 +425,6 @@ public abstract class PythonListEditor extends FieldEditor {
         downButton.setEnabled(size > 1 && index >= 0 && index < size - 1);
     }
 
-
     /*
      * (non-Javadoc) Method declared on FieldEditor.
      */
@@ -436,21 +434,19 @@ public abstract class PythonListEditor extends FieldEditor {
         }
     }
 
-
     protected int getSelectionIndex() {
-        if(this.treeWithInterpreters.getSelectionCount() != 1){
+        if (this.treeWithInterpreters.getSelectionCount() != 1) {
             return -1;
         }
-        
+
         TreeItem[] selection = treeWithInterpreters.getSelection();
         int index = -1;
-        if(selection != null && selection.length > 0){
+        if (selection != null && selection.length > 0) {
             index = treeWithInterpreters.indexOf(selection[0]);
         }
         return index;
     }
-    
-    
+
     /**
      * Moves the currently selected item up or down.
      * 
@@ -464,13 +460,13 @@ public abstract class PythonListEditor extends FieldEditor {
         if (index >= 0) {
             TreeItem curr = treeWithInterpreters.getItem(index);
             TreeItem replace = treeWithInterpreters.getItem(target);
-            
+
             //Just update the text!
             String col0 = replace.getText(0);
             String col1 = replace.getText(1);
-            replace.setText(new String[]{curr.getText(0), curr.getText(1)});
-            curr.setText(new String[]{col0, col1});
-            
+            replace.setText(new String[] { curr.getText(0), curr.getText(1) });
+            curr.setText(new String[] { col0, col1 });
+
             treeWithInterpreters.setSelection(treeWithInterpreters.getItem(target));
         }
         selectionChanged();
@@ -483,7 +479,6 @@ public abstract class PythonListEditor extends FieldEditor {
         swap(true);
     }
 
-    
     /*
      * @see FieldEditor.setEnabled(boolean,Composite).
      */

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -16,14 +16,13 @@ import org.python.pydev.core.IModule;
 import org.python.pydev.parser.jython.ast.Assign;
 import org.python.pydev.parser.jython.ast.exprType;
 
+public class AssignDefinition extends Definition {
 
-public class AssignDefinition extends Definition{
-    
     /**
      * This is the token name.
      */
     public final String target;
-    
+
     /**
      * This is the position in the target.
      * 
@@ -46,7 +45,7 @@ public class AssignDefinition extends Definition{
      * Call or some regular attribute.
      */
     public final exprType nodeValue;
-    
+
     /**
      * Constructor.
      * 
@@ -56,7 +55,8 @@ public class AssignDefinition extends Definition{
      * @param col
      * @param nodeValue 
      */
-    public AssignDefinition(String value, String target, int targetPos, Assign ast, int line, int col, ILocalScope scope, IModule module, exprType nodeValue){
+    public AssignDefinition(String value, String target, int targetPos, Assign ast, int line, int col,
+            ILocalScope scope, IModule module, exprType nodeValue) {
         super(line, col, value, ast, scope, module);
         this.target = target;
         this.targetPos = targetPos;

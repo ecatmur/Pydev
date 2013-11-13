@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -8,8 +8,8 @@ package org.python.pydev.navigator;
 
 import org.eclipse.swt.graphics.Image;
 
-public final class LabelAndImage{
-    
+public final class LabelAndImage {
+
     public final String label;
     public final Image image;
 
@@ -17,55 +17,54 @@ public final class LabelAndImage{
         this.label = o1;
         this.image = o2;
     }
-    
+
     @Override
     public boolean equals(Object obj) {
-        if(!(obj instanceof LabelAndImage)){
+        if (!(obj instanceof LabelAndImage)) {
             return false;
         }
-        
+
         LabelAndImage t2 = (LabelAndImage) obj;
-        if(label == t2.label && image == t2.image){ //all the same 
+        if (label == t2.label && image == t2.image) { //all the same 
             return true;
         }
-        
-        if(label == null && t2.label != null){
+
+        if (label == null && t2.label != null) {
             return false;
         }
-        if(image == null && t2.image != null){
+        if (image == null && t2.image != null) {
             return false;
         }
-        if(label != null && t2.label == null){
+        if (label != null && t2.label == null) {
             return false;
         }
-        if(image != null && t2.image == null){
+        if (image != null && t2.image == null) {
             return false;
         }
-        
-        
-        if(!label.equals(t2.label)){
+
+        if (!label.equals(t2.label)) {
             return false;
         }
-        if(!image.equals(t2.image)){
+        if (!image.equals(t2.image)) {
             return false;
         }
         return true;
     }
-    
+
     @Override
     public int hashCode() {
-        if(label != null && image != null){
+        if (label != null && image != null) {
             return label.hashCode() * image.hashCode();
         }
-        if(label != null){
+        if (label != null) {
             return label.hashCode();
         }
-        if(image != null){
+        if (image != null) {
             return image.hashCode();
         }
         return 7;
     }
-    
+
     @Override
     public String toString() {
         StringBuffer buffer = new StringBuffer();

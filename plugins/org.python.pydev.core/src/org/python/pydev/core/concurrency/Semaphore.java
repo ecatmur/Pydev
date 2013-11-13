@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -108,35 +108,34 @@ public class Semaphore {
 
     /** Wait until a permit is available, and take one **/
     public void acquire() {
-        synchronized(this){
-            while(permits_ <= 0){
-                try{
+        synchronized (this) {
+            while (permits_ <= 0) {
+                try {
                     wait();
-                }catch(InterruptedException e){
+                } catch (InterruptedException e) {
                 }
             }
             --permits_;
         }
     }
-    
-    
-//    This is the original code -- it was changed for a version that will ignore InterruptedExceptions.
-//
-//    /** Wait until a permit is available, and take one **/
-//    public void acquire() throws InterruptedException {
-//        if(Thread.interrupted())
-//            throw new InterruptedException();
-//        synchronized(this){
-//            try{
-//                while(permits_ <= 0)
-//                    wait();
-//                --permits_;
-//            }catch(InterruptedException ex){
-//                notify();
-//                throw ex;
-//            }
-//        }
-//    }
+
+    //    This is the original code -- it was changed for a version that will ignore InterruptedExceptions.
+    //
+    //    /** Wait until a permit is available, and take one **/
+    //    public void acquire() throws InterruptedException {
+    //        if(Thread.interrupted())
+    //            throw new InterruptedException();
+    //        synchronized(this){
+    //            try{
+    //                while(permits_ <= 0)
+    //                    wait();
+    //                --permits_;
+    //            }catch(InterruptedException ex){
+    //                notify();
+    //                throw ex;
+    //            }
+    //        }
+    //    }
 
     /** Release a permit **/
     public synchronized void release() {

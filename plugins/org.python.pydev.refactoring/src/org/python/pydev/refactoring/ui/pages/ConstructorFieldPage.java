@@ -1,3 +1,19 @@
+/******************************************************************************
+* Copyright (C) 2006-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Dennis Hunziker
+*     Ueli Kistler
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /* 
  * Copyright (C) 2006, 2007  Dennis Hunziker, Ueli Kistler
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
@@ -59,7 +75,8 @@ public class ConstructorFieldPage extends UserInputWizardPage {
         this.classProvider = provider;
         this.labelProvider = new TreeLabelProvider();
 
-        this.strategyProvider = new OffsetStrategyProvider(IOffsetStrategy.AFTERINIT | IOffsetStrategy.BEGIN | IOffsetStrategy.END);
+        this.strategyProvider = new OffsetStrategyProvider(IOffsetStrategy.AFTERINIT | IOffsetStrategy.BEGIN
+                | IOffsetStrategy.END);
     }
 
     private Composite createMainComp(Composite parent) {
@@ -150,7 +167,7 @@ public class ConstructorFieldPage extends UserInputWizardPage {
         methodInsertionComb.addSelectionChangedListener(new ISelectionChangedListener() {
             public void selectionChanged(SelectionChangedEvent event) {
                 IStructuredSelection sel = (IStructuredSelection) event.getSelection();
-                if(!sel.isEmpty()){
+                if (!sel.isEmpty()) {
                     OffsetStrategyModel elem = (OffsetStrategyModel) sel.getFirstElement();
                     getRequestProcessor().setMethodDestination(elem.getStrategy());
                 }
@@ -201,6 +218,6 @@ public class ConstructorFieldPage extends UserInputWizardPage {
 
     @Override
     public boolean canFlipToNextPage() {
-        return(treeViewer.getCheckedElements().length > 0);
+        return (treeViewer.getCheckedElements().length > 0);
     }
 }

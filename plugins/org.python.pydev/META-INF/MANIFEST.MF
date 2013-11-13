@@ -2,12 +2,13 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Pydev - Python Development Environment
 Bundle-SymbolicName: org.python.pydev; singleton:=true
-Bundle-Version: 2.4.0.qualifier
+Bundle-Version: 3.1.0.qualifier
 Bundle-ClassPath: pydev.jar,
- libs/WinRegistry-4.4.jar
+ libs/WinRegistry-4.5.jar
 Bundle-Activator: org.python.pydev.plugin.PydevPlugin
 Bundle-Vendor: Aptana
 Bundle-Localization: plugin
+Eclipse-BundleShape: dir
 Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.ide,
  org.eclipse.core.runtime,
@@ -32,11 +33,16 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.navigator.resources,
  org.eclipse.core.filesystem,
  org.eclipse.core.expressions,
- org.junit;bundle-version="[3.8.0,3.9.9]";resolution:=optional,
+ org.junit;bundle-version="4.0.0";resolution:=optional,
  org.eclipse.jdt.core;resolution:=optional,
  org.eclipse.jdt.ui;resolution:=optional,
- org.eclipse.compare
-Eclipse-LazyStart: true
+ org.eclipse.compare,
+ org.python.pydev.shared_interactive_console,
+ org.python.pydev.shared_ui,
+ org.python.pydev.shared_core,
+ org.eclipse.e4.ui.css.swt.theme;resolution:=optional,
+ org.eclipse.e4.ui.services;resolution:=optional
+Bundle-ActivationPolicy: lazy
 Export-Package: org.python.copiedfromeclipsesrc,
  org.python.pydev.builder,
  org.python.pydev.builder.pycremover,
@@ -44,12 +50,7 @@ Export-Package: org.python.copiedfromeclipsesrc,
  org.python.pydev.builder.syntaxchecker,
  org.python.pydev.builder.todo,
  org.python.pydev.codingstd,
- org.python.pydev.dltk.console,
  org.python.pydev.dltk.console.codegen,
- org.python.pydev.dltk.console.ui,
- org.python.pydev.dltk.console.ui.internal,
- org.python.pydev.dltk.console.ui.internal.actions,
- org.python.pydev.dltk.console.ui.internal.fromeclipse,
  org.python.pydev.eclipseresourcestubs,
  org.python.pydev.editor,
  org.python.pydev.editor.actions,
@@ -108,4 +109,4 @@ Export-Package: org.python.copiedfromeclipsesrc,
  org.python.pydev.ui.wizards.gettingstarted,
  org.python.pydev.ui.wizards.project,
  org.python.pydev.utils
-Eclipse-BundleShape: dir
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -7,11 +7,11 @@
 package org.python.pydev.editor.codecompletion;
 
 import org.python.pydev.core.TestDependent;
-import org.python.pydev.core.callbacks.ICallback;
 import org.python.pydev.core.log.Log;
 import org.python.pydev.core.structure.CompletionRecursionException;
 import org.python.pydev.editor.codecompletion.revisited.CodeCompletionTestsBase;
 import org.python.pydev.editor.codecompletion.revisited.modules.CompiledModule;
+import org.python.pydev.shared_core.callbacks.ICallback;
 
 public class PythonCompletionZipsTest extends CodeCompletionTestsBase {
 
@@ -36,13 +36,10 @@ public class PythonCompletionZipsTest extends CodeCompletionTestsBase {
     public void setUp() throws Exception {
         super.setUp();
         CompiledModule.COMPILED_MODULES_ENABLED = false;
-        
+
         //add the zip and the egg files here...
-        this.restorePythonPath(
-                TestDependent.GetCompletePythonLib(true)+"|"+
-                TestDependent.TEST_PYSRC_LOC+"myzipmodule.zip"+"|"+
-                TestDependent.TEST_PYSRC_LOC+"myeggmodule.egg", 
-                false);
+        this.restorePythonPath(TestDependent.GetCompletePythonLib(true) + "|" + TestDependent.TEST_PYSRC_LOC
+                + "myzipmodule.zip" + "|" + TestDependent.TEST_PYSRC_LOC + "myeggmodule.egg", false);
         codeCompletion = new PyCodeCompletion();
         PyCodeCompletion.onCompletionRecursionException = new ICallback<Object, CompletionRecursionException>() {
 
@@ -62,23 +59,18 @@ public class PythonCompletionZipsTest extends CodeCompletionTestsBase {
         PyCodeCompletion.onCompletionRecursionException = null;
     }
 
-    
+    public void testZip() throws Exception {
+        String s = "import myzipmodule\n" +
+                "myzipmodule.";
 
-    public void testZip() throws Exception{
-        String s = 
-            "import myzipmodule\n" +
-            "myzipmodule.";
-        
-        requestCompl(s, s.length(), -1, new String[]{"MyZipClass"});
+        requestCompl(s, s.length(), -1, new String[] { "MyZipClass" });
     }
-    
-    
-    public void testEgg() throws Exception{
-        String s = 
-            "import myeggmodule\n" +
-            "myeggmodule.";
-        
-        requestCompl(s, s.length(), -1, new String[]{"MyEggClass"});
+
+    public void testEgg() throws Exception {
+        String s = "import myeggmodule\n" +
+                "myeggmodule.";
+
+        requestCompl(s, s.length(), -1, new String[] { "MyEggClass" });
     }
 
 }

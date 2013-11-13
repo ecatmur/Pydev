@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -16,7 +16,7 @@ public class PyPreferencesCache implements IPropertyChangeListener {
 
     private IPreferenceStore preferenceStore;
     private HashMap<String, Object> cache = new HashMap<String, Object>();
-    
+
     public PyPreferencesCache(IPreferenceStore preferenceStore) {
         this.preferenceStore = preferenceStore;
         this.preferenceStore.addPropertyChangeListener(this);
@@ -24,13 +24,13 @@ public class PyPreferencesCache implements IPropertyChangeListener {
 
     public boolean getBoolean(String key) {
         Boolean b = (Boolean) cache.get(key);
-        if(b == null){
+        if (b == null) {
             b = this.preferenceStore.getBoolean(key);
             cache.put(key, b);
         }
         return b;
     }
-    
+
     /**
      * This is for a 'special case', when the value must be higher than 0
      *  
@@ -39,22 +39,22 @@ public class PyPreferencesCache implements IPropertyChangeListener {
      */
     public int getInt(String key, int defaultIfZeroOrLess) {
         Integer b = (Integer) cache.get(key);
-        
-        if(b == null || b <= 0){
+
+        if (b == null || b <= 0) {
             b = this.preferenceStore.getInt(key);
-            
-            if(b <= 0){
+
+            if (b <= 0) {
                 b = defaultIfZeroOrLess;
             }
             cache.put(key, b);
         }
-        
+
         return b;
     }
-    
+
     public int getInt(String key) {
         Integer b = (Integer) cache.get(key);
-        if(b == null){
+        if (b == null) {
             b = this.preferenceStore.getInt(key);
             cache.put(key, b);
         }
@@ -70,7 +70,7 @@ public class PyPreferencesCache implements IPropertyChangeListener {
      * Can be used to force clearing some value from the cache.
      */
     public void clear(String key) {
-        cache.put(key, null); 
+        cache.put(key, null);
     }
 
 }

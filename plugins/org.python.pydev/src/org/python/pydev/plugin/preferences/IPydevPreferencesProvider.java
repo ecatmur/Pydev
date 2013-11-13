@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -12,45 +12,46 @@ import org.eclipse.swt.graphics.RGB;
 
 public interface IPydevPreferencesProvider {
 
-	IPreferenceStore[] getPreferenceStore();
+    IPreferenceStore[] getPreferenceStore();
 
-	TextAttribute getSelfTextAttribute();
+    TextAttribute getSelfTextAttribute();
 
-	TextAttribute getCodeTextAttribute();
+    TextAttribute getCodeTextAttribute();
 
-	TextAttribute getDecoratorTextAttribute();
+    TextAttribute getDecoratorTextAttribute();
 
-	TextAttribute getNumberTextAttribute();
+    TextAttribute getNumberTextAttribute();
 
-	TextAttribute getClassNameTextAttribute();
+    TextAttribute getClassNameTextAttribute();
 
-	TextAttribute getFuncNameTextAttribute();
+    TextAttribute getFuncNameTextAttribute();
 
-	TextAttribute getCommentTextAttribute();
+    TextAttribute getCommentTextAttribute();
 
-	TextAttribute getBackquotesTextAttribute();
+    TextAttribute getBackquotesTextAttribute();
 
-	TextAttribute getStringTextAttribute();
+    TextAttribute getStringTextAttribute();
 
-	TextAttribute getKeywordTextAttribute();
+    TextAttribute getKeywordTextAttribute();
 
-	boolean isColorOrStyleProperty(String property);
+    boolean isColorOrStyleProperty(String property);
 
-	TextAttribute getConsoleErrorTextAttribute();
+    TextAttribute getConsoleErrorTextAttribute();
 
-	TextAttribute getConsoleOutputTextAttribute();
+    TextAttribute getConsoleOutputTextAttribute();
 
-	TextAttribute getConsoleInputTextAttribute();
+    TextAttribute getConsoleInputTextAttribute();
 
-	TextAttribute getConsolePromptTextAttribute();
-	
-	TextAttribute getHyperlinkTextAttribute();
+    TextAttribute getConsolePromptTextAttribute();
 
-	RGB getConsoleBackgroundRGB();
+    TextAttribute getHyperlinkTextAttribute();
+
+    RGB getConsoleBackgroundRGB();
 
     TextAttribute getParensTextAttribute();
 
     TextAttribute getOperatorsTextAttribute();
 
+    TextAttribute getDocstringMarkupTextAttribute();
 
 }

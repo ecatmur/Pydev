@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -10,13 +10,11 @@
  */
 package org.python.pydev.debug.model;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.PlatformObject;
+import org.eclipse.debug.core.DebugEvent;
 import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.model.IDebugTarget;
@@ -28,7 +26,6 @@ import org.eclipse.ui.progress.IDeferredWorkbenchAdapter;
 import org.eclipse.ui.views.properties.IPropertySource;
 import org.eclipse.ui.views.tasklist.ITaskListResourceAdapter;
 import org.python.pydev.core.IPyStackFrame;
-import org.python.pydev.core.log.Log;
 import org.python.pydev.debug.model.remote.AbstractDebuggerCommand;
 import org.python.pydev.debug.model.remote.AbstractRemoteDebugger;
 import org.python.pydev.debug.model.remote.GetFileContentsCommand;
@@ -49,12 +46,13 @@ public class PyStackFrame extends PlatformObject implements IStackFrame, IVariab
     private String id;
     private IPath path;
     private int line;
-    private IVariable[] variables;
+    private volatile IVariable[] variables;
     private IVariableLocator localsLocator;
     private IVariableLocator globalsLocator;
     private IVariableLocator frameLocator;
     private IVariableLocator expressionLocator;
     private AbstractDebugTarget target;
+    private volatile boolean onAskGetNewVars = true;
 
     public PyStackFrame(PyThread in_thread, String in_id, String name, IPath file, int line, AbstractDebugTarget target) {
         this.id = in_id;
@@ -62,54 +60,54 @@ public class PyStackFrame extends PlatformObject implements IStackFrame, IVariab
         this.path = file;
         this.line = line;
         this.thread = in_thread;
-        
+
         localsLocator = new IVariableLocator() {
             public String getPyDBLocation() {
-                return thread.getId() + "\t" + id + "\tLOCAL"; 
+                return thread.getId() + "\t" + id + "\tLOCAL";
             }
         };
         frameLocator = new IVariableLocator() {
             public String getPyDBLocation() {
-                return thread.getId() + "\t" + id + "\tFRAME"; 
+                return thread.getId() + "\t" + id + "\tFRAME";
             }
         };
         globalsLocator = new IVariableLocator() {
             public String getPyDBLocation() {
-                return thread.getId() + "\t" + id + "\tGLOBAL"; 
+                return thread.getId() + "\t" + id + "\tGLOBAL";
             }
         };
         expressionLocator = new IVariableLocator() {
             public String getPyDBLocation() {
-                return thread.getId() + "\t" + id + "\tEXPRESSION"; 
+                return thread.getId() + "\t" + id + "\tEXPRESSION";
             }
         };
         this.target = target;
     }
-    
-    public AbstractDebugTarget getTarget(){
+
+    public AbstractDebugTarget getTarget() {
         return target;
     }
 
     public String getId() {
         return id;
     }
-    
-    public String getThreadId(){
+
+    public String getThreadId() {
         return this.thread.getId();
     }
-    
+
     public IVariableLocator getLocalsLocator() {
         return localsLocator;
     }
-    
+
     public IVariableLocator getFrameLocator() {
         return frameLocator;
     }
-    
+
     public IVariableLocator getGlobalLocator() {
         return globalsLocator;
     }
-    
+
     public IVariableLocator getExpressionLocator() {
         return expressionLocator;
     }
@@ -121,7 +119,7 @@ public class PyStackFrame extends PlatformObject implements IStackFrame, IVariab
     public void setPath(IPath path) {
         this.path = path;
     }
-    
+
     public void setLine(int line) {
         this.line = line;
     }
@@ -129,15 +127,17 @@ public class PyStackFrame extends PlatformObject implements IStackFrame, IVariab
     public IPath getPath() {
         return path;
     }
-    
+
     public IThread getThread() {
         return thread;
     }
-    
+
     public void setVariables(IVariable[] locals) {
         this.variables = locals;
     }
-    
+
+    private final static IVariable[] EMPTY_VARIABLES = new IVariable[0];
+    private final static Object lock = new Object();
 
     /**
      * This interface changed in 3.2... we returned an empty collection before, and used the
@@ -148,30 +148,50 @@ public class PyStackFrame extends PlatformObject implements IStackFrame, IVariab
      * @see org.eclipse.debug.core.model.IStackFrame#getVariables()
      */
     public IVariable[] getVariables() throws DebugException {
-        if(this.variables == null){
-            this.variables = new IVariable[0]; //so that we do not enter here again (if another request to this method
-                                               //is done before we finish getting it)
-            DeferredWorkbenchAdapter adapter = new DeferredWorkbenchAdapter(this);
-            IVariable[] vars = (IVariable[]) adapter.getChildren(this);
-            this.target.getModificationChecker().verifyModified(this, vars);
-            this.variables = vars;
+        if (onAskGetNewVars) {
+            synchronized (lock) {
+                //double check idiom for accessing onAskGetNewVars.
+                if (onAskGetNewVars) {
+                    IVariable[] oldVars = this.variables;
+                    if (oldVars == null) {
+                        //Temporary in case some other thread asks for it while we're still calculating.
+                        this.variables = EMPTY_VARIABLES;
+                    }
+                    onAskGetNewVars = false;
+
+                    DeferredWorkbenchAdapter adapter = new DeferredWorkbenchAdapter(this);
+                    IVariable[] vars = (IVariable[]) adapter.getChildren(this);
+
+                    if (oldVars != null) {
+                        this.target.getModificationChecker().verifyVariablesModified(vars, oldVars);
+
+                    } else {
+                        this.target.getModificationChecker().verifyModified(this, vars);
+                    }
+
+                    this.variables = vars;
+                }
+
+            }
         }
         return this.variables;
     }
 
     /**
-     * create a map with the variables, such that the name of the variable points to the IVariable
-     * 
-     * @return the map
+     * @return the internal variables array directly (may be null).
      */
-    public Map<String, IVariable> getVariablesAsMap() throws DebugException {
-        HashMap<String, IVariable> map = new HashMap<String, IVariable>();
-        for (IVariable var : variables) {
-            map.put(var.getName(), var);
-        }
-        return map;
+    public IVariable[] getInternalVariables() {
+        return this.variables;
     }
-    
+
+    public void forceGetNewVariables() {
+        this.onAskGetNewVars = true;
+        AbstractDebugTarget target = getTarget();
+        if (target != null) {
+            target.fireEvent(new DebugEvent(this, DebugEvent.CHANGE, DebugEvent.CONTENT));
+        }
+    }
+
     public boolean hasVariables() throws DebugException {
         return true;
     }
@@ -275,34 +295,31 @@ public class PyStackFrame extends PlatformObject implements IStackFrame, IVariab
     public Object getAdapter(Class adapter) {
         AdapterDebug.print(this, adapter);
 
-        if (adapter.equals(ILaunch.class) ||
-            adapter.equals(IResource.class)){
+        if (adapter.equals(ILaunch.class) || adapter.equals(IResource.class)) {
             return thread.getAdapter(adapter);
-        }    
-        
-        if (adapter.equals(ITaskListResourceAdapter.class)){
+        }
+
+        if (adapter.equals(ITaskListResourceAdapter.class)) {
             return null;
         }
-        
-        if (adapter.equals(IDebugTarget.class)){
+
+        if (adapter.equals(IDebugTarget.class)) {
             return thread.getDebugTarget();
         }
-        
-        if(adapter.equals(org.eclipse.debug.ui.actions.IRunToLineTarget.class)){
+
+        if (adapter.equals(org.eclipse.debug.ui.actions.IRunToLineTarget.class)) {
             return this.target.getRunToLineTarget();
         }
-        
-        if (adapter.equals(IPropertySource.class) 
-            || adapter.equals(ITaskListResourceAdapter.class)
-            || adapter.equals(org.eclipse.debug.ui.actions.IToggleBreakpointsTarget.class)
-            ){
-            return  super.getAdapter(adapter);
+
+        if (adapter.equals(IPropertySource.class) || adapter.equals(ITaskListResourceAdapter.class)
+                || adapter.equals(org.eclipse.debug.ui.actions.IToggleBreakpointsTarget.class)) {
+            return super.getAdapter(adapter);
         }
-        
-        if (adapter.equals(IDeferredWorkbenchAdapter.class)){
+
+        if (adapter.equals(IDeferredWorkbenchAdapter.class)) {
             return new DeferredWorkbenchAdapter(this);
         }
-        
+
         AdapterDebug.printDontKnow(this, adapter);
         // ongoing, I do not fully understand all the interfaces they'd like me to support
         return super.getAdapter(adapter);
@@ -315,7 +332,7 @@ public class PyStackFrame extends PlatformObject implements IStackFrame, IVariab
     public int hashCode() {
         return id.hashCode();
     }
-    
+
     /**
      * fixed - this was bug http://sourceforge.net/tracker/index.php?func=detail&aid=1174821&group_id=85796&atid=577329
      * in the forum (unable to get stack correctly when recursing)
@@ -323,12 +340,12 @@ public class PyStackFrame extends PlatformObject implements IStackFrame, IVariab
     public boolean equals(Object obj) {
         if (obj instanceof PyStackFrame) {
             PyStackFrame sf = (PyStackFrame) obj;
-            return this.id.equals(sf.id) && this.path.toString().equals(sf.path.toString())
-                    && this.line == sf.line && this.getThreadId().equals(sf.getThreadId());
+            return this.id.equals(sf.id) && this.path.toString().equals(sf.path.toString()) && this.line == sf.line
+                    && this.getThreadId().equals(sf.getThreadId());
         }
         return false;
     }
-    
+
     public GetVariableCommand getFrameCommand(AbstractDebugTarget dbg) {
         return new GetFrameCommand(dbg, frameLocator.getPyDBLocation());
     }
@@ -343,26 +360,24 @@ public class PyStackFrame extends PlatformObject implements IStackFrame, IVariab
 
     @Override
     public String toString() {
-        return "PyStackFrame: "+this.id;
+        return "PyStackFrame: " + this.id;
     }
 
-    
     private String fileContents = null;
 
-    
     public String getFileContents() {
-        if(fileContents == null){
+        if (fileContents == null) {
             // send the command, and then busy-wait
             GetFileContentsCommand cmd = new GetFileContentsCommand(target, this.path.toOSString());
-            
+
             final Object lock = new Object();
             final String[] response = new String[1];
-            
+
             cmd.setCompletionListener(new ICommandResponseListener() {
-                
+
                 public void commandComplete(AbstractDebuggerCommand cmd) {
                     try {
-                        response[0] = ((GetFileContentsCommand)cmd).getResponse();
+                        response[0] = ((GetFileContentsCommand) cmd).getResponse();
                     } catch (CoreException e) {
                         response[0] = "";
                     }
@@ -375,11 +390,11 @@ public class PyStackFrame extends PlatformObject implements IStackFrame, IVariab
                     }
                 }
             });
-            
+
             target.postCommand(cmd);
             int timeout = PySourceLocatorPrefs.getFileContentsTimeout();
             long initialTimeMillis = System.currentTimeMillis();
-            while(response[0] == null){
+            while (response[0] == null) {
                 synchronized (lock) {
                     try {
                         lock.wait(50);
@@ -387,7 +402,7 @@ public class PyStackFrame extends PlatformObject implements IStackFrame, IVariab
                         //ignore
                     }
                 }
-                if(System.currentTimeMillis() - initialTimeMillis > timeout){
+                if (System.currentTimeMillis() - initialTimeMillis > timeout) {
                     break;
                 }
             }

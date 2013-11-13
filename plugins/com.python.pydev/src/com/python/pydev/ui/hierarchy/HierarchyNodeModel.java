@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -24,20 +24,19 @@ import org.python.pydev.parser.visitors.NodeUtils;
  */
 public class HierarchyNodeModel {
 
-
     /**
      * Its name (cannot be null)
      */
     public String name;
-    
+
     public List<HierarchyNodeModel> parents = new ArrayList<HierarchyNodeModel>(5);
     public List<HierarchyNodeModel> children = new ArrayList<HierarchyNodeModel>(5);
-    
+
     /**
      * The module where it was defined (might be null)
      */
     public String moduleName;
-    
+
     /**
      * The classdef definition (might be null)
      */
@@ -47,17 +46,18 @@ public class HierarchyNodeModel {
      * The module where this node is defined (might be null)
      */
     public IModule module;
-    
+
     public HierarchyNodeModel(String name) {
         this(name, "", null);
     }
+
     public HierarchyNodeModel(String pack, ClassDef ast) {
         this(NodeUtils.getRepresentationString(ast), pack, ast);
     }
-    
+
     public HierarchyNodeModel(String name, String pack, ClassDef ast) {
         Assert.isNotNull(name);
-        if(pack == null){
+        if (pack == null) {
             pack = "";
         }
         this.name = name;
@@ -70,12 +70,10 @@ public class HierarchyNodeModel {
         this.module = module;
     }
 
-    
     @Override
     public String toString() {
-        return "HierarchyNodeModel["+name+" - "+moduleName+"]";
+        return "HierarchyNodeModel[" + name + " - " + moduleName + "]";
     }
-    
 
     @Override
     public int hashCode() {
@@ -85,6 +83,7 @@ public class HierarchyNodeModel {
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         return result;
     }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj)

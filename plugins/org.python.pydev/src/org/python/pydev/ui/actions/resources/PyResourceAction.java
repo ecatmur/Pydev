@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -21,8 +21,9 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IWorkbenchPart;
 import org.python.pydev.core.log.Log;
-import org.python.pydev.core.uiutils.AsynchronousProgressMonitorDialog;
-import org.python.pydev.editor.actions.PyAction;
+import org.python.pydev.shared_ui.EditorUtils;
+import org.python.pydev.shared_ui.utils.AsynchronousProgressMonitorDialog;
+
 
 /**
  * Abstract class for actions that'll act upon the selected resources.
@@ -34,21 +35,19 @@ public abstract class PyResourceAction {
     /**
      * Subclasses can override to determine if the resource should be refreshed before the action is executed or not.
      */
-    protected boolean getRefreshBeforeExecute(){
+    protected boolean getRefreshBeforeExecute() {
         return true;
     }
-    
+
     /**
      * List with the resources the user selected 
      */
     protected List<IResource> selectedResources;
 
-    
     public void setActivePart(IAction action, IWorkbenchPart targetPart) {
         //empty
     }
-    
-    
+
     /**
      * When the selection changes, we've to keep the selected resources...
      */
@@ -58,52 +57,51 @@ public abstract class PyResourceAction {
             selectedResources = null;
             return;
         }
-        
+
         IStructuredSelection selections = (IStructuredSelection) selection;
         ArrayList<IResource> resources = new ArrayList<IResource>();
-        
-        for(Iterator<Object> it = selections.iterator(); it.hasNext();){
+
+        for (Iterator<Object> it = selections.iterator(); it.hasNext();) {
             Object o = it.next();
-            if(o instanceof IResource){
+            if (o instanceof IResource) {
                 resources.add((IResource) o);
-                
-            }else if(o instanceof IAdaptable){
+
+            } else if (o instanceof IAdaptable) {
                 IAdaptable adaptable = (IAdaptable) o;
                 IResource resource = (IResource) adaptable.getAdapter(IResource.class);
-                if(resource != null){
+                if (resource != null) {
                     resources.add(resource);
                 }
             }
         }
-        
+
         this.selectedResources = resources;
     }
-    
-    
+
     /**
      * Act on the selection to do the needed action (will confirm and make a refresh before executing)
      */
     public void run(IAction action) {
         //should not happen
-        if(selectedResources == null){
+        if (selectedResources == null) {
             return;
         }
-        
-        if (!confirmRun()){
+
+        if (!confirmRun()) {
             return;
         }
-        
+
         beforeRun();
-        
-        final Integer[] nChanged = new Integer[]{0};
-        ProgressMonitorDialog monitorDialog = new AsynchronousProgressMonitorDialog(PyAction.getShell());
+
+        final Integer[] nChanged = new Integer[] { 0 };
+        ProgressMonitorDialog monitorDialog = new AsynchronousProgressMonitorDialog(EditorUtils.getShell());
         try {
-            IRunnableWithProgress operation = new IRunnableWithProgress(){
+            IRunnableWithProgress operation = new IRunnableWithProgress() {
 
                 public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
                     for (Iterator<IResource> iter = selectedResources.iterator(); iter.hasNext();) {
                         IResource next = iter.next();
-                        if(getRefreshBeforeExecute()){
+                        if (getRefreshBeforeExecute()) {
                             //as files are generated externally, if we don't refresh, it's very likely that we won't delete a bunch of files.
                             try {
                                 next.refreshLocal(IResource.DEPTH_INFINITE, monitor);
@@ -120,26 +118,22 @@ public abstract class PyResourceAction {
         } catch (Throwable e) {
             Log.log(e);
         }
-        
-        
-        
+
         afterRun(nChanged[0]);
     }
-
 
     /**
      * Called before actually running the action.
      */
-    protected void beforeRun(){
+    protected void beforeRun() {
         //do nothing by default.
     }
-
 
     /**
      * @return true if the action should be run and false otherwise
      */
-    protected abstract boolean confirmRun() ;
-    
+    protected abstract boolean confirmRun();
+
     /**
      * If it needs UI access, 
      * @return true if UI access is needed (and false -- which is the default -- otherwise).
@@ -147,18 +141,16 @@ public abstract class PyResourceAction {
      * @note If it needs the UI access, it needs to call Display.readAndDispatch() to assure that 
      * the interface remains responsive.
      */
-    protected boolean needsUIThread(){
+    protected boolean needsUIThread() {
         return false;
     }
 
-    
     /**
      * Hook for clients to implement after the run is done (useful to show message)
      * 
      * @param resourcesAffected the number of resources that've been affected.
      */
     protected abstract void afterRun(int resourcesAffected);
-
 
     /**
      * Executes the action on the resource passed

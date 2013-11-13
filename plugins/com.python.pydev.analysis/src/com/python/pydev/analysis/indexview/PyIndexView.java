@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -14,7 +14,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.part.ViewPart;
 
-public class PyIndexView extends ViewPart{
+public class PyIndexView extends ViewPart {
 
     private Tree tree;
     private TreeViewer treeViewer;
@@ -25,15 +25,15 @@ public class PyIndexView extends ViewPart{
         treeViewer = new TreeViewer(tree);
         treeViewer.setContentProvider(new PyIndexContentProvider());
         treeViewer.setInput(new IndexRoot());
-        
+
         tree.addKeyListener(new KeyListener() {
-            
+
             public void keyReleased(KeyEvent e) {
-                if(e.keyCode == SWT.F5){
+                if (e.keyCode == SWT.F5) {
                     treeViewer.setInput(new IndexRoot());
                 }
             }
-            
+
             public void keyPressed(KeyEvent e) {
             }
         });

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -14,7 +14,7 @@ import java.util.Collection;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 public interface ISimpleAssistParticipant2 {
-    
+
     /**
      * This method should be overridden to compute the completions for the console.
      * 

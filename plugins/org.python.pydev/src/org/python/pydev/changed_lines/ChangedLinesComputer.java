@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -23,6 +23,7 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.python.pydev.core.log.Log;
 
+
 /**
  * Based on org.eclipse.jdt.internal.ui.javaeditor.EditorUtility.calculateChangedLineRegions
  */
@@ -35,7 +36,8 @@ public class ChangedLinesComputer {
      * @param monitor to report progress to
      * @return the regions of the changed lines or null if something went wrong.
      */
-    public static int[] calculateChangedLines(final ITextFileBuffer buffer, final IProgressMonitor monitor) throws CoreException {
+    public static int[] calculateChangedLines(final ITextFileBuffer buffer, final IProgressMonitor monitor)
+            throws CoreException {
         int[] result = null;
 
         try {
@@ -46,7 +48,8 @@ public class ChangedLinesComputer {
             fileBufferManager.connectFileStore(fileStore, getSubProgressMonitor(monitor, 15));
             try {
                 IDocument currentDocument = buffer.getDocument();
-                IDocument oldDocument = ((ITextFileBuffer) fileBufferManager.getFileStoreFileBuffer(fileStore)).getDocument();
+                IDocument oldDocument = ((ITextFileBuffer) fileBufferManager.getFileStoreFileBuffer(fileStore))
+                        .getDocument();
 
                 result = getChangedLines(oldDocument, currentDocument);
             } finally {
@@ -78,7 +81,8 @@ public class ChangedLinesComputer {
         Object leftSide = new LineComparator(oldDocument);
         Object rightSide = new LineComparator(currentDocument);
 
-        RangeDifference[] differences = RangeDifferencer.findDifferences((IRangeComparator) leftSide, (IRangeComparator) rightSide);
+        RangeDifference[] differences = RangeDifferencer.findDifferences((IRangeComparator) leftSide,
+                (IRangeComparator) rightSide);
 
         //It holds that:
         //1. Ranges are sorted:
@@ -96,7 +100,7 @@ public class ChangedLinesComputer {
                 if (startLine == endLine) {
                     regions.add(startLine);
                 } else {
-                    for(int iLine=startLine;iLine<=endLine;iLine++){
+                    for (int iLine = startLine; iLine <= endLine; iLine++) {
                         regions.add(iLine);
                     }
                 }
@@ -104,8 +108,8 @@ public class ChangedLinesComputer {
         }
 
         int size = regions.size();
-        int [] ret = new int[size];
-        for(int i=0;i<size;i++){
+        int[] ret = new int[size];
+        for (int i = 0; i < size; i++) {
             ret[i] = regions.get(i);
         }
         return ret;

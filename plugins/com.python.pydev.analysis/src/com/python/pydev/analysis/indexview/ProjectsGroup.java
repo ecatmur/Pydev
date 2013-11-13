@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -21,12 +21,10 @@ public class ProjectsGroup extends ElementWithChildren {
         return true;
     }
 
-    
     @Override
     public String toString() {
         return "Projects";
     }
-
 
     @Override
     protected void calculateChildren() {
@@ -34,10 +32,10 @@ public class ProjectsGroup extends ElementWithChildren {
         IProject[] projects = root.getProjects();
         for (IProject iProject : projects) {
             PythonNature nature = PythonNature.getPythonNature(iProject);
-            if(nature != null){
+            if (nature != null) {
                 addChild(new NatureGroup(this, nature));
             }
         }
     }
-    
+
 }

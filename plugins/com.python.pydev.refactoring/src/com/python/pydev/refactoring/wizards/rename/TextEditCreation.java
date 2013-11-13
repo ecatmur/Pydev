@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -26,16 +26,15 @@ import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.TextEditGroup;
-import org.python.pydev.core.REF;
-import org.python.pydev.core.Tuple;
-import org.python.pydev.core.docutils.StringUtils;
-import org.python.pydev.core.structure.FastStringBuffer;
+import org.python.pydev.core.FileUtilsFileBuffer;
 import org.python.pydev.editor.codecompletion.revisited.modules.ASTEntryWithSourceModule;
 import org.python.pydev.editor.refactoring.RefactoringRequest;
 import org.python.pydev.editorinput.PySourceLocatorBase;
 import org.python.pydev.parser.visitors.scope.ASTEntry;
 import org.python.pydev.refactoring.core.base.PyDocumentChange;
 import org.python.pydev.refactoring.core.base.PyTextFileChange;
+import org.python.pydev.shared_core.string.FastStringBuffer;
+import org.python.pydev.shared_core.structure.Tuple;
 
 import com.python.pydev.analysis.scopeanalysis.AstEntryScopeAnalysisConstants;
 import com.python.pydev.refactoring.changes.PyRenameResourceChange;
@@ -91,7 +90,7 @@ public class TextEditCreation {
      * occurrences to be renamed
      */
     private Map<Tuple<String, File>, HashSet<ASTEntry>> fileOccurrences;
-    
+
     /**
      * Occurrences to be renamed in the current module.
      */
@@ -122,23 +121,23 @@ public class TextEditCreation {
                 break;
             }
             HashSet<ASTEntry> occurrences = p.getOccurrences();
-            if(docOccurrences == null){
+            if (docOccurrences == null) {
                 docOccurrences = occurrences;
-            }else{
+            } else {
                 docOccurrences.addAll(occurrences);
             }
-            
+
             Map<Tuple<String, File>, HashSet<ASTEntry>> occurrencesInOtherFiles = p.getOccurrencesInOtherFiles();
-            if(fileOccurrences == null){
+            if (fileOccurrences == null) {
                 fileOccurrences = occurrencesInOtherFiles;
-            }else{
+            } else {
                 //iterate in a copy
-                for (Map.Entry<Tuple<String, File>, HashSet<ASTEntry>> entry : 
-                        new HashMap<Tuple<String, File>, HashSet<ASTEntry>>(occurrencesInOtherFiles).entrySet()) {
+                for (Map.Entry<Tuple<String, File>, HashSet<ASTEntry>> entry : new HashMap<Tuple<String, File>, HashSet<ASTEntry>>(
+                        occurrencesInOtherFiles).entrySet()) {
                     HashSet<ASTEntry> set = occurrencesInOtherFiles.get(entry.getKey());
-                    if(set == null){
+                    if (set == null) {
                         occurrencesInOtherFiles.put(entry.getKey(), entry.getValue());
-                    }else{
+                    } else {
                         set.addAll(entry.getValue());
                     }
                 }
@@ -163,30 +162,28 @@ public class TextEditCreation {
             Tuple<String, File> tup = entry.getKey();
 
             //now, let's make the mapping from the filesystem to the Eclipse workspace
-            IFile workspaceFile = null; 
-            try{
+            IFile workspaceFile = null;
+            try {
                 workspaceFile = new PySourceLocatorBase().getWorkspaceFile(tup.o2);
-                if(workspaceFile == null){
-                    status.addWarning(StringUtils.format("Error. Unable to resolve the file:\n" +
-                            "%s\n" +
-                            "to a file in the Eclipse workspace.",
-                            tup.o2));
+                if (workspaceFile == null) {
+                    status.addWarning(org.python.pydev.shared_core.string.StringUtils.format("Error. Unable to resolve the file:\n" + "%s\n"
+                            + "to a file in the Eclipse workspace.", tup.o2));
                     continue;
                 }
-            }catch(IllegalStateException e){
+            } catch (IllegalStateException e) {
                 //this can happen on tests (but if not on tests, we want to re-throw it
                 String message = e.getMessage();
-                if(message == null || !message.equals("Workspace is closed.")){
-                    throw e; 
+                if (message == null || !message.equals("Workspace is closed.")) {
+                    throw e;
                 }
                 //otherwise, let's just keep going in the test...
                 continue;
             }
-                
+
             //check the text changes
             HashSet<ASTEntry> astEntries = filterAstEntries(entry.getValue(), AST_ENTRIES_FILTER_TEXT);
             if (astEntries.size() > 0) {
-                IDocument docFromResource = REF.getDocFromResource(workspaceFile);
+                IDocument docFromResource = FileUtilsFileBuffer.getDocFromResource(workspaceFile);
                 TextFileChange fileChange = new PyTextFileChange("RenameChange: " + inputName, workspaceFile);
 
                 MultiTextEdit rootEdit = new MultiTextEdit();
@@ -210,16 +207,14 @@ public class TextEditCreation {
                     newName = inputName;
 
                     if (!resourceToRename.getName().equals(initialName)) {
-                        status
-                                .addFatalError(StringUtils
-                                        .format(
-                                                "Error. The package that was found (%s) for renaming does not match the initial token found (%s)",
-                                                resourceToRename.getName(), initialName));
+                        status.addFatalError(org.python.pydev.shared_core.string.StringUtils
+                                .format("Error. The package that was found (%s) for renaming does not match the initial token found (%s)",
+                                        resourceToRename.getName(), initialName));
                         return;
                     }
                 }
 
-                fChange.add(new PyRenameResourceChange(resourceToRename, newName, StringUtils.format(
+                fChange.add(new PyRenameResourceChange(resourceToRename, newName, org.python.pydev.shared_core.string.StringUtils.format(
                         "Renaming %s to %s", resourceToRename.getName(), inputName)));
             }
         }
@@ -256,9 +251,9 @@ public class TextEditCreation {
      */
     private void createCurrModuleChange() {
         TextChange docChange;
-        if(this.currentFile != null){
+        if (this.currentFile != null) {
             docChange = new PyTextFileChange("Current module: " + moduleName, this.currentFile);
-        }else{
+        } else {
             //used for tests
             docChange = PyDocumentChange.create("Current module: " + moduleName, this.currentDoc);
         }

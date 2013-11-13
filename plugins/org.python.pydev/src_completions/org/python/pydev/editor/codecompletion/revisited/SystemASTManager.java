@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -14,9 +14,10 @@ import org.eclipse.jface.text.IDocument;
 import org.python.pydev.core.IInterpreterInfo;
 import org.python.pydev.core.IInterpreterManager;
 import org.python.pydev.core.IPythonNature;
+import org.python.pydev.shared_core.callbacks.ICallback0;
 
-public class SystemASTManager extends AbstractASTManager{
-    
+public class SystemASTManager extends AbstractASTManager {
+
     public SystemASTManager(IInterpreterManager manager, IPythonNature nature, IInterpreterInfo info) {
         this.modulesManager = info.getModulesManager();
         setNature(nature);
@@ -26,7 +27,8 @@ public class SystemASTManager extends AbstractASTManager{
         throw new RuntimeException("Not implemented");
     }
 
-    public void rebuildModule(File file, IDocument doc, IProject project, IProgressMonitor monitor, IPythonNature nature) {
+    public void rebuildModule(File file, ICallback0<IDocument> doc, IProject project, IProgressMonitor monitor,
+            IPythonNature nature) {
         throw new RuntimeException("Not implemented");
     }
 

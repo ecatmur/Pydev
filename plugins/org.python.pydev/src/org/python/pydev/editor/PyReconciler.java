@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -56,7 +56,7 @@ public class PyReconciler implements IReconcilingStrategy, IReconcilingStrategyE
         private IAnnotationModel fAnnotationModel;
 
         /** Annotations to add. */
-        private Map fAddAnnotations;
+        private Map<SpellingAnnotation, Position> fAddAnnotations;
 
         /**
          * Initializes this collector with the given annotation model.
@@ -71,45 +71,44 @@ public class PyReconciler implements IReconcilingStrategy, IReconcilingStrategyE
         /*
          * @see org.eclipse.ui.texteditor.spelling.ISpellingProblemCollector#accept(org.eclipse.ui.texteditor.spelling.SpellingProblem)
          */
-        @SuppressWarnings("unchecked")
         public void accept(SpellingProblem problem) {
-            fAddAnnotations.put(new SpellingAnnotation(problem), new Position(problem.getOffset(), problem.getLength()));
+            fAddAnnotations
+                    .put(new SpellingAnnotation(problem), new Position(problem.getOffset(), problem.getLength()));
         }
 
         /*
          * @see org.eclipse.ui.texteditor.spelling.ISpellingProblemCollector#beginCollecting()
          */
         public void beginCollecting() {
-            fAddAnnotations = new HashMap();
+            fAddAnnotations = new HashMap<SpellingAnnotation, Position>();
         }
 
         /*
          * @see org.eclipse.ui.texteditor.spelling.ISpellingProblemCollector#endCollecting()
          */
-        @SuppressWarnings("unchecked")
         public void endCollecting() {
 
             List toRemove = new ArrayList();
-            
+
             Object fLockObject;
-            if (fAnnotationModel instanceof ISynchronizable){
+            if (fAnnotationModel instanceof ISynchronizable) {
                 fLockObject = ((ISynchronizable) fAnnotationModel).getLockObject();
-            }else{
+            } else {
                 fLockObject = new Object();
             }
-            
+
             //let other threads execute before getting the lock on the annotation model
             Thread.yield();
-            
+
             Thread thread = Thread.currentThread();
             int initiaThreadlPriority = thread.getPriority();
-            try{
+            try {
                 //before getting the lock, let's execute with normal priority, to optimize the time that we'll 
                 //retain that object locked (the annotation model is used on lots of places, so, retaining the lock
                 //on it on a minimum priority thread is not a good thing.
                 thread.setPriority(Thread.NORM_PRIORITY);
-                Iterator iter;
-                
+                Iterator<SpellingAnnotation> iter;
+
                 synchronized (fLockObject) {
                     iter = fAnnotationModel.getAnnotationIterator();
                     while (iter.hasNext()) {
@@ -120,26 +119,27 @@ public class PyReconciler implements IReconcilingStrategy, IReconcilingStrategyE
                     }
                     iter = null;
                 }
-                
+
                 Annotation[] annotationsToRemove = (Annotation[]) toRemove.toArray(new Annotation[toRemove.size()]);
 
                 //let other threads execute before getting the lock (again) on the annotation model
                 Thread.yield();
                 synchronized (fLockObject) {
                     if (fAnnotationModel instanceof IAnnotationModelExtension) {
-                        ((IAnnotationModelExtension) fAnnotationModel).replaceAnnotations(annotationsToRemove, fAddAnnotations);
+                        ((IAnnotationModelExtension) fAnnotationModel).replaceAnnotations(annotationsToRemove,
+                                fAddAnnotations);
                     } else {
                         for (int i = 0; i < annotationsToRemove.length; i++) {
                             fAnnotationModel.removeAnnotation(annotationsToRemove[i]);
                         }
                         for (iter = fAddAnnotations.keySet().iterator(); iter.hasNext();) {
-                            Annotation annotation = (Annotation) iter.next();
-                            fAnnotationModel.addAnnotation(annotation, (Position) fAddAnnotations.get(annotation));
+                            Annotation annotation = iter.next();
+                            fAnnotationModel.addAnnotation(annotation, fAddAnnotations.get(annotation));
                         }
                     }
                 }
-                
-            }finally{
+
+            } finally {
                 thread.setPriority(initiaThreadlPriority);
             }
             fAddAnnotations = null;
@@ -160,7 +160,6 @@ public class PyReconciler implements IReconcilingStrategy, IReconcilingStrategyE
     /** The spelling context containing the Java source content type. */
     private SpellingContext fSpellingContext;
 
-    
     /**
      * Set containing the models that are being checked at the current moment (this is used
      * so that when there are multiple editors binded to the same model, we only make the check in one of those
@@ -170,7 +169,7 @@ public class PyReconciler implements IReconcilingStrategy, IReconcilingStrategyE
      * It's static so that we can share it among threads.
      */
     private static HashSet<IAnnotationModel> modelBeingChecked = new HashSet<IAnnotationModel>();
-    
+
     /**
      * Creates a new comment reconcile strategy.
      * 
@@ -185,7 +184,6 @@ public class PyReconciler implements IReconcilingStrategy, IReconcilingStrategyE
         fSpellingContext = new SpellingContext();
         fSpellingContext.setContentType(getContentType());
     }
-    
 
     /*
      * @see org.eclipse.jface.text.reconciler.IReconcilingStrategyExtension#initialReconcile()
@@ -213,7 +211,7 @@ public class PyReconciler implements IReconcilingStrategy, IReconcilingStrategyE
      */
     public void reconcile(IRegion region) {
         IAnnotationModel annotationModel = fViewer.getAnnotationModel();
-        
+
         if (annotationModel == null) {
             return;
         }
@@ -222,7 +220,7 @@ public class PyReconciler implements IReconcilingStrategy, IReconcilingStrategyE
         //When having multiple editors for the same document, only one of the reconcilers actually needs to
         //work (because the others are binded to the same annotation model, so, having one do the work is enough)
         synchronized (modelBeingChecked) {
-            if(modelBeingChecked.contains(annotationModel)){
+            if (modelBeingChecked.contains(annotationModel)) {
                 return;
             }
             modelBeingChecked.add(annotationModel);
@@ -231,17 +229,12 @@ public class PyReconciler implements IReconcilingStrategy, IReconcilingStrategyE
         try {
             //we're not using incremental updates!!! -- that's why the region is ignored and fDocument.len is used.
             //PyEditConfiguration#getReconciler should also be configured for that if needed.
-            ITypedRegion[] partitions = TextUtilities.computePartitioning(
-                    fDocument, 
-                    IPythonPartitions.PYTHON_PARTITION_TYPE, 
-                    0, 
-                    fDocument.getLength(), 
-                    false
-            );
+            ITypedRegion[] partitions = TextUtilities.computePartitioning(fDocument,
+                    IPythonPartitions.PYTHON_PARTITION_TYPE, 0, fDocument.getLength(), false);
 
             ArrayList<IRegion> regions = new ArrayList<IRegion>();
             for (ITypedRegion partition : partitions) {
-                if (fProgressMonitor != null && fProgressMonitor.isCanceled()){
+                if (fProgressMonitor != null && fProgressMonitor.isCanceled()) {
                     return;
                 }
 
@@ -257,17 +250,17 @@ public class PyReconciler implements IReconcilingStrategy, IReconcilingStrategyE
             if (size > 0) {
                 //only create the collector when actually needed for the current model
                 ISpellingProblemCollector spellingProblemCollector = new SpellingProblemCollector(annotationModel);
-                fSpellingService.check(fDocument, regions.toArray(new IRegion[size]), fSpellingContext, spellingProblemCollector,
-                        fProgressMonitor);
+                fSpellingService.check(fDocument, regions.toArray(new IRegion[size]), fSpellingContext,
+                        spellingProblemCollector, fProgressMonitor);
             }
 
         } catch (BadLocationException e) {
             //Ignore: can happen if the document changes during the reconciling.
-            
+
         } catch (Exception e) {
             Log.log(e);
-            
-        }finally{
+
+        } finally {
             synchronized (modelBeingChecked) {
                 modelBeingChecked.remove(annotationModel);
             }

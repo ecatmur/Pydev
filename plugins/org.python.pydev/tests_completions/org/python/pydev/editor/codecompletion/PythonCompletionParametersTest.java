@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -50,34 +50,33 @@ public class PythonCompletionParametersTest extends CodeCompletionTestsBase {
         CompiledModule.COMPILED_MODULES_ENABLED = true;
         super.tearDown();
     }
-    
-    
+
     public void testParameterCompletion() throws Exception {
         String doc = "" +
-        "def m1(foo):\n" +
-        "   foo.bar = 2\n" +
-        "   foo."; //<- bring tokens that are already defined in the local
-        String[] toks = new String[]{"bar"};
+                "def m1(foo):\n" +
+                "   foo.bar = 2\n" +
+                "   foo."; //<- bring tokens that are already defined in the local
+        String[] toks = new String[] { "bar" };
         requestCompl(doc, doc.length(), toks.length, toks);
     }
-    
+
     public void testParameterCompletion2() throws Exception {
         String doc = "" +
-        "def m1(foo):\n" +
-        "   foo.bar = 2\n" +
-        "   foo.bar2 = 2\n" +
-        "   foo."; //<- bring tokens that are already defined in the local
-        String[] toks = new String[]{"bar", "bar2"};
+                "def m1(foo):\n" +
+                "   foo.bar = 2\n" +
+                "   foo.bar2 = 2\n" +
+                "   foo."; //<- bring tokens that are already defined in the local
+        String[] toks = new String[] { "bar", "bar2" };
         requestCompl(doc, doc.length(), toks.length, toks);
     }
-    
+
     public void testParameterCompletion3() throws Exception {
         String doc = "" +
-        "def m1(foo):\n" +
-        "   foo.bar.x = 2\n" +
-        "   foo.bar.y = 2\n" +
-        "   foo.bar."; //<- bring tokens that are already defined in the local
-        String[] toks = new String[]{"x", "y"};
+                "def m1(foo):\n" +
+                "   foo.bar.x = 2\n" +
+                "   foo.bar.y = 2\n" +
+                "   foo.bar."; //<- bring tokens that are already defined in the local
+        String[] toks = new String[] { "x", "y" };
         requestCompl(doc, doc.length(), toks.length, toks);
     }
 

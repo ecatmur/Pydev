@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -57,7 +57,7 @@ import org.eclipse.ui.console.IHyperlink;
 import org.eclipse.ui.console.TextConsoleViewer;
 import org.python.pydev.core.IInterpreterInfo;
 import org.python.pydev.core.docutils.PySelection;
-import org.python.pydev.dltk.console.ui.IScriptConsoleViewer;
+import org.python.pydev.shared_interactive_console.console.ui.IScriptConsoleViewer;
 
 public class ScriptConsoleViewerWrapper implements ITextViewer, IScriptConsoleViewer {
 
@@ -238,7 +238,8 @@ public class ScriptConsoleViewerWrapper implements ITextViewer, IScriptConsoleVi
         viewer.setDocument(document, annotationModel);
     }
 
-    public void setDocument(IDocument document, IAnnotationModel annotationModel, int modelRangeOffset, int modelRangeLength) {
+    public void setDocument(IDocument document, IAnnotationModel annotationModel, int modelRangeOffset,
+            int modelRangeLength) {
         viewer.setDocument(document, annotationModel, modelRangeOffset, modelRangeLength);
     }
 
@@ -649,6 +650,5 @@ public class ScriptConsoleViewerWrapper implements ITextViewer, IScriptConsoleVi
     public void setTabsToSpacesConverter(IAutoEditStrategy converter) {
         viewer.setTabsToSpacesConverter(converter);
     }
-
 
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -27,10 +27,7 @@ import org.eclipse.ui.console.TextConsoleViewer;
 import org.eclipse.ui.internal.console.IOConsolePage;
 import org.eclipse.ui.internal.console.IOConsolePartition;
 import org.eclipse.ui.part.IPageBookViewPage;
-import org.python.pydev.bindingutils.KeyBindingHelper;
 import org.python.pydev.core.IInterpreterInfo;
-import org.python.pydev.core.Tuple;
-import org.python.pydev.core.callbacks.ICallback;
 import org.python.pydev.core.log.Log;
 import org.python.pydev.debug.core.Constants;
 import org.python.pydev.debug.model.AbstractDebugTarget;
@@ -43,12 +40,15 @@ import org.python.pydev.debug.model.remote.ICommandResponseListener;
 import org.python.pydev.debug.newconsole.PydevConsoleCommunication;
 import org.python.pydev.debug.newconsole.PydevConsoleCompletionProcessor;
 import org.python.pydev.debug.newconsole.PydevConsoleInterpreter;
-import org.python.pydev.dltk.console.IScriptConsoleCommunication;
-import org.python.pydev.dltk.console.InterpreterResponse;
-import org.python.pydev.dltk.console.ui.internal.IStreamListener;
 import org.python.pydev.editor.codecompletion.PyCodeCompletionPreferencesPage;
 import org.python.pydev.editor.codecompletion.PyContentAssistant;
 import org.python.pydev.plugin.nature.PythonNature;
+import org.python.pydev.shared_core.callbacks.ICallback;
+import org.python.pydev.shared_core.structure.Tuple;
+import org.python.pydev.shared_interactive_console.console.IScriptConsoleCommunication;
+import org.python.pydev.shared_interactive_console.console.InterpreterResponse;
+import org.python.pydev.shared_interactive_console.console.ui.internal.IStreamListener;
+import org.python.pydev.shared_ui.bindings.KeyBindingHelper;
 
 /**
  * Will provide code-completion in debug sessions.
@@ -56,50 +56,45 @@ import org.python.pydev.plugin.nature.PythonNature;
 @SuppressWarnings("restriction")
 public class ConsoleCompletionsPageParticipant implements IConsolePageParticipant {
 
-    
     /**
      * @return the currently selected / suspended frame. If the console is passed, it will only return
      * a frame that matches the passed console. If no selected / suspended frame is found or the console
      * doesn't match, null is returned.
      */
-    protected static PyStackFrame getCurrentSuspendedPyStackFrame(IConsole console){
+    protected static PyStackFrame getCurrentSuspendedPyStackFrame(IConsole console) {
         IAdaptable context = DebugUITools.getDebugContext();
-        
-        
-        if(context instanceof PyStackFrame){
+
+        if (context instanceof PyStackFrame) {
             PyStackFrame stackFrame = (PyStackFrame) context;
-            if(!stackFrame.isTerminated() && stackFrame.isSuspended()){
-                if(console != null){
+            if (!stackFrame.isTerminated() && stackFrame.isSuspended()) {
+                if (console != null) {
                     //If a console is passed, we must check if it matches the console from the selected frame.
                     AbstractDebugTarget target = (AbstractDebugTarget) stackFrame.getAdapter(IDebugTarget.class);
-                    if(DebugUITools.getConsole(target.getProcess()) != console){
+                    if (DebugUITools.getConsole(target.getProcess()) != console) {
                         return null;
                     }
                 }
-                
+
                 return stackFrame;
             }
         }
         return null;
     }
-    
-    
+
     /**
      * Class to get the completions in debug mode in a suspended frame.
      */
     public static class GetCompletionsInDebug implements IScriptConsoleCommunication, ICommandResponseListener {
-        
+
         private static final ICompletionProposal[] EMPTY_COMPLETION_PROPOSALS = new ICompletionProposal[0];
         private ICompletionProposal[] receivedCompletions;
         private String actTok;
         private String text;
         private int offset;
-        
 
         public String getDescription(String text) throws Exception {
             throw new RuntimeException("Not implemented");
         }
-
 
         /**
          * Gets the completions at the passed offset.
@@ -109,12 +104,12 @@ public class ConsoleCompletionsPageParticipant implements IConsolePageParticipan
             this.actTok = actTok;
             this.offset = offset;
             PyStackFrame stackFrame = getCurrentSuspendedPyStackFrame(null);
-            
-            if(stackFrame != null){
+
+            if (stackFrame != null) {
                 AbstractDebugTarget target = (AbstractDebugTarget) stackFrame.getAdapter(IDebugTarget.class);
-                if(target != null){
-                    GetCompletionsCommand cmd = new GetCompletionsCommand(target, actTok, 
-                            stackFrame.getLocalsLocator().getPyDBLocation());
+                if (target != null) {
+                    GetCompletionsCommand cmd = new GetCompletionsCommand(target, actTok, stackFrame.getLocalsLocator()
+                            .getPyDBLocation());
                     cmd.setCompletionListener(this);
                     target.postCommand(cmd);
                 }
@@ -122,42 +117,38 @@ public class ConsoleCompletionsPageParticipant implements IConsolePageParticipan
             }
             return EMPTY_COMPLETION_PROPOSALS;
         }
-        
+
         /**
          * Gets the completions at the passed offset.
          */
         public ICompletionProposal[] getCompletions(String text, String actTok, int offset, boolean ipythonOnly) throws Exception {
             return getCompletions(text, actTok, offset);
         }
-        
-        
-        
+
         /**
          * Keeps in a loop for 3 seconds or until the completions are found. If no completions are found in that time,
          * returns an empty array.
          */
         private ICompletionProposal[] waitForCommand() {
-            int i = 300;  //wait up to 3 seconds
-            while (--i > 0 && receivedCompletions == null){
+            int i = 300; //wait up to 3 seconds
+            while (--i > 0 && receivedCompletions == null) {
                 try {
                     Thread.sleep(10); //10 millis
                 } catch (InterruptedException e) {
                     //ignore
-                } 
+                }
             }
 
             ICompletionProposal[] temp = receivedCompletions;
             receivedCompletions = null;
-            if(temp == null){
+            if (temp == null) {
                 Log.logInfo("Timeout for waiting for debug completions elapsed (3 seconds).");
                 return EMPTY_COMPLETION_PROPOSALS;
             }
             return temp;
         }
 
-        public void execInterpreter(
-                String command, 
-                ICallback<Object, InterpreterResponse> onResponseReceived, 
+        public void execInterpreter(String command, ICallback<Object, InterpreterResponse> onResponseReceived,
                 ICallback<Object, Tuple<String, String>> onContentsReceived) {
             throw new RuntimeException("Not implemented");
 
@@ -166,6 +157,7 @@ public class ConsoleCompletionsPageParticipant implements IConsolePageParticipan
         public void close() throws Exception {
             throw new RuntimeException("Not implemented");
         }
+
         public void interrupt(int signal) throws Exception {
             throw new RuntimeException("Not implemented");
         }
@@ -178,7 +170,7 @@ public class ConsoleCompletionsPageParticipant implements IConsolePageParticipan
             GetCompletionsCommand compCmd = (GetCompletionsCommand) cmd;
             try {
                 String response = compCmd.getResponse();
-                List<Object[]> fromServer = XMLUtils.XMLToCompletions(response);
+                List<Object[]> fromServer = XMLUtils.convertXMLcompletionsFromConsole(response);
                 List<ICompletionProposal> ret = new ArrayList<ICompletionProposal>();
                 PydevConsoleCommunication.convertToICompletions(text, actTok, offset, fromServer, ret);
                 receivedCompletions = ret.toArray(new ICompletionProposal[ret.size()]);
@@ -186,22 +178,24 @@ public class ConsoleCompletionsPageParticipant implements IConsolePageParticipan
                 receivedCompletions = EMPTY_COMPLETION_PROPOSALS;
                 Log.log(e);
             }
-            
+
         }
 
+        public void linkWithDebugSelection(boolean isLinkedWithDebug) {
+            throw new RuntimeException("Not implemented");
+        }
 
         public void addListener(IStreamListener listener) {
             // Should never have any stdout/stderr to report to users, so ignore.
             throw new RuntimeException("Not implemented");
         }
 
-
         public void removeListener(IStreamListener listener) {
             // Should never have any stdout/stderr to report to users, so ignore.
             throw new RuntimeException("Not implemented");
         }
+
     }
-    
 
     /**
      * The content assistant added to the console.
@@ -217,19 +211,20 @@ public class ConsoleCompletionsPageParticipant implements IConsolePageParticipan
      * When a console page is initialized,
      */
     public void init(IPageBookViewPage page, final IConsole console) {
-        if(!(console instanceof ProcessConsole)){
+        if (!(console instanceof ProcessConsole)) {
             return;
         }
         ProcessConsole processConsole = (ProcessConsole) console;
         IProcess process = processConsole.getProcess();
-        if(process == null){
+        if (process == null) {
             return;
         }
-        if(!PyCodeCompletionPreferencesPage.useCodeCompletion() || !PyCodeCompletionPreferencesPage.useCodeCompletionOnDebug()){
+        if (!PyCodeCompletionPreferencesPage.useCodeCompletion()
+                || !PyCodeCompletionPreferencesPage.useCodeCompletionOnDebug()) {
             return;
         }
         String attribute = process.getAttribute(Constants.PYDEV_DEBUG_IPROCESS_ATTR);
-        if(!Constants.PYDEV_DEBUG_IPROCESS_ATTR_TRUE.equals(attribute)){
+        if (!Constants.PYDEV_DEBUG_IPROCESS_ATTR_TRUE.equals(attribute)) {
             //Only provide code-completion for pydev debug processes.
             return;
         }
@@ -241,7 +236,7 @@ public class ConsoleCompletionsPageParticipant implements IConsolePageParticipan
             //call it ourselves here.
             control.addKeyListener(new KeyListener() {
                 public void keyPressed(KeyEvent e) {
-                    
+
                     if (KeyBindingHelper.matchesContentAssistKeybinding(e)) {
                         contentAssist.showPossibleCompletions();
                     }
@@ -254,10 +249,10 @@ public class ConsoleCompletionsPageParticipant implements IConsolePageParticipan
             IOConsolePage consolePage = (IOConsolePage) page;
             TextConsoleViewer viewer = consolePage.getViewer();
 
-            contentAssist = new PyContentAssistant(){
+            contentAssist = new PyContentAssistant() {
                 public String showPossibleCompletions() {
                     //Only show completions if we're in a suspended console.
-                    if(getCurrentSuspendedPyStackFrame(console) == null){
+                    if (getCurrentSuspendedPyStackFrame(console) == null) {
                         return null;
                     }
                     return super.showPossibleCompletions();
@@ -267,17 +262,17 @@ public class ConsoleCompletionsPageParticipant implements IConsolePageParticipan
             ILaunch launch = process.getLaunch();
             IDebugTarget debugTarget = launch.getDebugTarget();
             IInterpreterInfo projectInterpreter = null;
-            if(debugTarget instanceof PyDebugTarget){
+            if (debugTarget instanceof PyDebugTarget) {
                 PyDebugTarget pyDebugTarget = (PyDebugTarget) debugTarget;
                 PythonNature nature = PythonNature.getPythonNature(pyDebugTarget.project);
-                if(nature != null){
+                if (nature != null) {
                     try {
                         projectInterpreter = nature.getProjectInterpreter();
                     } catch (Throwable e1) {
                         Log.log(e1);
                     }
                 }
-                
+
             }
             contentAssist.install(new ScriptConsoleViewerWrapper(viewer, projectInterpreter));
 

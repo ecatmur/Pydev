@@ -1,3 +1,19 @@
+/******************************************************************************
+* Copyright (C) 2006-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Dennis Hunziker
+*     Ueli Kistler
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /* 
  * Copyright (C) 2006, 2007  Dennis Hunziker, Ueli Kistler
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
@@ -36,10 +52,10 @@ public class VariableCellValidator {
     private boolean hasUniqueArguments() {
         TableItem[] items = table.getItems();
 
-        for(TableItem outer:items){
-            for(TableItem inner:items){
-                if(outer != inner){
-                    if(outer.getText().equals(inner.getText())){
+        for (TableItem outer : items) {
+            for (TableItem inner : items) {
+                if (outer != inner) {
+                    if (outer.getText().equals(inner.getText())) {
                         page.setErrorMessage("Variable name " + outer.getText() + " was already used");
                         return false;
                     }
@@ -54,17 +70,17 @@ public class VariableCellValidator {
         NameValidator validator = new NameValidator(status, this.scope);
 
         TableItem[] items = table.getItems();
-        for(TableItem item:items){
-            if(item instanceof SimpleTableItem){
+        for (TableItem item : items) {
+            if (item instanceof SimpleTableItem) {
                 SimpleTableItem variableItem = (SimpleTableItem) item;
-                if(variableItem.hasNewName()){
+                if (variableItem.hasNewName()) {
                     validator.validateVariableName(item.getText());
                     validator.validateUniqueVariable(item.getText());
                 }
             }
         }
 
-        if(status.hasError()){
+        if (status.hasError()) {
             page.setErrorMessage(status.getMessageMatchingSeverity(RefactoringStatus.WARNING));
         }
     }

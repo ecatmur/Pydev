@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -24,17 +24,17 @@ import org.eclipse.jface.text.source.projection.ProjectionSupport;
 import org.eclipse.jface.text.source.projection.ProjectionViewer;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.editors.text.TextEditor;
 import org.eclipse.ui.texteditor.AnnotationPreference;
 import org.eclipse.ui.texteditor.IEditorStatusLine;
 import org.eclipse.ui.texteditor.SourceViewerDecorationSupport;
 import org.python.pydev.core.docutils.PythonPairMatcher;
 import org.python.pydev.core.log.Log;
-import org.python.pydev.core.parser.IParserObserver;
 import org.python.pydev.editor.preferences.PydevEditorPrefs;
 import org.python.pydev.overview_ruler.MinimapOverviewRuler;
 import org.python.pydev.overview_ruler.MinimapOverviewRulerPreferencesPage;
 import org.python.pydev.plugin.preferences.PydevPrefs;
+import org.python.pydev.shared_core.parsing.IParserObserver;
+import org.python.pydev.shared_ui.editor.BaseEditor;
 
 /**
  * @author Fabio Zadrozny
@@ -43,13 +43,12 @@ import org.python.pydev.plugin.preferences.PydevPrefs;
  * 
  * http://download2.eclipse.org/downloads/drops/S-3.0M9-200405211200/buildnotes/buildnotes_text.html
  */
-public abstract class PyEditProjection extends TextEditor implements IParserObserver {
+public abstract class PyEditProjection extends BaseEditor implements IParserObserver {
 
     private ProjectionSupport fProjectionSupport;
 
     public static final int PROP_FOLDING_CHANGED = -999;
 
-    
     /*
      * (non-Javadoc)
      * 
@@ -58,15 +57,14 @@ public abstract class PyEditProjection extends TextEditor implements IParserObse
     protected ISourceViewer createSourceViewer(Composite parent, IVerticalRuler ruler, int styles) {
         IOverviewRuler overviewRuler = getOverviewRuler();
         PySourceViewer viewer = new PySourceViewer(parent, ruler, overviewRuler, isOverviewRulerVisible(), styles, this);
-        
+
         //ensure decoration support has been created and configured.
         getSourceViewerDecorationSupport(viewer);
 
         return viewer;
     }
-    
-    
-    public PySourceViewer getPySourceViewer(){
+
+    public PySourceViewer getPySourceViewer() {
         return (PySourceViewer) getSourceViewer();
     }
 
@@ -77,7 +75,8 @@ public abstract class PyEditProjection extends TextEditor implements IParserObse
     protected void configureSourceViewerDecorationSupport(SourceViewerDecorationSupport support) {
         super.configureSourceViewerDecorationSupport(support);
         support.setCharacterPairMatcher(fBracketMatcher);
-        support.setMatchingCharacterPainterPreferenceKeys(PydevEditorPrefs.USE_MATCHING_BRACKETS, PydevEditorPrefs.MATCHING_BRACKETS_COLOR);
+        support.setMatchingCharacterPainterPreferenceKeys(PydevEditorPrefs.USE_MATCHING_BRACKETS,
+                PydevEditorPrefs.MATCHING_BRACKETS_COLOR);
     }
 
     public void createPartControl(Composite parent) {
@@ -130,22 +129,23 @@ public abstract class PyEditProjection extends TextEditor implements IParserObse
         if (statusLine != null)
             statusLine.setMessage(true, msg, null);
     }
-    
-    
+
     @Override
     protected IOverviewRuler createOverviewRuler(ISharedTextColors sharedColors) {
-        if(MinimapOverviewRulerPreferencesPage.useMinimap()){
-            IOverviewRuler ruler= new MinimapOverviewRuler(getAnnotationAccess(), sharedColors);
-    
-            Iterator e= getAnnotationPreferences().getAnnotationPreferences().iterator();
+        // Note: create the minimap overview ruler regardless of whether it should be shown or not
+        // (the setting to show it will control what's drawn).
+        if (MinimapOverviewRulerPreferencesPage.useMinimap()) {
+            IOverviewRuler ruler = new MinimapOverviewRuler(getAnnotationAccess(), sharedColors);
+
+            Iterator e = getAnnotationPreferences().getAnnotationPreferences().iterator();
             while (e.hasNext()) {
-                AnnotationPreference preference= (AnnotationPreference) e.next();
-                if (preference.contributesToHeader()){
+                AnnotationPreference preference = (AnnotationPreference) e.next();
+                if (preference.contributesToHeader()) {
                     ruler.addHeaderAnnotationType(preference.getAnnotationType());
                 }
             }
             return ruler;
-        }else{
+        } else {
             return super.createOverviewRuler(sharedColors);
         }
     }

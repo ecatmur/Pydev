@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -18,8 +18,6 @@ public class CodecompletionPlugin extends AbstractUIPlugin {
     //The shared instance.
     private static CodecompletionPlugin plugin;
 
-    
-    
     /**
      * The constructor.
      */
@@ -59,6 +57,5 @@ public class CodecompletionPlugin extends AbstractUIPlugin {
     public static ImageDescriptor getImageDescriptor(String path) {
         return AbstractUIPlugin.imageDescriptorFromPlugin("com.python.pydev.codecompletion", path);
     }
-
 
 }

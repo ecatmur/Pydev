@@ -1,3 +1,20 @@
+/******************************************************************************
+* Copyright (C) 2006-2013  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Dennis Hunziker
+*     Ueli Kistler
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com>    - initial implementation
+*     Jonah Graham <jonah@kichwacoders.com> - ongoing maintenance
+******************************************************************************/
 /* 
  * Copyright (C) 2006, 2007  Dennis Hunziker, Ueli Kistler
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
@@ -16,7 +33,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
-import org.python.pydev.core.Tuple;
 import org.python.pydev.core.log.Log;
 import org.python.pydev.parser.jython.ParseException;
 import org.python.pydev.parser.jython.TokenMgrError;
@@ -33,6 +49,7 @@ import org.python.pydev.refactoring.core.change.IChangeProcessor;
 import org.python.pydev.refactoring.core.validator.NameValidator;
 import org.python.pydev.refactoring.messages.Messages;
 import org.python.pydev.refactoring.utils.ListUtils;
+import org.python.pydev.shared_core.structure.Tuple;
 
 public class ExtractLocalRefactoring extends AbstractPythonRefactoring {
     private ExtractLocalRequestProcessor requestProcessor;
@@ -45,8 +62,7 @@ public class ExtractLocalRefactoring extends AbstractPythonRefactoring {
 
     @Override
     protected List<IChangeProcessor> getChangeProcessors() {
-        IChangeProcessor changeProcessor = new ExtractLocalChangeProcessor(
-                getName(), this.info, this.requestProcessor);
+        IChangeProcessor changeProcessor = new ExtractLocalChangeProcessor(getName(), this.info, this.requestProcessor);
         return ListUtils.wrap(changeProcessor);
     }
 
@@ -55,38 +71,37 @@ public class ExtractLocalRefactoring extends AbstractPythonRefactoring {
         List<Tuple<ITextSelection, ModuleAdapter>> selections = new LinkedList<Tuple<ITextSelection, ModuleAdapter>>();
 
         /* Use different approaches to find a valid selection */
-        selections.add(new Tuple<ITextSelection, ModuleAdapter>(
-                info.getUserSelection(), info.getParsedUserSelection()));
-        
-        selections.add(new Tuple<ITextSelection, ModuleAdapter>(
-                info.getExtendedSelection(), info.getParsedExtendedSelection()));
-        
-        selections.add(new Tuple<ITextSelection, ModuleAdapter>(
-                info.getUserSelection(), getParsedMultilineSelection(info.getUserSelection())));
+        selections
+                .add(new Tuple<ITextSelection, ModuleAdapter>(info.getUserSelection(), info.getParsedUserSelection()));
+
+        selections.add(new Tuple<ITextSelection, ModuleAdapter>(info.getExtendedSelection(), info
+                .getParsedExtendedSelection()));
+
+        selections.add(new Tuple<ITextSelection, ModuleAdapter>(info.getUserSelection(),
+                getParsedMultilineSelection(info.getUserSelection())));
 
         /* Find a valid selection */
         ITextSelection selection = null;
         exprType expression = null;
-        for(Tuple<ITextSelection, ModuleAdapter> s:selections){
+        for (Tuple<ITextSelection, ModuleAdapter> s : selections) {
             /* Is selection valid? */
-            if(s != null){
+            if (s != null) {
                 expression = extractExpression(s.o2);
                 selection = s.o1;
-                if(expression != null){
+                if (expression != null) {
                     break;
                 }
             }
         }
-        
 
         /* No valid selections found, report error */
-        if(expression == null){
+        if (expression == null) {
             status.addFatalError(Messages.extractLocalNoExpressionSelected);
         }
 
         AbstractScopeNode<?> scopeAdapter = info.getModuleAdapter().getScopeAdapter(selection);
         requestProcessor.setDuplicates(scopeAdapter.getDuplicates(selection, expression));
-        
+
         requestProcessor.setSelection(selection);
         requestProcessor.setExpression(expression);
 
@@ -98,31 +113,31 @@ public class ExtractLocalRefactoring extends AbstractPythonRefactoring {
         source = source.replaceAll("\n", "");
         source = source.replaceAll("\r", "");
 
-        try{
-            ModuleAdapter node = VisitorFactory.createModuleAdapter(
-                    null, null, new Document(source), null, info.getVersionProvider());
+        try {
+            ModuleAdapter node = VisitorFactory.createModuleAdapter(null, null, new Document(source), null,
+                    info.getVersionProvider());
             return node;
-        }catch(TokenMgrError e){
+        } catch (TokenMgrError e) {
             return null;
-        }catch(ParseException e){
+        } catch (ParseException e) {
             return null;
-        }catch(Throwable e){
+        } catch (Throwable e) {
             Log.log(e);
             return null;
         }
     }
 
     private exprType extractExpression(ModuleAdapter node) {
-        if(node == null){
+        if (node == null) {
             return null;
         }
         Module astNode = node.getASTNode();
-        if(astNode == null){
+        if (astNode == null) {
             return null;
         }
         stmtType[] body = astNode.body;
 
-        if(body.length > 0 && body[0] instanceof Expr){
+        if (body.length > 0 && body[0] instanceof Expr) {
             Expr expr = (Expr) body[0];
             return expr.value;
         }

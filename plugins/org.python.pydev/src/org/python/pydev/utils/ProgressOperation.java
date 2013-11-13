@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -20,7 +20,8 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
 import org.python.pydev.core.log.Log;
-import org.python.pydev.core.uiutils.AsynchronousProgressMonitorDialog;
+import org.python.pydev.shared_ui.utils.AsynchronousProgressMonitorDialog;
+
 
 /**
  * Helper class for executing an action and showing its progress.
@@ -38,8 +39,8 @@ public class ProgressOperation extends WorkspaceModifyOperation {
         this.action = action;
     }
 
-    protected void execute(IProgressMonitor monitor) throws CoreException,
-            InvocationTargetException, InterruptedException {
+    protected void execute(IProgressMonitor monitor) throws CoreException, InvocationTargetException,
+            InterruptedException {
 
         try {
             this.monitor = monitor;
@@ -52,14 +53,13 @@ public class ProgressOperation extends WorkspaceModifyOperation {
         }
 
     }
-    
+
     /**
      * @param shell
      * 
      */
     public static void startAction(Shell shell, ProgressAction action, boolean cancelable) {
-        ProgressMonitorDialog monitorDialog = new AsynchronousProgressMonitorDialog(
-                shell);
+        ProgressMonitorDialog monitorDialog = new AsynchronousProgressMonitorDialog(shell);
         monitorDialog.setCancelable(cancelable);
         monitorDialog.setBlockOnOpen(false);
         try {
@@ -74,5 +74,3 @@ public class ProgressOperation extends WorkspaceModifyOperation {
 
     }
 }
-
-

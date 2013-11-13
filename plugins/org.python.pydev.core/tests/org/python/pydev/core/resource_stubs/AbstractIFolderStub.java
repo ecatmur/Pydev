@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -10,11 +10,12 @@ import java.net.URI;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 
-public class AbstractIFolderStub extends AbstractIContainerStub implements IFolder{
+public class AbstractIFolderStub extends AbstractIContainerStub implements IFolder {
 
     public void create(boolean force, boolean local, IProgressMonitor monitor) throws CoreException {
         throw new RuntimeException("Not implemented");
@@ -48,9 +49,14 @@ public class AbstractIFolderStub extends AbstractIContainerStub implements IFold
         throw new RuntimeException("Not implemented");
     }
 
-    public void move(IPath destination, boolean force, boolean keepHistory, IProgressMonitor monitor) throws CoreException {
+    public void move(IPath destination, boolean force, boolean keepHistory, IProgressMonitor monitor)
+            throws CoreException {
         throw new RuntimeException("Not implemented");
     }
 
+    @Override
+    public int getType() {
+        return IResource.FOLDER;
+    }
 
 }

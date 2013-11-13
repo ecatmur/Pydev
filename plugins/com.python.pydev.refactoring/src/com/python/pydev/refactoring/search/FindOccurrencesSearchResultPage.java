@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -17,11 +17,10 @@ import org.python.pydev.core.log.Log;
 
 import com.python.pydev.refactoring.refactorer.search.copied.FileSearchPage;
 
-
-public class FindOccurrencesSearchResultPage extends FileSearchPage{
+public class FindOccurrencesSearchResultPage extends FileSearchPage {
 
     private static boolean logged = false;
-    
+
     /**
      * Handles a search result event for the current search result.
      * 
@@ -29,7 +28,7 @@ public class FindOccurrencesSearchResultPage extends FileSearchPage{
      */
     protected void handleSearchResultChanged(final SearchResultEvent e) {
         if (e instanceof MatchEvent) {
-            try{
+            try {
                 //Don't you just HATE when the field you want is not accessible?
                 //That's not really needed in eclipse 3.4 (as it'll already call the evaluateChangedElements), but
                 //it should do no harm either.
@@ -37,17 +36,17 @@ public class FindOccurrencesSearchResultPage extends FileSearchPage{
                 //If postUpdate was protected, that'd be a good alternative too.
                 Field field = AbstractTextSearchViewPage.class.getDeclaredField("fBatchedUpdates");
                 field.setAccessible(true);
-                Set set = (Set)field.get(this);
-                
+                Set set = (Set) field.get(this);
+
                 MatchEvent matchEvent = ((MatchEvent) e);
                 Match[] matches = matchEvent.getMatches();
                 for (int i = 0; i < matches.length; i++) {
                     set.add(matches[i].getElement());
                 }
-                
+
                 evaluateChangedElements(matches, set);
-            }catch(Throwable e1){
-                if(!logged){
+            } catch (Throwable e1) {
+                if (!logged) {
                     logged = true; //just log it once.
                     Log.log(e1);
                 }
@@ -56,6 +55,4 @@ public class FindOccurrencesSearchResultPage extends FileSearchPage{
         super.handleSearchResultChanged(e);
     }
 
-
-    
 }

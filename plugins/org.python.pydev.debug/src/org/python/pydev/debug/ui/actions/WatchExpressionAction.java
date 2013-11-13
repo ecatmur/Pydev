@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -26,7 +26,7 @@ import org.python.pydev.debug.core.PydevDebugPlugin;
 public class WatchExpressionAction implements IEditorActionDelegate {
     private ITextSelection fSelection;
 
-    public void setActiveEditor(IAction action, IEditorPart targetEditor) {        
+    public void setActiveEditor(IAction action, IEditorPart targetEditor) {
     }
 
     public void run(IAction action) {
@@ -34,17 +34,17 @@ public class WatchExpressionAction implements IEditorActionDelegate {
             return;
         }
         String text = fSelection.getText();
-        createExpression(text);    
+        createExpression(text);
     }
 
     public void selectionChanged(IAction action, ISelection selection) {
-        fSelection = null;        
-        if (selection instanceof ITextSelection ) {
+        fSelection = null;
+        if (selection instanceof ITextSelection) {
             fSelection = (ITextSelection) selection;
         }
     }
-    
-    private void showExpressionsView() {        
+
+    private void showExpressionsView() {
         IWorkbenchPage page = PydevDebugPlugin.getDefault().getWorkbench().getActiveWorkbenchWindow().getActivePage();
         IViewPart part = page.findView(IDebugUIConstants.ID_EXPRESSION_VIEW);
         if (part == null) {
@@ -60,7 +60,7 @@ public class WatchExpressionAction implements IEditorActionDelegate {
 
     private void createExpression(String variable) {
         IWatchExpression expression = DebugPlugin.getDefault().getExpressionManager().newWatchExpression(variable);
-        
+
         DebugPlugin.getDefault().getExpressionManager().addExpression(expression);
         IAdaptable object = DebugUITools.getDebugContext();
         IDebugElement context = null;

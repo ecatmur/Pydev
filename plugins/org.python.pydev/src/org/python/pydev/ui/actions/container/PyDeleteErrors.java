@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -14,13 +14,13 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.python.pydev.core.log.Log;
 
+
 /**
  * Action used to delete the error markers
  *  
  * @author Fabio
  */
 public class PyDeleteErrors extends PyContainerAction {
-    
 
     /**
      * Deletes the error markers... recursively pass the folders and delete the files (and sum them so that we know how many
@@ -35,16 +35,16 @@ public class PyDeleteErrors extends PyContainerAction {
         } catch (CoreException e) {
             Log.log(e);
         }
-        
-        if(monitor.isCanceled()){
+
+        if (monitor.isCanceled()) {
             return -1;
         }
-        try{
+        try {
             container.deleteMarkers(IMarker.PROBLEM, true, IResource.DEPTH_INFINITE);
         } catch (CoreException e) {
             Log.log(e);
         }
-            
+
         return -1;
     }
 
@@ -54,11 +54,8 @@ public class PyDeleteErrors extends PyContainerAction {
 
     @Override
     protected boolean confirmRun() {
-        return MessageDialog.openConfirm(null, "Confirm deletion", "Are you sure that you want to recursively remove all the markers from the selected folder(s)?");
+        return MessageDialog.openConfirm(null, "Confirm deletion",
+                "Are you sure that you want to recursively remove all the markers from the selected folder(s)?");
     }
-
-
-
-
 
 }

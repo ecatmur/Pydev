@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -15,16 +15,16 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 
-public class MarkerStub implements IMarker{
+public class MarkerStub implements IMarker {
 
     private static final Object TYPE = "TYPE_STUB";
-    
-    private Map attrs;
 
-    public MarkerStub(Map attrs) {
+    private Map<String, Object> attrs;
+
+    public MarkerStub(Map<String, Object> attrs) {
         this.attrs = attrs;
     }
-    
+
     public void delete() throws CoreException {
     }
 
@@ -38,7 +38,7 @@ public class MarkerStub implements IMarker{
 
     public int getAttribute(String attributeName, int defaultValue) {
         Integer i = (Integer) attrs.get(attributeName);
-        if(i == null){
+        if (i == null) {
             return defaultValue;
         }
         return i;
@@ -46,7 +46,7 @@ public class MarkerStub implements IMarker{
 
     public String getAttribute(String attributeName, String defaultValue) {
         String i = (String) attrs.get(attributeName);
-        if(i == null){
+        if (i == null) {
             return defaultValue;
         }
         return i;
@@ -54,13 +54,13 @@ public class MarkerStub implements IMarker{
 
     public boolean getAttribute(String attributeName, boolean defaultValue) {
         Boolean i = (Boolean) attrs.get(attributeName);
-        if(i == null){
+        if (i == null) {
             return defaultValue;
         }
         return i;
     }
 
-    public Map getAttributes() throws CoreException {
+    public Map<String, Object> getAttributes() throws CoreException {
         return attrs;
     }
 

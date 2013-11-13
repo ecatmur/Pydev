@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -10,9 +10,9 @@ import java.lang.ref.WeakReference;
 
 import org.eclipse.jface.action.Action;
 import org.python.pydev.plugin.PydevPlugin;
-import org.python.pydev.ui.UIConstants;
+import org.python.pydev.shared_ui.UIConstants;
 
-public class RelaunchErrorsAction extends Action{
+public class RelaunchErrorsAction extends Action {
 
     private WeakReference<PyUnitView> view;
 
@@ -21,12 +21,12 @@ public class RelaunchErrorsAction extends Action{
         this.setImageDescriptor(PydevPlugin.getImageCache().getDescriptor(UIConstants.RELAUNCH_ERRORS));
         this.setToolTipText("Relaunches only the errors in the currently selected test run.");
     }
-    
+
     @Override
     public void run() {
         PyUnitView pyUnitView = view.get();
         PyUnitTestRun currentTestRun = pyUnitView.getCurrentTestRun();
-        if(currentTestRun != null){
+        if (currentTestRun != null) {
             currentTestRun.relaunchOnlyErrors();
         }
     }

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -15,14 +15,14 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IProjectNature;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IPluginDescriptor;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.content.IContentTypeMatcher;
 
-public class AbstractIProjectStub extends AbstractIContainerStub implements IProject{
-
+public class AbstractIProjectStub extends AbstractIContainerStub implements IProject {
 
     public void build(int kind, IProgressMonitor monitor) throws CoreException {
         throw new RuntimeException("Not implemented");
@@ -47,7 +47,7 @@ public class AbstractIProjectStub extends AbstractIContainerStub implements IPro
     public void delete(boolean deleteContent, boolean force, IProgressMonitor monitor) throws CoreException {
         throw new RuntimeException("Not implemented");
     }
-    
+
     public IContentTypeMatcher getContentTypeMatcher() throws CoreException {
         throw new RuntimeException("Not implemented");
     }
@@ -83,7 +83,6 @@ public class AbstractIProjectStub extends AbstractIContainerStub implements IPro
     public IProject[] getReferencingProjects() {
         throw new RuntimeException("Not implemented");
     }
-    
 
     public boolean hasNature(String natureId) throws CoreException {
         throw new RuntimeException("Not implemented");
@@ -113,21 +112,21 @@ public class AbstractIProjectStub extends AbstractIContainerStub implements IPro
         throw new RuntimeException("Not implemented");
     }
 
-    public void setDescription(IProjectDescription description, int updateFlags, IProgressMonitor monitor) throws CoreException {
+    public void setDescription(IProjectDescription description, int updateFlags, IProgressMonitor monitor)
+            throws CoreException {
         throw new RuntimeException("Not implemented");
     }
 
-	public void loadSnapshot(int options, URI snapshotLocation, IProgressMonitor monitor)
-			throws CoreException {
-		throw new RuntimeException("Not implemented");
-	}
+    public void loadSnapshot(int options, URI snapshotLocation, IProgressMonitor monitor) throws CoreException {
+        throw new RuntimeException("Not implemented");
+    }
 
-	public void saveSnapshot(int options, URI snapshotLocation, IProgressMonitor monitor)
-			throws CoreException {
-		throw new RuntimeException("Not implemented");
-	}
+    public void saveSnapshot(int options, URI snapshotLocation, IProgressMonitor monitor) throws CoreException {
+        throw new RuntimeException("Not implemented");
+    }
 
-    public void build(int kind, String builderName, Map<String, String> args, IProgressMonitor monitor) throws CoreException {
+    public void build(int kind, String builderName, Map<String, String> args, IProgressMonitor monitor)
+            throws CoreException {
         throw new RuntimeException("Not implemented");
     }
 
@@ -147,7 +146,8 @@ public class AbstractIProjectStub extends AbstractIContainerStub implements IPro
         throw new RuntimeException("Not implemented");
     }
 
-    public IBuildConfiguration[] getReferencedBuildConfigs(String configName, boolean includeMissing) throws CoreException {
+    public IBuildConfiguration[] getReferencedBuildConfigs(String configName, boolean includeMissing)
+            throws CoreException {
         throw new RuntimeException("Not implemented");
     }
 
@@ -155,5 +155,9 @@ public class AbstractIProjectStub extends AbstractIContainerStub implements IPro
         throw new RuntimeException("Not implemented");
     }
 
+    @Override
+    public int getType() {
+        return IResource.PROJECT;
+    }
 
 }

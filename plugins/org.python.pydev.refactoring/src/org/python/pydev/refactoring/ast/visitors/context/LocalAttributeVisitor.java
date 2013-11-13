@@ -1,3 +1,19 @@
+/******************************************************************************
+* Copyright (C) 2006-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Dennis Hunziker
+*     Ueli Kistler
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /* 
  * Copyright (C) 2006, 2007  Dennis Hunziker, Ueli Kistler
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
@@ -24,19 +40,19 @@ public class LocalAttributeVisitor extends GlobalAttributeVisitor {
 
     @Override
     public void traverse(SimpleNode node) throws Exception {
-        if(nodeHelper.isClassDef(node)){
+        if (nodeHelper.isClassDef(node)) {
             ClassDef classDef = (ClassDef) node;
             visit(classDef.body);
-        }else{
+        } else {
             super.traverse(node);
         }
     }
 
     @Override
     public Object visitClassDef(ClassDef node) throws Exception {
-        if(inLocalScope){
+        if (inLocalScope) {
             return null;
-        }else{
+        } else {
             inLocalScope = true;
             return super.visitClassDef(node);
         }

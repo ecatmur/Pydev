@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -15,11 +15,9 @@ import org.python.pydev.core.IGrammarVersionProvider;
 import org.python.pydev.core.TestDependent;
 import org.python.pydev.parser.prettyprinterv2.PrettyPrinterPrefsV2;
 
-public class PrettyPrinterLibTest extends AbstractPrettyPrinterTestBase{
-
+public class PrettyPrinterLibTest extends AbstractPrettyPrinterTestBase {
 
     private static boolean MAKE_COMPLETE_PARSE = true;
-
 
     public static void main(String[] args) {
         try {
@@ -28,7 +26,6 @@ public class PrettyPrinterLibTest extends AbstractPrettyPrinterTestBase{
             e.printStackTrace();
         }
     }
-
 
     @Override
     protected void setUp() throws Exception {
@@ -39,11 +36,11 @@ public class PrettyPrinterLibTest extends AbstractPrettyPrinterTestBase{
 
     public void testOnCompleteLib() throws Exception {
         File file = new File(TestDependent.PYTHON_LIB);
-        if(MAKE_COMPLETE_PARSE){
+        if (MAKE_COMPLETE_PARSE) {
             parseAndReparsePrettyPrintedFilesInDir(file);
-        }else{
+        } else {
             System.out.println("COMPLETE LIB NOT PARSED!");
         }
     }
-    
+
 }

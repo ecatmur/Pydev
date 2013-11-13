@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -11,6 +11,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.debug.core.model.IBreakpoint;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.text.source.IVerticalRulerInfo;
 import org.eclipse.swt.widgets.Display;
@@ -30,33 +31,36 @@ public class EnableDisableBreakpointRulerAction extends AbstractBreakpointRulerA
     }
 
     public void update() {
-        setBreakpoint(determineBreakpoint());
-        if (getBreakpoint() == null) {
+        IBreakpoint breakpoint = getBreakpointFromLastLineOfActivityInCurrentEditor();
+        setBreakpoint(breakpoint);
+        if (breakpoint == null) {
             setEnabled(false);
-            return;
-        }
-        setEnabled(true);
-        try {
-            boolean enabled = getBreakpoint().isEnabled();
-            setText(enabled ? "&Disable Breakpoint" : "&Enable Breakpoint");
-        } catch (CoreException ce) {
-            PydevDebugPlugin.log(IStatus.ERROR, ce.getLocalizedMessage(), ce);
+        } else {
+            setEnabled(true);
+            try {
+                boolean enabled = breakpoint.isEnabled();
+                setText(enabled ? "&Disable Breakpoint" : "&Enable Breakpoint");
+            } catch (CoreException ce) {
+                PydevDebugPlugin.log(IStatus.ERROR, ce.getLocalizedMessage(), ce);
+            }
         }
     }
 
     @Override
     public void run() {
 
-        if (getBreakpoint() != null) {
+        final IBreakpoint breakpoint = getBreakpoint();
+        if (breakpoint != null) {
             new Job("Enabling / Disabling Breakpoint") { //$NON-NLS-1$
                 protected IStatus run(IProgressMonitor monitor) {
                     try {
-                        getBreakpoint().setEnabled(!getBreakpoint().isEnabled());
+                        breakpoint.setEnabled(!breakpoint.isEnabled());
                         return Status.OK_STATUS;
                     } catch (final CoreException e) {
                         Display.getDefault().asyncExec(new Runnable() {
                             public void run() {
-                                ErrorDialog.openError(getTextEditor().getEditorSite().getShell(), "Enabling/disabling breakpoints",
+                                ErrorDialog.openError(getTextEditor().getEditorSite().getShell(),
+                                        "Enabling/disabling breakpoints",
                                         "Exceptions occurred enabling disabling the breakpoint", e.getStatus());
                             }
                         });

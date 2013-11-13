@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -20,11 +20,11 @@ import org.python.pydev.core.IInterpreterInfo;
 import org.python.pydev.core.IInterpreterManager;
 import org.python.pydev.core.MisconfigurationException;
 import org.python.pydev.core.TestDependent;
-import org.python.pydev.core.Tuple;
+import org.python.pydev.shared_core.structure.Tuple;
 import org.python.pydev.ui.interpreters.IronpythonInterpreterManager;
 import org.python.pydev.ui.pythonpathconf.InterpreterInfo;
 
-public class IronpythonInterpreterManagerStub extends PythonInterpreterManagerStub{
+public class IronpythonInterpreterManagerStub extends PythonInterpreterManagerStub {
 
     public IronpythonInterpreterManagerStub(PreferenceStore prefs) {
         super(prefs);
@@ -34,29 +34,30 @@ public class IronpythonInterpreterManagerStub extends PythonInterpreterManagerSt
         return TestDependent.IRONPYTHON_EXE;
     }
 
-
     @Override
     public IInterpreterInfo[] getInterpreterInfos() {
         String defaultInterpreter = getDefaultInterpreter();
-        InterpreterInfo info = (InterpreterInfo) this.createInterpreterInfo(defaultInterpreter, new NullProgressMonitor(), false);
-        if(!InterpreterInfo.isJythonExecutable(defaultInterpreter)){
+        InterpreterInfo info = (InterpreterInfo) this.createInterpreterInfo(defaultInterpreter,
+                new NullProgressMonitor(), false);
+        if (!InterpreterInfo.isJythonExecutable(defaultInterpreter)) {
             TestDependent.IRONPYTHON_EXE = info.executableOrJar;
         }
-        return new IInterpreterInfo[]{info};
+        return new IInterpreterInfo[] { info };
     }
-    
+
     /**
      * @throws MisconfigurationException 
      * @see org.python.pydev.core.IInterpreterManager#getInterpreterInfo(java.lang.String, org.eclipse.core.runtime.IProgressMonitor)
      */
-    public InterpreterInfo getInterpreterInfo(String executable, IProgressMonitor monitor) throws MisconfigurationException {
+    public InterpreterInfo getInterpreterInfo(String executable, IProgressMonitor monitor)
+            throws MisconfigurationException {
         InterpreterInfo info = super.getInterpreterInfo(executable, monitor);
-        if(!InterpreterInfo.isJythonExecutable(executable)){
+        if (!InterpreterInfo.isJythonExecutable(executable)) {
             TestDependent.IRONPYTHON_EXE = info.executableOrJar;
         }
         return info;
     }
-    
+
     /**
      * @see org.python.pydev.core.IInterpreterManager#getDefaultJavaLocation()
      */
@@ -75,15 +76,15 @@ public class IronpythonInterpreterManagerStub extends PythonInterpreterManagerSt
     }
 
     @Override
-    public Tuple<InterpreterInfo,String> internalCreateInterpreterInfo(String executable, IProgressMonitor monitor, boolean askUser) throws CoreException, JDTNotAvailableException {
+    public Tuple<InterpreterInfo, String> internalCreateInterpreterInfo(String executable, IProgressMonitor monitor,
+            boolean askUser) throws CoreException, JDTNotAvailableException {
         return IronpythonInterpreterManager.doCreateInterpreterInfo(executable, monitor, askUser);
     }
 
-    
     public int getInterpreterType() {
         return IInterpreterManager.INTERPRETER_TYPE_IRONPYTHON;
     }
-    
+
     public String getManagerRelatedName() {
         return "ipy";
     }

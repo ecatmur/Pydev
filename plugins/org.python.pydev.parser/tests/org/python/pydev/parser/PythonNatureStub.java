@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -78,15 +78,17 @@ public class PythonNatureStub implements IPythonNature {
     public boolean isResourceInPythonpath(String resource) {
         throw new RuntimeException("Not implemented");
     }
-    
-    public boolean isResourceInPythonpathProjectSources(IResource resource, boolean addExternal) throws MisconfigurationException{
-    	throw new RuntimeException("Not implemented");
+
+    public boolean isResourceInPythonpathProjectSources(IResource resource, boolean addExternal)
+            throws MisconfigurationException {
+        throw new RuntimeException("Not implemented");
     }
-    
-    public boolean isResourceInPythonpathProjectSources(String resource, boolean addExternal) throws MisconfigurationException{
-    	throw new RuntimeException("Not implemented");
+
+    public boolean isResourceInPythonpathProjectSources(String resource, boolean addExternal)
+            throws MisconfigurationException {
+        throw new RuntimeException("Not implemented");
     }
-    
+
     public void rebuildPath() {
         throw new RuntimeException("Not implemented");
     }
@@ -150,20 +152,18 @@ public class PythonNatureStub implements IPythonNature {
     public IInterpreterInfo getProjectInterpreter() {
         throw new RuntimeException("Not implemented");
     }
-    
-    public boolean isOkToUse(){
+
+    public boolean isOkToUse() {
         throw new RuntimeException("Not implemented");
     }
 
-	
-	public String resolveModuleOnlyInProjectSources(String fileAbsolutePath, boolean addExternal)
-			throws CoreException, MisconfigurationException {
-		throw new RuntimeException("Not implemented");
-	}
+    public String resolveModuleOnlyInProjectSources(String fileAbsolutePath, boolean addExternal) throws CoreException,
+            MisconfigurationException {
+        throw new RuntimeException("Not implemented");
+    }
 
-	
-	public String resolveModuleOnlyInProjectSources(IResource fileAbsolutePath, boolean addExternal)
-			throws CoreException, MisconfigurationException {
-		throw new RuntimeException("Not implemented");
-	}
+    public String resolveModuleOnlyInProjectSources(IResource fileAbsolutePath, boolean addExternal)
+            throws CoreException, MisconfigurationException {
+        throw new RuntimeException("Not implemented");
+    }
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -40,17 +40,16 @@ public class PyStructuralChange {
         this.addedTokens.add(token);
     }
 
-
     public void addRemovedToken(String token) {
         this.removedTokens.add(token);
     }
 
     public Set<String> getChangedTokens() {
         HashSet<String> toks = new HashSet<String>();
-        
+
         toks.addAll(addedTokens);
         toks.addAll(removedTokens);
-        
+
         return toks;
     }
 

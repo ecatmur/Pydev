@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -19,7 +19,7 @@ import org.python.pydev.parser.jython.ast.NameTok;
  * 
  * @author Fabio
  */
-public class FindCallVisitor extends Visitor{
+public class FindCallVisitor extends Visitor {
 
     private Name name;
     private NameTok nameTok;
@@ -29,7 +29,7 @@ public class FindCallVisitor extends Visitor{
     public FindCallVisitor(Name name) {
         this.name = name;
     }
-    
+
     public FindCallVisitor(NameTok nameTok) {
         this.nameTok = nameTok;
     }
@@ -37,46 +37,45 @@ public class FindCallVisitor extends Visitor{
     public Call getCall() {
         return call;
     }
-    
+
     @Override
     public Object visitCall(Call node) throws Exception {
-        if(this.call != null){
+        if (this.call != null) {
             return null;
         }
-        
-        if(node.func == name){
+
+        if (node.func == name) {
             //check the name (direct)
             this.call = node;
-            
-            
-        }else if(nameTok != null){
+
+        } else if (nameTok != null) {
             //check the name tok (inside of attribute)
             lastCall.push(node);
             Object r = super.visitCall(node);
             lastCall.pop();
-            if(this.call != null){
+            if (this.call != null) {
                 return null;
             }
             return r;
         }
-        if(this.call != null){
+        if (this.call != null) {
             return null;
         }
         return super.visitCall(node);
     }
-    
+
     @Override
     public Object visitNameTok(NameTok node) throws Exception {
-        if(node == nameTok){
-            if(lastCall.size() > 0){
+        if (node == nameTok) {
+            if (lastCall.size() > 0) {
                 call = lastCall.peek();
             }
             return null;
         }
         return super.visitNameTok(node);
     }
-    
-    public static Call findCall(NameTok nametok, SimpleNode root){
+
+    public static Call findCall(NameTok nametok, SimpleNode root) {
         FindCallVisitor visitor = new FindCallVisitor(nametok);
         try {
             visitor.traverse(root);
@@ -85,8 +84,8 @@ public class FindCallVisitor extends Visitor{
         }
         return visitor.call;
     }
-    
-    public static Call findCall(Name name, SimpleNode root){
+
+    public static Call findCall(Name name, SimpleNode root) {
         FindCallVisitor visitor = new FindCallVisitor(name);
         try {
             visitor.traverse(root);
@@ -95,5 +94,5 @@ public class FindCallVisitor extends Visitor{
         }
         return visitor.call;
     }
-    
+
 }

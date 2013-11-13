@@ -1,11 +1,10 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
  */
 package org.python.pydev.navigator.actions.copied;
-
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
@@ -38,9 +37,9 @@ import org.eclipse.ui.actions.CopyProjectOperation;
 import org.eclipse.ui.actions.SelectionListenerAction;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.ResourceTransfer;
-import org.python.pydev.core.docutils.StringUtils;
 import org.python.pydev.core.log.Log;
 import org.python.pydev.editor.actions.PyAction;
+import org.python.pydev.editor.codecompletion.revisited.PythonPathHelper;
 
 /**
  * Copied to extend.
@@ -78,8 +77,8 @@ public abstract class PasteAction extends SelectionListenerAction {
         this.clipboard = clipboard;
         setToolTipText("Paste ToolTip"); // TODO ResourceNavigatorMessages.PasteAction_toolTip); //$NON-NLS-1$
         setId(PasteAction.ID);
-//        PlatformUI.getWorkbench().getHelpSystem().setHelp(this, "HelpId"); //$NON-NLS-1$
-                // TODO INavigatorHelpContextIds.PASTE_ACTION);
+        //        PlatformUI.getWorkbench().getHelpSystem().setHelp(this, "HelpId"); //$NON-NLS-1$
+        // TODO INavigatorHelpContextIds.PASTE_ACTION);
     }
 
     /**
@@ -126,27 +125,29 @@ public abstract class PasteAction extends SelectionListenerAction {
     /**
      * Implementation of method defined on <code>IAction</code>.
      */
+    @Override
     public void run() {
         // try a resource transfer
         ResourceTransfer resTransfer = ResourceTransfer.getInstance();
-        IResource[] resourceData = (IResource[]) clipboard
-                .getContents(resTransfer);
+        IResource[] resourceData = (IResource[]) clipboard.getContents(resTransfer);
 
         if (resourceData != null && resourceData.length > 0) {
             if (resourceData[0].getType() == IResource.PROJECT) {
                 // enablement checks for all projects
                 for (int i = 0; i < resourceData.length; i++) {
-                    CopyProjectOperation operation = new CopyProjectOperation(
-                            this.shell);
+                    CopyProjectOperation operation = new CopyProjectOperation(this.shell);
                     operation.copyProject((IProject) resourceData[i]);
                 }
             } else {
                 // enablement should ensure that we always have access to a container
                 IContainer container = getContainer();
 
-                CopyFilesAndFoldersOperation operation = new CopyFilesAndFoldersOperation(
-                        this.shell);
-                operation.copyResources(resourceData, container);
+                CopyFilesAndFoldersOperation operation = new CopyFilesAndFoldersOperation(this.shell);
+                IResource[] copiedResources = operation.copyResources(resourceData, container);
+                if (copiedResources.length > 0) {
+                    PythonPathHelper.updatePyPath(copiedResources, container,
+                            PythonPathHelper.OPERATION_COPY);
+                }
             }
             return;
         }
@@ -159,29 +160,28 @@ public abstract class PasteAction extends SelectionListenerAction {
             // enablement should ensure that we always have access to a container
             IContainer container = getContainer();
 
-            CopyFilesAndFoldersOperation operation = new CopyFilesAndFoldersOperation(
-                    this.shell);
+            CopyFilesAndFoldersOperation operation = new CopyFilesAndFoldersOperation(this.shell);
             operation.copyFiles(fileData, container);
             return;
         }
-        
+
         //Now, at last, try a text transfer (create a new file with the contents).
         TextTransfer instance = TextTransfer.getInstance();
         String contents = (String) clipboard.getContents(instance);
-        if(contents != null){
+        if (contents != null) {
             // enablement should ensure that we always have access to a container
             IContainer container = getContainer();
             String name = getNameForContentsPasted(container);
-            if(name == null){
+            if (name == null) {
                 return;
             }
             String delimiter = PyAction.getDelimiter(new Document());
-            if(delimiter != null){
-                StringUtils.replaceNewLines(contents, delimiter);
+            if (delimiter != null) {
+                org.python.pydev.shared_core.string.StringUtils.replaceNewLines(contents, delimiter);
             }
-            
+
             IFile file = container.getFile(new Path(name));
-            if(!file.exists()){
+            if (!file.exists()) {
                 try {
                     file.create(new ByteArrayInputStream(contents.getBytes()), true, null);
                 } catch (CoreException e) {
@@ -189,7 +189,7 @@ public abstract class PasteAction extends SelectionListenerAction {
                 }
                 try {
                     IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-                    if(page != null){
+                    if (page != null) {
                         IDE.openEditor(page, file);
                     }
                 } catch (Exception e) {
@@ -199,7 +199,6 @@ public abstract class PasteAction extends SelectionListenerAction {
         }
     }
 
-    
     private String getNameForContentsPasted(final IContainer container) {
         final IWorkspace workspace = container.getWorkspace();
         final String returnValue[] = { null };
@@ -216,40 +215,37 @@ public abstract class PasteAction extends SelectionListenerAction {
                 return null;
             }
         };
-        
+
         String base = "snippet%s.py";
-        for(int i=0;i<1000;i++){
+        for (int i = 0; i < 1000; i++) {
             String newCheck;
-            if(i == 0){
-                newCheck = StringUtils.format(base, "");
-            }else{
-                newCheck = StringUtils.format(base, i);
-                
+            if (i == 0) {
+                newCheck = org.python.pydev.shared_core.string.StringUtils.format(base, "");
+            } else {
+                newCheck = org.python.pydev.shared_core.string.StringUtils.format(base, i);
+
             }
-            if(validator.isValid(newCheck) == null){
+            if (validator.isValid(newCheck) == null) {
                 base = newCheck;
                 break;
             }
         }
-        
+
         final String initialValue = base;
-        
+
         this.shell.getDisplay().syncExec(new Runnable() {
             public void run() {
 
-                InputDialog dialog = new InputDialog(
-                        shell, 
-                        "Enter file name", 
-                        "Please enter the name of the file to be created with the pasted contents.", 
-                        initialValue, 
-                        validator){
+                InputDialog dialog = new InputDialog(shell, "Enter file name",
+                        "Please enter the name of the file to be created with the pasted contents.", initialValue,
+                        validator) {
                     @Override
                     protected void createButtonsForButtonBar(Composite parent) {
                         super.createButtonsForButtonBar(parent);
                         Text control = getText();
                         String textInControl = control.getText();
                         int i = textInControl.indexOf('.');
-                        if(i >= 0){
+                        if (i >= 0) {
                             control.setSelection(0, i);
                         }
                     }
@@ -291,6 +287,7 @@ public abstract class PasteAction extends SelectionListenerAction {
      * -Files and folders may be pasted to a single selected folder in open 
      *  project or multiple selected files in the same folder 
      */
+    @Override
     protected boolean updateSelection(IStructuredSelection selection) {
         if (!super.updateSelection(selection)) {
             return false;
@@ -301,8 +298,7 @@ public abstract class PasteAction extends SelectionListenerAction {
             public void run() {
                 // clipboard must have resources or files
                 ResourceTransfer resTransfer = ResourceTransfer.getInstance();
-                clipboardData[0] = (IResource[]) clipboard
-                        .getContents(resTransfer);
+                clipboardData[0] = (IResource[]) clipboard.getContents(resTransfer);
             }
         });
         IResource[] resourceData = clipboardData[0];
@@ -313,8 +309,7 @@ public abstract class PasteAction extends SelectionListenerAction {
             for (int i = 0; i < resourceData.length; i++) {
                 // make sure all resource data are open projects
                 // can paste open projects regardless of selection
-                if (resourceData[i].getType() != IResource.PROJECT
-                        || ((IProject) resourceData[i]).isOpen() == false) {
+                if (resourceData[i].getType() != IResource.PROJECT || ((IProject) resourceData[i]).isOpen() == false) {
                     return false;
                 }
             }
@@ -348,8 +343,7 @@ public abstract class PasteAction extends SelectionListenerAction {
         }
         if (resourceData != null) {
             // linked resources can only be pasted into projects
-            if (isLinked(resourceData)
-                    && targetResource.getType() != IResource.PROJECT) {
+            if (isLinked(resourceData) && targetResource.getType() != IResource.PROJECT) {
                 return false;
             }
 
@@ -373,4 +367,3 @@ public abstract class PasteAction extends SelectionListenerAction {
         return false;
     }
 }
-

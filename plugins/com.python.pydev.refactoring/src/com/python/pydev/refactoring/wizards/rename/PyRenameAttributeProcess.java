@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -21,7 +21,7 @@ import org.python.pydev.parser.visitors.scope.ASTEntry;
 
 import com.python.pydev.analysis.scopeanalysis.ScopeAnalysis;
 
-public class PyRenameAttributeProcess extends AbstractRenameWorkspaceRefactorProcess{
+public class PyRenameAttributeProcess extends AbstractRenameWorkspaceRefactorProcess {
 
     /**
      * Target is the full name. E.g.: foo.bar (and the initialName would be just 'bar')
@@ -33,14 +33,13 @@ public class PyRenameAttributeProcess extends AbstractRenameWorkspaceRefactorPro
         this.target = target;
     }
 
-
     protected void findReferencesToRenameOnLocalScope(RefactoringRequest request, RefactoringStatus status) {
         SimpleNode ast = request.getAST();
-        
-        List<ASTEntry> attributeOccurrences = new ArrayList<ASTEntry>(); 
+
+        List<ASTEntry> attributeOccurrences = new ArrayList<ASTEntry>();
         attributeOccurrences.addAll(ScopeAnalysis.getAttributeOccurrences(this.target, ast));
         attributeOccurrences.addAll(ScopeAnalysis.getAttributeReferences(this.target, ast));
-        if(attributeOccurrences.size() > 0){
+        if (attributeOccurrences.size() > 0) {
             //only add comments and strings if there's at least some other occurrence
             attributeOccurrences.addAll(ScopeAnalysis.getCommentOccurrences(request.initialName, ast));
             attributeOccurrences.addAll(ScopeAnalysis.getStringOccurrences(request.initialName, ast));
@@ -48,9 +47,9 @@ public class PyRenameAttributeProcess extends AbstractRenameWorkspaceRefactorPro
         addOccurrences(request, attributeOccurrences);
     }
 
-
     @Override
-    protected List<ASTEntry> findReferencesOnOtherModule(RefactoringStatus status, String initialName, SourceModule module) {
+    protected List<ASTEntry> findReferencesOnOtherModule(RefactoringStatus status, String initialName,
+            SourceModule module) {
         return ScopeAnalysis.getAttributeReferences(initialName, module.getAst()); //will get the self.xxx occurrences
     }
 

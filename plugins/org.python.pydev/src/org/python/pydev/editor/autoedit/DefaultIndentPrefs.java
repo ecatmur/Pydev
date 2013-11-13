@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -15,12 +15,13 @@ import org.python.pydev.core.IIndentPrefs;
 import org.python.pydev.core.cache.PyPreferencesCache;
 import org.python.pydev.editor.preferences.PydevEditorPrefs;
 import org.python.pydev.plugin.PydevPlugin;
+import org.python.pydev.shared_core.SharedCorePlugin;
 
 /**
  * Provides indentation preferences from the preferences set in the preferences pages within eclipse.
  */
 public class DefaultIndentPrefs extends AbstractIndentPrefs {
-    
+
     /** 
      * Cache for indentation string 
      */
@@ -29,41 +30,48 @@ public class DefaultIndentPrefs extends AbstractIndentPrefs {
     private boolean useSpaces;
 
     private int tabWidth;
-    
+
     private static PyPreferencesCache cache;
 
     /**
      * Singleton instance for the preferences
      */
     private static IIndentPrefs indentPrefs;
-    
+
+    /**
+     * Should only be used on tests (and on a finally it should be set to null again in the test).
+     */
+    public synchronized static void set(IIndentPrefs indentPrefs) {
+        DefaultIndentPrefs.indentPrefs = indentPrefs;
+    }
+
     /**
      * @return the indentation preferences to be used
      */
     public synchronized static IIndentPrefs get() {
-        if(indentPrefs == null){
-            if(PydevPlugin.getDefault() == null){
+        if (indentPrefs == null) {
+            if (SharedCorePlugin.inTestMode()) {
                 return new TestIndentPrefs(true, 4);
             }
             indentPrefs = new DefaultIndentPrefs();
         }
         return indentPrefs;
     }
-    
+
     /**
      * @return a cache for the preferences.
      */
-    private PyPreferencesCache getCache(){
-        if(cache == null){
+    private PyPreferencesCache getCache() {
+        if (cache == null) {
             cache = new PyPreferencesCache(PydevPlugin.getDefault().getPreferenceStore());
         }
         return cache;
     }
-    
+
     /**
      * Not singleton (each pyedit may force to use tabs or not).
      */
-    public DefaultIndentPrefs(){
+    public DefaultIndentPrefs() {
         PyPreferencesCache c = getCache();
         useSpaces = c.getBoolean(PydevEditorPrefs.SUBSTITUTE_TABS);
         tabWidth = c.getInt(PydevEditorPrefs.TAB_WIDTH, 4);
@@ -71,56 +79,59 @@ public class DefaultIndentPrefs extends AbstractIndentPrefs {
 
     public boolean getUseSpaces(boolean considerForceTabs) {
         PyPreferencesCache c = getCache();
-        if(useSpaces != c.getBoolean(PydevEditorPrefs.SUBSTITUTE_TABS)){
+        if (useSpaces != c.getBoolean(PydevEditorPrefs.SUBSTITUTE_TABS)) {
             useSpaces = c.getBoolean(PydevEditorPrefs.SUBSTITUTE_TABS);
             regenerateIndentString();
         }
-        if(considerForceTabs && getForceTabs()){
-        	return false; //forcing tabs.
+        if (considerForceTabs && getForceTabs()) {
+            return false; //forcing tabs.
         }
         return useSpaces;
     }
-    
+
+    @Override
     public void setForceTabs(boolean forceTabs) {
-    	super.setForceTabs(forceTabs);
-    	regenerateIndentString(); //When forcing tabs, we must update the cache.
+        super.setForceTabs(forceTabs);
+        regenerateIndentString(); //When forcing tabs, we must update the cache.
     }
 
-    public static int getStaticTabWidth(){
+    public static int getStaticTabWidth() {
         PydevPlugin default1 = PydevPlugin.getDefault();
-        if(default1 == null){
+        if (default1 == null) {
             return 4;
         }
         int w = default1.getPluginPreferences().getInt(PydevEditorPrefs.TAB_WIDTH);
-        if(w <= 0){ //tab width should never be 0 or less (in this case, let's make the default 4)
+        if (w <= 0) { //tab width should never be 0 or less (in this case, let's make the default 4)
             w = 4;
         }
         return w;
     }
-    
+
     public int getTabWidth() {
         PyPreferencesCache c = getCache();
-        if(tabWidth != c.getInt(PydevEditorPrefs.TAB_WIDTH, 4)){
+        if (tabWidth != c.getInt(PydevEditorPrefs.TAB_WIDTH, 4)) {
             tabWidth = c.getInt(PydevEditorPrefs.TAB_WIDTH, 4);
             regenerateIndentString();
         }
         return tabWidth;
     }
 
-    public void regenerateIndentString(){
+    public void regenerateIndentString() {
         PyPreferencesCache c = getCache();
         c.clear(PydevEditorPrefs.TAB_WIDTH);
         c.clear(PydevEditorPrefs.SUBSTITUTE_TABS);
         indentString = super.getIndentationString();
     }
+
     /**
      * This class also puts the indentation string in a cache and redoes it 
      * if the preferences are changed.
      * 
      * @return the indentation string. 
      */
+    @Override
     public String getIndentationString() {
-        if (indentString == null){
+        if (indentString == null) {
             regenerateIndentString();
         }
 
@@ -133,11 +144,11 @@ public class DefaultIndentPrefs extends AbstractIndentPrefs {
     public boolean getAutoParentesis() {
         return getCache().getBoolean(PydevEditorPrefs.AUTO_PAR);
     }
-    
+
     public boolean getAutoLink() {
         return getCache().getBoolean(PydevEditorPrefs.AUTO_LINK);
     }
-    
+
     public boolean getIndentToParLevel() {
         return getCache().getBoolean(PydevEditorPrefs.AUTO_INDENT_TO_PAR_LEVEL);
     }
@@ -170,13 +181,12 @@ public class DefaultIndentPrefs extends AbstractIndentPrefs {
         return getCache().getInt(PydevEditorPrefs.AUTO_INDENT_AFTER_PAR_WIDTH, 1);
     }
 
-	public boolean getSmartLineMove() {
-		return getCache().getBoolean(PydevEditorPrefs.SMART_LINE_MOVE);
-	}
-	
-	public boolean getAutoLiterals() {
-		return getCache().getBoolean(PydevEditorPrefs.AUTO_LITERALS);
-	}
+    public boolean getSmartLineMove() {
+        return getCache().getBoolean(PydevEditorPrefs.SMART_LINE_MOVE);
+    }
 
+    public boolean getAutoLiterals() {
+        return getCache().getBoolean(PydevEditorPrefs.AUTO_LITERALS);
+    }
 
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -25,6 +25,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Text;
 import org.python.pydev.core.log.Log;
 import org.python.pydev.debug.core.Constants;
+
 
 /**
  * A control for setting the working directory associated with a launch
@@ -101,8 +102,7 @@ public class ProgramArgumentsBlock extends AbstractLaunchConfigurationTab {
             String text = configuration.getAttribute(Constants.ATTR_PROGRAM_ARGUMENTS, "");
             fPrgmArgumentsText.setText(text);
         } catch (CoreException e) {
-            setErrorMessage("Exception occurred reading configuration"
-                    + e.getStatus().getMessage());
+            setErrorMessage("Exception occurred reading configuration" + e.getStatus().getMessage());
             Log.log(e);
         }
     }
@@ -112,8 +112,7 @@ public class ProgramArgumentsBlock extends AbstractLaunchConfigurationTab {
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#performApply(org.eclipse.debug.core.ILaunchConfigurationWorkingCopy)
      */
     public void performApply(ILaunchConfigurationWorkingCopy configuration) {
-        configuration.setAttribute(Constants.ATTR_PROGRAM_ARGUMENTS,
-                fPrgmArgumentsText.getText().trim());
+        configuration.setAttribute(Constants.ATTR_PROGRAM_ARGUMENTS, fPrgmArgumentsText.getText().trim());
     }
 
     /*

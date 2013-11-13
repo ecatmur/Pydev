@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -15,13 +15,14 @@ import org.eclipse.ui.editors.text.templates.ContributionTemplateStore;
 import org.python.pydev.core.log.Log;
 import org.python.pydev.plugin.PydevPlugin;
 
+
 /**
  * Helper for getting the template store and registry.
  * 
  * @author Fabio
  */
 public class TemplateHelper {
-    
+
     /** The template store. */
     private static TemplateStore fStore;
 
@@ -38,8 +39,8 @@ public class TemplateHelper {
      */
     public static TemplateStore getTemplateStore() {
         if (fStore == null) {
-            fStore = new ContributionTemplateStore(TemplateHelper.getContextTypeRegistry(), 
-                    PydevPlugin.getDefault().getPreferenceStore(), CUSTOM_TEMPLATES_PY_KEY);
+            fStore = new ContributionTemplateStore(TemplateHelper.getContextTypeRegistry(), PydevPlugin.getDefault()
+                    .getPreferenceStore(), CUSTOM_TEMPLATES_PY_KEY);
             try {
                 fStore.load();
             } catch (IOException e) {
@@ -64,12 +65,12 @@ public class TemplateHelper {
         }
         return fRegistry;
     }
-    
+
     /**
      * Used from jython scripts.
      */
-    public static void clearTemplateRegistryCache(){
-    	fRegistry = null;
+    public static void clearTemplateRegistryCache() {
+        fRegistry = null;
     }
 
 }

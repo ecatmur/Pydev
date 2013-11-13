@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -17,11 +17,9 @@ import org.python.pydev.core.IInterpreterManager;
 /**
  * Creates the interpreter info in a separate operation.
  */
-public class ObtainInterpreterInfoOperation implements IRunnableWithProgress{
+public class ObtainInterpreterInfoOperation implements IRunnableWithProgress {
 
-    
-
-    static class OperationMonitor extends ProgressMonitorWrapper{
+    static class OperationMonitor extends ProgressMonitorWrapper {
 
         private PrintWriter logger;
 
@@ -29,7 +27,7 @@ public class ObtainInterpreterInfoOperation implements IRunnableWithProgress{
             super(monitor);
             this.logger = logger;
         }
-        
+
         @Override
         public void beginTask(String name, int totalWork) {
             super.beginTask(name, totalWork);
@@ -38,14 +36,14 @@ public class ObtainInterpreterInfoOperation implements IRunnableWithProgress{
             logger.print(" totalWork:");
             logger.println(totalWork);
         }
-        
+
         @Override
         public void setTaskName(String name) {
             super.setTaskName(name);
             logger.print("- Setting task name:");
             logger.println(name);
         }
-        
+
         @Override
         public void subTask(String name) {
             super.subTask(name);
@@ -53,22 +51,24 @@ public class ObtainInterpreterInfoOperation implements IRunnableWithProgress{
             logger.println(name);
         }
     }
-    
-    
+
     public InterpreterInfo result;
     public String file;
     public Exception e;
     private PrintWriter logger;
     private IInterpreterManager interpreterManager;
-    
+    private boolean autoSelect;
+
     /**
      * @param file2
      * @param logger 
      */
-    public ObtainInterpreterInfoOperation(String file2, PrintWriter logger, IInterpreterManager interpreterManager) {
+    public ObtainInterpreterInfoOperation(String file2, PrintWriter logger, IInterpreterManager interpreterManager,
+            boolean autoSelect) {
         this.file = file2;
         this.logger = logger;
         this.interpreterManager = interpreterManager;
+        this.autoSelect = autoSelect;
     }
 
     /**
@@ -78,15 +78,16 @@ public class ObtainInterpreterInfoOperation implements IRunnableWithProgress{
         monitor = new OperationMonitor(monitor, logger);
         monitor.beginTask("Getting libs", 100);
         try {
-            InterpreterInfo interpreterInfo = (InterpreterInfo) interpreterManager.createInterpreterInfo(file, monitor, true);
-            if(interpreterInfo != null){
+            InterpreterInfo interpreterInfo = (InterpreterInfo) interpreterManager.createInterpreterInfo(file, monitor,
+                    !autoSelect);
+            if (interpreterInfo != null) {
                 result = interpreterInfo;
             }
         } catch (Exception e) {
-            logger.println("Exception detected: "+e.getMessage());
+            logger.println("Exception detected: " + e.getMessage());
             this.e = e;
         }
         monitor.done();
     }
-    
+
 }

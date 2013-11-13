@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -17,18 +17,18 @@ import org.eclipse.core.runtime.jobs.Job;
 /**
  * @author Fabio Zadrozny
  */
-public class JobProgressComunicator implements IProgressMonitor{
+public class JobProgressComunicator implements IProgressMonitor {
 
     private IProgressMonitor monitor;
     private Job job;
 
-    public JobProgressComunicator(IProgressMonitor monitor, String main, int total, Job job){
+    public JobProgressComunicator(IProgressMonitor monitor, String main, int total, Job job) {
         this.monitor = monitor;
         this.job = job;
         this.monitor.beginTask(main, total);
     }
-    
-    public void done(){
+
+    public void done() {
         monitor.done();
     }
 

@@ -1,3 +1,19 @@
+/******************************************************************************
+* Copyright (C) 2006-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Dennis Hunziker
+*     Ueli Kistler
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /* 
  * Copyright (C) 2006, 2007  Dennis Hunziker, Ueli Kistler
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
@@ -24,7 +40,8 @@ public class FunctionDefAdapter extends AbstractScopeNode<FunctionDef> {
 
     private List<FunctionDefAdapter> functions;
 
-    public FunctionDefAdapter(ModuleAdapter module, AbstractScopeNode<?> parent, FunctionDef node, AdapterPrefs adapterPrefs) {
+    public FunctionDefAdapter(ModuleAdapter module, AbstractScopeNode<?> parent, FunctionDef node,
+            AdapterPrefs adapterPrefs) {
         super(module, parent, node, adapterPrefs);
         this.arguments = new FunctionArgAdapter(getModule(), this, getASTNode().args, adapterPrefs);
         this.functions = null;
@@ -48,20 +65,22 @@ public class FunctionDefAdapter extends AbstractScopeNode<FunctionDef> {
 
     public String getNodeBodyIndent() {
         FunctionDef functionNode = getASTNode();
-        if(functionNode.body == null || functionNode.body.length == 0){
+        if (functionNode.body == null || functionNode.body.length == 0) {
             PySelection pySelection = new PySelection(getModule().getDoc());
-            String indentationFromLine = PySelection.getIndentationFromLine(pySelection.getLine(functionNode.beginLine-1));
-            return indentationFromLine+DefaultIndentPrefs.get().getIndentationString();
-            
+            String indentationFromLine = PySelection.getIndentationFromLine(pySelection
+                    .getLine(functionNode.beginLine - 1));
+            return indentationFromLine + DefaultIndentPrefs.get().getIndentationString();
+
         }
 
         return getModule().getIndentationFromAst(functionNode.body[0]);
     }
 
     public List<FunctionDefAdapter> getFunctions() {
-        if(this.functions == null){
+        if (this.functions == null) {
             LocalFunctionDefVisitor visitor = null;
-            visitor = VisitorFactory.createContextVisitor(LocalFunctionDefVisitor.class, this.getASTNode(), getModule(), this);
+            visitor = VisitorFactory.createContextVisitor(LocalFunctionDefVisitor.class, this.getASTNode(),
+                    getModule(), this);
 
             this.functions = visitor.getAll();
         }
@@ -69,7 +88,8 @@ public class FunctionDefAdapter extends AbstractScopeNode<FunctionDef> {
     }
 
     public List<SimpleAdapter> getAssignedVariables() {
-        ScopeAssignedVisitor visitor = VisitorFactory.createContextVisitor(ScopeAssignedVisitor.class, getASTNode(), this.getModule(), this);
+        ScopeAssignedVisitor visitor = VisitorFactory.createContextVisitor(ScopeAssignedVisitor.class, getASTNode(),
+                this.getModule(), this);
         return visitor.getAll();
     }
 }

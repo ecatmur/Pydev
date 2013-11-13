@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -14,17 +14,14 @@ package org.python.pydev.editor.codecompletion;
 import java.io.File;
 
 import org.eclipse.jface.text.IDocument;
-import org.python.pydev.core.ICodeCompletionASTManager;
 import org.python.pydev.core.ICompletionRequest;
-import org.python.pydev.core.ICompletionState;
 import org.python.pydev.core.IModule;
 import org.python.pydev.core.IPythonNature;
 import org.python.pydev.core.MisconfigurationException;
 import org.python.pydev.core.docutils.PySelection;
 import org.python.pydev.core.docutils.PySelection.ActivationTokenAndQual;
-import org.python.pydev.core.structure.FastStringBuffer;
 import org.python.pydev.editor.codecompletion.revisited.AbstractASTManager;
-import org.python.pydev.editor.codecompletion.revisited.modules.SourceModule;
+import org.python.pydev.shared_core.string.FastStringBuffer;
 
 /**
  * This class defines the information used for a code completion request.
@@ -37,8 +34,8 @@ public final class CompletionRequest implements ICompletionRequest {
      * This is used on the AssistOverride: the activationToken is pre-specified
      * for some reason
      */
-    public CompletionRequest(File editorFile, IPythonNature nature, IDocument doc, String activationToken, int documentOffset, int qlen,
-            IPyCodeCompletion codeCompletion, String qualifier) {
+    public CompletionRequest(File editorFile, IPythonNature nature, IDocument doc, String activationToken,
+            int documentOffset, int qlen, IPyCodeCompletion codeCompletion, String qualifier) {
 
         this.editorFile = editorFile;
         this.nature = nature;
@@ -51,7 +48,7 @@ public final class CompletionRequest implements ICompletionRequest {
 
         // the full qualifier is not set here
         this.fullQualifier = null;
-        
+
         this.calltipOffset = 0;
         this.alreadyHasParams = false;
         this.offsetForKeywordParam = 0;
@@ -67,7 +64,8 @@ public final class CompletionRequest implements ICompletionRequest {
      * @param documentOffset
      * @param codeCompletion
      */
-    public CompletionRequest(File editorFile, IPythonNature nature, IDocument doc, int documentOffset, IPyCodeCompletion codeCompletion) {
+    public CompletionRequest(File editorFile, IPythonNature nature, IDocument doc, int documentOffset,
+            IPyCodeCompletion codeCompletion) {
         //we need those set before requesting a py selection
         this.doc = doc;
         this.documentOffset = documentOffset;
@@ -79,8 +77,7 @@ public final class CompletionRequest implements ICompletionRequest {
         this.isInMethodKeywordParam = act.isInMethodKeywordParam;
         this.offsetForKeywordParam = act.offsetForKeywordParam;
         this.alreadyHasParams = act.alreadyHasParams;
-        this.calltipOffset=  act.calltipOffset;
-
+        this.calltipOffset = act.calltipOffset;
 
         int qlen = qualifier.length();
 
@@ -92,14 +89,12 @@ public final class CompletionRequest implements ICompletionRequest {
         this.fullQualifier = getPySelection().getActivationTokenAndQual(true)[1];
     }
 
-    
-    
     public CompletionRequest createCopyForKeywordParamRequest() {
-        CompletionRequest request = new CompletionRequest(editorFile, nature, doc, this.offsetForKeywordParam, codeCompletion);
+        CompletionRequest request = new CompletionRequest(editorFile, nature, doc, this.offsetForKeywordParam,
+                codeCompletion);
         request.isInMethodKeywordParam = false; //Just making sure it will not be another request for keyword params
         return request;
     }
-
 
     /**
      * This is the file where the request was created. Note that it might be
@@ -107,18 +102,20 @@ public final class CompletionRequest implements ICompletionRequest {
      * may be used to resolve some path.
      */
     public File editorFile;
-    public File getEditorFile(){
+
+    public File getEditorFile() {
         return editorFile;
     }
-    
+
     /**
      * Used when a completion is requested for an editor
      */
     public IPythonNature nature;
-    public IPythonNature getNature(){
+
+    public IPythonNature getNature() {
         return nature;
     }
-    
+
     public final IDocument doc;
 
     /**
@@ -164,17 +161,17 @@ public final class CompletionRequest implements ICompletionRequest {
      * This happens when we're after a '(' or ',' in a method call. 
      */
     public boolean isInCalltip;
-    
+
     /**
      * Defines if we're in a method call.
      */
     public boolean isInMethodKeywordParam;
-    
+
     /**
      * Only really valid when isInMethodKeywordParam == true. Defines the offset of the method call.
      */
     public final int offsetForKeywordParam;
-    
+
     /**
      * Offset of the parens in a calltip.
      */
@@ -218,7 +215,7 @@ public final class CompletionRequest implements ICompletionRequest {
      * for other requests.
      */
     public PySelection getPySelection() {
-        if(this.ps == null){
+        if (this.ps == null) {
             this.ps = new PySelection(this.doc, this.documentOffset);
         }
         return this.ps;
@@ -233,13 +230,13 @@ public final class CompletionRequest implements ICompletionRequest {
      * Cache for the source module created.
      */
     private IModule module;
-    
+
     /**
      * @return the module name where the completion request took place (may be null if there is no editor file associated)
      * @throws MisconfigurationException 
      */
     public String resolveModule() throws MisconfigurationException {
-        if(initialModule == null && editorFile != null){
+        if (initialModule == null && editorFile != null) {
             initialModule = nature.resolveModule(editorFile);
         }
         return initialModule;
@@ -252,7 +249,7 @@ public final class CompletionRequest implements ICompletionRequest {
      * @throws MisconfigurationException 
      */
     public IModule getModule() throws MisconfigurationException {
-        if(module == null){
+        if (module == null) {
             module = AbstractASTManager.createModule(this.editorFile, this.doc, this.nature);
         }
         return module;

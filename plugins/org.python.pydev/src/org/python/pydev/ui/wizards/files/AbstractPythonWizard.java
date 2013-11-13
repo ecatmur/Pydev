@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -31,17 +31,16 @@ import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard;
 import org.python.pydev.core.log.Log;
 import org.python.pydev.plugin.PydevPlugin;
 
+
 public abstract class AbstractPythonWizard extends Wizard implements INewWizard {
 
-    
     public static void startWizard(AbstractPythonWizard wizard, String title) {
         IWorkbenchPart part = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActivePart();
-        IStructuredSelection sel = (IStructuredSelection) part.getSite().getSelectionProvider()
-            .getSelection();
+        IStructuredSelection sel = (IStructuredSelection) part.getSite().getSelectionProvider().getSelection();
 
         startWizard(wizard, title, sel);
     }
-    
+
     /**
      * Must be called in the UI thread.
      * @param sel will define what appears initially in the project/source folder/name.
@@ -62,7 +61,6 @@ public abstract class AbstractPythonWizard extends Wizard implements INewWizard 
         dialog.create();
         dialog.open();
     }
-    
 
     /**
      * The workbench.
@@ -74,16 +72,17 @@ public abstract class AbstractPythonWizard extends Wizard implements INewWizard 
      */
     protected IStructuredSelection selection;
 
-    protected String description;
-    
-    public AbstractPythonWizard(String description){
-        this.description = description;
+    protected String title;
+    protected String description = "";
+
+    public AbstractPythonWizard(String title) {
+        this.title = title;
     }
 
     public void init(IWorkbench workbench, IStructuredSelection selection) {
         this.workbench = workbench;
         this.selection = selection;
-        
+
         initializeDefaultPageImageDescriptor();
 
     }
@@ -92,11 +91,11 @@ public abstract class AbstractPythonWizard extends Wizard implements INewWizard 
      * Set Python logo to top bar
      */
     protected void initializeDefaultPageImageDescriptor() {
-        ImageDescriptor desc = PydevPlugin.imageDescriptorFromPlugin(PydevPlugin.getPluginID(), "icons/python_logo.png");//$NON-NLS-1$
+        ImageDescriptor desc = PydevPlugin
+                .imageDescriptorFromPlugin(PydevPlugin.getPluginID(), "icons/python_logo.png");//$NON-NLS-1$
         setDefaultPageImageDescriptor(desc);
     }
 
-    
     /** Wizard page asking filename */
     protected AbstractPythonWizardPage filePage;
 
@@ -105,6 +104,7 @@ public abstract class AbstractPythonWizard extends Wizard implements INewWizard 
      */
     public void addPages() {
         filePage = createPathPage();
+        filePage.setTitle(this.title);
         filePage.setDescription(this.description);
         addPage(filePage);
     }
@@ -114,7 +114,6 @@ public abstract class AbstractPythonWizard extends Wizard implements INewWizard 
      */
     protected abstract AbstractPythonWizardPage createPathPage();
 
-    
     /**
      * User clicks Finish
      */
@@ -158,7 +157,7 @@ public abstract class AbstractPythonWizard extends Wizard implements INewWizard 
      * @param openEditor the opened editor
      */
     protected void afterEditorCreated(IEditorPart openEditor) {
-        
+
     }
 
     /**

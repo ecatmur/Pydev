@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -16,18 +16,19 @@ import org.eclipse.swt.widgets.Shell;
 import org.python.pydev.core.TestDependent;
 import org.python.pydev.plugin.PydevPlugin;
 
-public class SWTTest extends TestCase{
+public class SWTTest extends TestCase {
 
     protected Shell shell;
     protected Display display;
+
     private void createSShell() {
         shell = new org.eclipse.swt.widgets.Shell();
     }
 
-    public void testIt() throws Exception{
-        
+    public void testIt() throws Exception {
+
     }
-    
+
     /*
      * @see TestCase#setUp()
      */
@@ -35,7 +36,7 @@ public class SWTTest extends TestCase{
         super.setUp();
         PydevPlugin.setBundleInfo(new BundleInfoStub());
         try {
-            if(TestDependent.HAS_SWT_ON_PATH){
+            if (TestDependent.HAS_SWT_ON_PATH) {
                 display = createDisplay();
                 createSShell();
             }

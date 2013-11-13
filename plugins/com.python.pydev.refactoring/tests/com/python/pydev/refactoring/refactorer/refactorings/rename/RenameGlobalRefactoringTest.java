@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -28,12 +28,10 @@ public class RenameGlobalRefactoringTest extends RefactoringRenameTestBase {
         }
     }
 
-    
-    protected Class getProcessUnderTest() {
+    protected Class<PyRenameGlobalProcess> getProcessUnderTest() {
         return PyRenameGlobalProcess.class;
     }
 
-    
     public void testRename1() throws Exception {
         Map<String, HashSet<ASTEntry>> references = getReferencesForRenameSimple("reflib.renameglobal.renglobal", 0, 8);
         assertTrue(references.containsKey(CURRENT_MODULE_IN_REFERENCES)); //the current module must also be there
@@ -47,8 +45,5 @@ public class RenameGlobalRefactoringTest extends RefactoringRenameTestBase {
         assertContains(3, 1, references.get(CURRENT_MODULE_IN_REFERENCES));
         assertContains(6, 1, references.get("reflib.renameglobal2.bar1"));
     }
-    
-    
-    
 
 }

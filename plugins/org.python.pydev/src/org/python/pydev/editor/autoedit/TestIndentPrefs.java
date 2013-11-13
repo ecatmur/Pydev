@@ -1,17 +1,16 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
  */
 package org.python.pydev.editor.autoedit;
 
-
 /**
  * Code to be used in tests.
  */
 public class TestIndentPrefs extends AbstractIndentPrefs {
-    
+
     private boolean useSpaces;
     private int tabWidth;
     public boolean autoPar = true;
@@ -26,28 +25,28 @@ public class TestIndentPrefs extends AbstractIndentPrefs {
     public boolean autoAddLiterals = true;
     public boolean autoLink = true;
 
-    public TestIndentPrefs(boolean useSpaces, int tabWidth){
+    public TestIndentPrefs(boolean useSpaces, int tabWidth) {
         this.useSpaces = useSpaces;
         this.tabWidth = tabWidth;
     }
 
-    public TestIndentPrefs(boolean useSpaces, int tabWidth, boolean autoPar){
-        this(useSpaces,tabWidth, autoPar, true);
+    public TestIndentPrefs(boolean useSpaces, int tabWidth, boolean autoPar) {
+        this(useSpaces, tabWidth, autoPar, true);
     }
 
-    public TestIndentPrefs(boolean useSpaces, int tabWidth, boolean autoPar, boolean autoElse){
-        this(useSpaces,tabWidth);
+    public TestIndentPrefs(boolean useSpaces, int tabWidth, boolean autoPar, boolean autoElse) {
+        this(useSpaces, tabWidth);
         this.autoPar = autoPar;
         this.autoElse = autoElse;
     }
-    
+
     public boolean getUseSpaces(boolean considerForceTabs) {
-    	if(considerForceTabs && getForceTabs()){
-    		return false;//force use tabs
-    	}
+        if (considerForceTabs && getForceTabs()) {
+            return false;//force use tabs
+        }
         return useSpaces;
     }
-    
+
     public boolean getAutoLink() {
         return autoLink;
     }
@@ -64,8 +63,7 @@ public class TestIndentPrefs extends AbstractIndentPrefs {
         return autoColon;
     }
 
-    public boolean getAutoBraces()
-    {
+    public boolean getAutoBraces() {
         return autoBraces;
     }
 
@@ -90,17 +88,17 @@ public class TestIndentPrefs extends AbstractIndentPrefs {
     }
 
     public int getIndentAfterParWidth() {
-      return indentAfterParWidth;
+        return indentAfterParWidth;
     }
-    
+
     public boolean getSmartLineMove() {
-    	return true;
+        return true;
     }
-    
+
     public boolean getAutoLiterals() {
-    	return autoAddLiterals;
+        return autoAddLiterals;
     }
-    
+
     public void regenerateIndentString() {
         //ignore it
     }

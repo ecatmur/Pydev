@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -129,16 +129,17 @@ public class PyDevCodeFoldingPrefPage extends PreferencePage implements IWorkben
         Button master = addCheckBox(top, "Use Code Folding?  -  Will apply to new editors", USE_CODE_FOLDING, 0);
 
         Label listLabel = new Label(top, SWT.NONE);
-        listLabel.setText("\nSelect the elements you would like PyDev \nto fold on.\n\nWill be applied when the document is saved");
+        listLabel
+                .setText("\nSelect the elements you would like PyDev \nto fold on.\n\nWill be applied when the document is saved");
 
         Button slaveImport = addCheckBox(top, "Fold Imports?", FOLD_IMPORTS, 0);
-        
+
         Button slaveClass = addCheckBox(top, "Fold Class Definitions?", FOLD_CLASSDEF, 0);
 
         Button slaveFunc = addCheckBox(top, "Fold Function Definitions?", FOLD_FUNCTIONDEF, 0);
-        
+
         Button slaveString = addCheckBox(top, "Fold Multi-line Strings?", FOLD_STRINGS, 0);
-        
+
         Button slaveComment = addCheckBox(top, "Fold Comments?", FOLD_COMMENTS, 0);
 
         Button slaveFor = addCheckBox(top, "Fold FOR statments?", FOLD_FOR, 0);
@@ -189,7 +190,7 @@ public class PyDevCodeFoldingPrefPage extends PreferencePage implements IWorkben
 
     protected void initializeFields() {
 
-        Iterator e = fCheckBoxes.keySet().iterator();
+        Iterator<Button> e = fCheckBoxes.keySet().iterator();
         while (e.hasNext()) {
             Button b = (Button) e.next();
             String key = (String) fCheckBoxes.get(b);
@@ -207,7 +208,7 @@ public class PyDevCodeFoldingPrefPage extends PreferencePage implements IWorkben
         //        updateStatus(validatePositiveNumber("0")); 
 
         // Update slaves
-        Iterator iter = fMasterSlaveListeners.iterator();
+        Iterator<SelectionListener> iter = fMasterSlaveListeners.iterator();
         while (iter.hasNext()) {
             SelectionListener listener = (SelectionListener) iter.next();
             listener.widgetSelected(null);

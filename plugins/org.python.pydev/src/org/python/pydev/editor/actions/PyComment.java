@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2013 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -11,15 +11,15 @@
 
 package org.python.pydev.editor.actions;
 
-import java.util.List;
-
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextSelection;
-import org.python.pydev.core.Tuple;
-import org.python.pydev.core.docutils.PySelection;
-import org.python.pydev.core.docutils.StringUtils;
-import org.python.pydev.core.structure.FastStringBuffer;
+import org.python.pydev.editor.PyEdit;
+import org.python.pydev.editor.actions.PyFormatStd.FormatStd;
+import org.python.pydev.shared_core.actions.LineCommentAction;
+import org.python.pydev.shared_core.string.TextSelectionUtils;
+import org.python.pydev.shared_core.structure.Tuple;
 
 /**
  * Creates a bulk comment. Comments all selected lines
@@ -28,26 +28,47 @@ import org.python.pydev.core.structure.FastStringBuffer;
  * @author Parhaum Toofanian
  */
 public class PyComment extends PyAction {
-    
+
+    protected FormatStd std;
+
+    public PyComment(FormatStd std) {
+        super();
+        this.std = std;
+    }
+
+    public PyComment() {
+        this(null);
+    }
+
     /**
      * Grabs the selection information and performs the action.
      */
     public void run(IAction action) {
         try {
-        	if(!canModifyEditor()){
-        		return;
-        	}
+            if (!canModifyEditor()) {
+                return;
+            }
+
+            PyEdit pyEdit = getPyEdit();
+            this.std = pyEdit.getFormatStd();
 
             // Select from text editor
-            PySelection ps = new PySelection(getTextEditor());
+            IDocument document = pyEdit.getDocumentProvider().getDocument(pyEdit.getEditorInput());
+            ITextSelection selection = (ITextSelection) pyEdit.getSelectionProvider().getSelection();
+
+            TextSelectionUtils ps = new TextSelectionUtils(document, selection);
             // Perform the action
             Tuple<Integer, Integer> repRegion = perform(ps);
 
             // Put cursor at the first area of the selection
-            getTextEditor().selectAndReveal(repRegion.o1, repRegion.o2);
+            pyEdit.selectAndReveal(repRegion.o1, repRegion.o2);
         } catch (Exception e) {
             beep(e);
         }
+    }
+
+    public Tuple<Integer, Integer> perform(TextSelectionUtils ps) throws BadLocationException {
+        return performComment(ps);
     }
 
     /**
@@ -57,27 +78,9 @@ public class PyComment extends PyAction {
      * @return the new selection
      * @throws BadLocationException 
      */
-    public Tuple<Integer, Integer> perform(PySelection ps) throws BadLocationException {
-        // What we'll be replacing the selected text with
-
-        // If they selected a partial line, count it as a full one
-        ps.selectCompleteLine();
-
-        String selectedText = ps.getSelectedText();
-        List<String> ret = StringUtils.splitInLines(selectedText);
-        
-        FastStringBuffer strbuf = new FastStringBuffer(selectedText.length()+ret.size()+2);
-        for(String line: ret){
-            strbuf.append('#').append(line);
-        }
-        
-        ITextSelection txtSel = ps.getTextSelection();
-        int start = txtSel.getOffset();
-        int len = txtSel.getLength();
-        
-        String replacement = strbuf.toString();
-        // Replace the text with the modified information
-        ps.getDoc().replace(start, len, replacement);
-        return new Tuple<Integer, Integer>(start, replacement.length());
+    protected Tuple<Integer, Integer> performComment(TextSelectionUtils ps) throws BadLocationException {
+        LineCommentAction lineCommentAction = new LineCommentAction(ps, "#", this.std.spacesInStartComment);
+        return lineCommentAction.execute();
     }
+
 }

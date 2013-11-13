@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2005-2012 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Eclipse Public License (EPL).
  * Please see the license.txt included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
@@ -53,10 +53,10 @@ public class SimplePythonRunnerTest extends TestCase {
      * 
      */
     public void testEnv() throws CoreException, IOException {
-        
-        File relativePath = PydevPlugin.getBundleInfo().getRelativePath(new Path("PySrc/interpreterInfo.py"));
-        String string = new SimplePythonRunner().runAndGetOutput(new String[] { TestDependent.PYTHON_EXE,
-                relativePath.getCanonicalPath() }, null, null, null).o1;
+
+        File relativePath = PydevPlugin.getBundleInfo().getRelativePath(new Path("pysrc/interpreterInfo.py"));
+        String string = new SimplePythonRunner().runAndGetOutput(
+                new String[] { TestDependent.PYTHON_EXE, relativePath.getCanonicalPath() }, null, null, null, "utf-8").o1;
         assertNotNull(string);
         //System.out.println(string);
     }

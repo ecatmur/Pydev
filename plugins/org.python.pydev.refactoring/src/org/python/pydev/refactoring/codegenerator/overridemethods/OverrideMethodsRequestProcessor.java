@@ -1,3 +1,19 @@
+/******************************************************************************
+* Copyright (C) 2006-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Dennis Hunziker
+*     Ueli Kistler
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /* 
  * Copyright (C) 2006, 2007  Dennis Hunziker, Ueli Kistler
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
@@ -54,11 +70,10 @@ public class OverrideMethodsRequestProcessor implements IRequestProcessor<Overri
     public List<OverrideMethodsRequest> getRefactoringRequests() {
         List<OverrideMethodsRequest> requests = new ArrayList<OverrideMethodsRequest>();
 
-        for(ClassTreeNode clazz:getClasses()){
-            for(FunctionDefAdapter method:getMethods(clazz)){
-                requests.add(new OverrideMethodsRequest(
-                        origin, insertionPoint, method, generateMethodComments, 
-                        clazz.getAdapter().getName(), adapterPrefs));
+        for (ClassTreeNode clazz : getClasses()) {
+            for (FunctionDefAdapter method : getMethods(clazz)) {
+                requests.add(new OverrideMethodsRequest(origin, insertionPoint, method, generateMethodComments, clazz
+                        .getAdapter().getName(), adapterPrefs));
             }
         }
 
@@ -68,10 +83,10 @@ public class OverrideMethodsRequestProcessor implements IRequestProcessor<Overri
     private List<FunctionDefAdapter> getMethods(ClassTreeNode parent) {
         List<FunctionDefAdapter> methods = new ArrayList<FunctionDefAdapter>();
 
-        for(Object obj:checked){
-            if(obj instanceof FunctionTreeNode){
+        for (Object obj : checked) {
+            if (obj instanceof FunctionTreeNode) {
                 FunctionTreeNode method = (FunctionTreeNode) obj;
-                if(method.getParent() == parent){
+                if (method.getParent() == parent) {
                     methods.add(method.getAdapter());
                 }
             }
@@ -83,8 +98,8 @@ public class OverrideMethodsRequestProcessor implements IRequestProcessor<Overri
     private List<ClassTreeNode> getClasses() {
         List<ClassTreeNode> classes = new ArrayList<ClassTreeNode>();
 
-        for(Object obj:checked){
-            if(obj instanceof ClassTreeNode){
+        for (Object obj : checked) {
+            if (obj instanceof ClassTreeNode) {
                 classes.add((ClassTreeNode) obj);
             }
         }

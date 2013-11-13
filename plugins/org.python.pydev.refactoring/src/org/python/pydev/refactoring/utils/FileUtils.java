@@ -1,3 +1,17 @@
+/******************************************************************************
+* Copyright (C) 2007-2012  IFS Institute for Software and others
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Original authors:
+*     Reto Schuettel
+*     Robin Stocker
+* Contributors:
+*     Fabio Zadrozny <fabiofz@gmail.com> - initial implementation
+******************************************************************************/
 /*
  * Copyright (C) 2007  Reto Schuettel, Robin Stocker
  *
@@ -28,17 +42,17 @@ public final class FileUtils {
     public static String read(File file) throws IOException {
         BufferedReader reader = null;
 
-        try{
+        try {
             reader = new BufferedReader(new FileReader(file));
             StringBuilder builder = new StringBuilder();
             char[] buffer = new char[BUFFER_SIZE];
             int len;
-            while((len = reader.read(buffer, 0, BUFFER_SIZE)) != -1){
+            while ((len = reader.read(buffer, 0, BUFFER_SIZE)) != -1) {
                 builder.append(buffer, 0, len);
             }
             return builder.toString();
-        }finally{
-            if(reader != null){
+        } finally {
+            if (reader != null) {
                 reader.close();
             }
         }
