@@ -333,13 +333,12 @@ class PyDevFrontEnd:
         # So that ipython magics and aliases can be doctested (they work by making
         # a call into a global _ip object).  Also make the top-level get_ipython
         # now return this without recursively calling here again.
-        get_ipython = shell.get_ipython
         try:
             import __builtin__
         except:
             import builtins as __builtin__
-        __builtin__._ip = shell
-        __builtin__.get_ipython = get_ipython
+        __builtin__._ip = self.ipython
+        __builtin__.get_ipython = self.ipython.get_ipython
 
         # We want to print to stdout/err as usual.
         io.stdout = original_stdout
