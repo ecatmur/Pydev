@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.Thread.State;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -113,7 +114,6 @@ public class PydevConsoleCommunication implements IScriptConsoleCommunication, X
         streamMonitor = new ThreadedStreamMonitor(outputQueue);
         streamReader = new StreamReader(process.getInputStream(), process.getErrorStream(), outputQueue);
         streamReader.run();
-        streamMonitor.start();
 
         //start the server that'll handle input requests
         this.webServer = new WebServer(clientPort);
@@ -521,6 +521,9 @@ public class PydevConsoleCommunication implements IScriptConsoleCommunication, X
 
     public void addListener(IStreamListener listener) {
         streamMonitor.addListener(listener);
+        if (streamMonitor.getState() == State.NEW) {
+            streamMonitor.start();
+        }
     }
 
     public void removeListener(IStreamListener listener) {
@@ -608,25 +611,11 @@ public class PydevConsoleCommunication implements IScriptConsoleCommunication, X
      */
     public void hello(IProgressMonitor monitor) throws Exception, UserCanceledException {
         int maximumAttempts = InteractiveConsolePrefs.getMaximumAttempts();
-        IStreamListener listener = null;
         monitor.beginTask("Establishing Connection To Console Process", maximumAttempts);
         try {
             if (firstCommWorked) {
                 return;
             }
-
-            final StringBuilder out = new StringBuilder(), err = new StringBuilder();
-            listener = new IStreamListener() {
-                public void onStream(StreamMessage msg) {
-                    switch (msg.type) {
-                        case STDOUT:
-                            out.append(msg.message);
-                        case STDERR:
-                            err.append(msg.message);
-                    }
-                }
-            };
-            this.addListener(listener);
 
             // We'll do a connection attempt, we can try to
             // connect n times (until the 1st time the connection
@@ -665,14 +654,22 @@ public class PydevConsoleCommunication implements IScriptConsoleCommunication, X
             }
 
             if (!firstCommWorked) {
+                final StringBuilder out = new StringBuilder(), err = new StringBuilder();
+                for (final StreamMessage msg : outputQueue) {
+                    switch (msg.type) {
+                        case STDOUT:
+                            out.append(msg.message);
+                            break;
+                        case STDERR:
+                            err.append(msg.message);
+                            break;
+                    }
+                }
                 throw new Exception("Failed to receive suitable Hello response from pydevconsole. Last msg received: "
                         + result + "\nstdout: " + out + "\nstderr: " + err);
             }
         } finally {
             monitor.done();
-            if (listener != null) {
-                this.removeListener(listener);
-            }
         }
     }
 
