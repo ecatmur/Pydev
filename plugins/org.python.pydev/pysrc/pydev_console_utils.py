@@ -319,6 +319,7 @@ class BaseInterpreterInterface:
             try:
                 from pydev_ipython.inputhook import enable_gui
                 enable_gui(guiname)
+                sys.stderr.write("Enabled GUI event loop integration for '%s'\n" % guiname)
             except:
                 sys.stderr.write("Failed to enable GUI event loop integration for '%s'\n" % guiname)
                 import traceback;traceback.print_exc()

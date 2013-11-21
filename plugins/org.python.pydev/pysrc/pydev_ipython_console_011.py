@@ -33,10 +33,6 @@ except ImportError:
     from IPython.frontend.terminal.interactiveshell import TerminalInteractiveShell
 from IPython.utils.traitlets import CBool, Unicode
 from IPython.utils import io
-try:    # since IPython 0.12
-    from IPython.core.pylabtools import find_gui_and_backend
-except ImportError:     # IPython 0.11
-    from IPython.lib.pylabtools import find_gui_and_backend
 original_stdout = sys.stdout
 original_stderr = sys.stderr
 

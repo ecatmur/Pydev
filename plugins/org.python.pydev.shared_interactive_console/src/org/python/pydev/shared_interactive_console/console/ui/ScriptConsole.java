@@ -218,8 +218,7 @@ public abstract class ScriptConsole extends TextConsole implements ICommandHandl
     public void interrupt(int signal) {
         try {
             interpreter.interrupt(signal);
-            // Add a newline to the console to flush through
-            getDocument().replace(getDocument().getLength(), 0, "\n");
+            getViewer().discardCommandLine();
         } catch (Exception e) {
         }
     }

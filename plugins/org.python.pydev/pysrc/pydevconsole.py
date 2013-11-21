@@ -201,6 +201,7 @@ def StartServer(host, port, client_port):
     server.register_function(interpreter.getCompletions)
     server.register_function(interpreter.getDescription)
     server.register_function(interpreter.close)
+    server.register_function(interpreter.interrupt)
 
     # Functions so that the console can work as a debugger (i.e.: variables view, expressions...)
     server.register_function(interpreter.connectToDebugger)

@@ -164,16 +164,28 @@ public class PydevConsoleCommunication implements IScriptConsoleCommunication, X
      * Sends a message to the client to be handled (SIGINT, SIGSTP, etc). 
      * Don't confuse 'kill' with the idea of only sending 'SIGKILL'.
      */
-    public void interrupt(int signal) throws Exception {
-        // This is evil evil evil. I'm sorry.
-        // Todo this properly, borrow the native process signalling bits from Eclipse CDT
-        try {
-            Field f = process.getClass().getDeclaredField("pid");
-            f.setAccessible(true);
-            Runtime.getRuntime().exec("kill -" + signal + " " + f.get(process));
-        } catch (Exception e) {
-            Log.log(IStatus.ERROR, "Problem interrupting python process", e);
-        }
+    public void interrupt(final int signal) throws Exception {
+        Job job = new Job("Interrupt console process") {
+            @Override
+            protected IStatus run(IProgressMonitor monitor) {
+                try {
+                    // This is evil evil evil. I'm sorry.
+                    // Todo this properly, borrow the native process signalling bits from Eclipse CDT
+                    Field f = process.getClass().getDeclaredField("pid");
+                    f.setAccessible(true);
+                    Runtime.getRuntime().exec("kill -" + signal + " " + f.get(process));
+                    PydevConsoleCommunication.this.client.execute("interrupt", new Object[0]);
+                    if (PydevConsoleCommunication.this.waitingForInput) {
+                        PydevConsoleCommunication.this.inputReceived = "";
+                        PydevConsoleCommunication.this.waitingForInput = false;
+                    }
+                } catch (Exception e) {
+                    Log.log(IStatus.ERROR, "Problem interrupting python process", e);
+                }
+                return Status.OK_STATUS;
+            }
+        };
+        job.schedule();
     }
 
     /**

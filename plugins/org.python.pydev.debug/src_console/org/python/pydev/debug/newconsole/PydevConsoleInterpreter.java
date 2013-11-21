@@ -255,14 +255,8 @@ public class PydevConsoleInterpreter implements IScriptConsoleInterpreter {
         this.closeRunnables = null;
     }
 
-    public void interrupt(int signal) {
-        if (consoleCommunication != null) {
-            try {
-                consoleCommunication.interrupt(signal);
-            } catch (Exception e) {
-                //ignore
-            }
-        }
+    public void interrupt(int signal) throws Exception {
+        consoleCommunication.interrupt(signal);
     }
 
     /*
