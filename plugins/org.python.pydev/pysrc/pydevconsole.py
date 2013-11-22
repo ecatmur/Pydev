@@ -138,7 +138,7 @@ class InterpreterInterface(BaseInterpreterInterface):
         return self.namespace
 
 
-    def getCompletions(self, text, act_tok, ipython_only):
+    def getCompletions(self, text, act_tok):
         try:
             from _pydev_completer import Completer
             completer = Completer(self.namespace, None)

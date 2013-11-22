@@ -77,7 +77,6 @@ public class EvaluateDebugConsoleExpression implements ICommandResponseListener 
      * @param consoleId
      * @param actTok
      * @param offset
-     * @param ipythonOnly 
      */
     public String getCompletions(String actTok, int offset) {
         AbstractDebugTarget target = frame.getTarget();
