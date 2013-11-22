@@ -35,8 +35,6 @@ public interface IScriptConsoleCommunication extends IStreamMonitor {
     /**
      * Creates the completions to be applied in the interpreter.
      * 
-     * Equivalent to {@link #getCompletions(String, String, int, false)}
-     * 
      * @param text the full line
      * @param actTok the text with what should be completed (e.g.: xxx.bar.foo) 
      * @param offset the offset where the completion was requested in the console document
@@ -44,18 +42,6 @@ public interface IScriptConsoleCommunication extends IStreamMonitor {
      * @throws Exception
      */
     public ICompletionProposal[] getCompletions(String text, String actTok, int offset) throws Exception;
-
-    /**
-     * Creates the completions to be applied in the interpreter.
-     * 
-     * @param text the full line
-     * @param actTok the text with what should be completed (e.g.: xxx.bar.foo) 
-     * @param offset the offset where the completion was requested in the console document
-     * @param ipythonOnly flag which indicates if the completions returned should be restricted to those returned from Ipython (if available
-     * @return a list of proposals that can be applied for the given text.
-     * @throws Exception
-     */
-    public ICompletionProposal[] getCompletions(String text, String actTok, int offset, boolean ipythonOnly) throws Exception;
 
     /**
      * Gets the description to be shown on hover to the user

@@ -399,19 +399,14 @@ public class PydevConsoleCommunication implements IScriptConsoleCommunication, X
         onResponseReceived.call(nextResponse);
     }
 
-    public ICompletionProposal[] getCompletions(String text, String actTok, int offset) throws Exception {
-        return getCompletions(text, actTok, offset, false);
-    }
-
     /**
      * @return completions from the client
      */
-    public ICompletionProposal[] getCompletions(String text, String actTok, int offset, boolean ipythonOnly)
-            throws Exception {
+    public ICompletionProposal[] getCompletions(String text, String actTok, int offset) throws Exception {
         if (waitingForInput) {
             return new ICompletionProposal[0];
         }
-        Object fromServer = client.execute("getCompletions", new Object[] { text, actTok, ipythonOnly });
+        Object fromServer = client.execute("getCompletions", new Object[] { text, actTok });
         List<ICompletionProposal> ret = new ArrayList<ICompletionProposal>();
 
         convertToICompletions(text, actTok, offset, fromServer, ret);

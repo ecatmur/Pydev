@@ -41,8 +41,9 @@ class InterpreterInterface(BaseInterpreterInterface):
     def getNamespace(self):
         return self.interpreter.getNamespace()
 
-    def getCompletions(self, text, act_tok, ipython_only):
-        return self.interpreter.getCompletions(text, act_tok, ipython_only)
+
+    def getCompletions(self, text, act_tok):
+        return self.interpreter.getCompletions(text, act_tok)
 
     def interrupt(self):
         self.interpreter.interrupt()

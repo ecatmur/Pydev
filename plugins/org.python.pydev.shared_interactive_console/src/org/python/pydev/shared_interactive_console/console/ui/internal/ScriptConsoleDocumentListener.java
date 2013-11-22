@@ -528,73 +528,81 @@ public class ScriptConsoleDocumentListener implements IDocumentListener, IStream
         final String commandLine = getCommandLine();
         final int commandLineOffset = viewer.getCommandLineOffset();
         final int caretOffset = viewer.getCaretOffset();
-        
+
         // Don't block the UI when talking to the console
         Job j = new Job("Async Fetch completions") {
 
             @Override
             protected IStatus run(IProgressMonitor monitor) {
-                final StringBuilder sb = new StringBuilder("\n");
-                ICompletionProposal[] completions = handler.getCompletions(commandLine, caretOffset - commandLineOffset);
-                if (completions.length == 0)
+                ICompletionProposal[] completions = handler
+                        .getCompletions(commandLine, caretOffset - commandLineOffset);
+                if (completions.length == 0) {
                     return Status.OK_STATUS;
-                
+                }
+
                 // Evaluate all the completions
                 final List<String> compList = new ArrayList<String>();
                 for (ICompletionProposal completion : completions) {
-                    Document out = new Document(commandLine);
-                    completion.apply(out);
-                    compList.add(out.get());
+                    boolean magicCommand = commandLine.startsWith("%"), magicCompletion = completion.getDisplayString()
+                            .startsWith("%");
+                    Document doc = new Document(commandLine.substring((magicCommand && magicCompletion) ? 1 : 0));
+                    completion.apply(doc);
+                    compList.add(doc.get().substring((magicCommand && !magicCompletion) ? 1 : 0));
                 }
 
                 // Discover the longest possible completion so we can zip up to it
                 String longestCommonPrefix = null;
-                int length = 0;
                 for (String completion : compList) {
-                    // Handle magic % character -> IPython does the right thing
-                    if (completion.charAt(0) == '%')
-                        completion = completion.substring(1);
+                    if (!completion.startsWith(commandLine)) {
+                        continue;
+                    }
+                    if (completion.startsWith("_", completion.lastIndexOf('.') + 1)
+                            && !commandLine.startsWith("_", commandLine.lastIndexOf('.') + 1)) {
+                        continue;
+                    }
                     // Calculate the longest common prefix so we can auto-complete at least up to there.
                     if (longestCommonPrefix == null) {
                         longestCommonPrefix = completion;
                     } else {
-                        for (int i = 0 ; i < longestCommonPrefix.length() && i < completion.length(); i++) {
+                        for (int i = 0; i < longestCommonPrefix.length() && i < completion.length(); i++) {
                             if (longestCommonPrefix.charAt(i) != completion.charAt(i)) {
                                 longestCommonPrefix = longestCommonPrefix.substring(0, i);
                                 break;
                             }
                         }
                         // Handle mismatched lengths: dir and dirs
-                        if (longestCommonPrefix.length() > completion.length())
+                        if (longestCommonPrefix.length() > completion.length()) {
                             longestCommonPrefix = completion;
+                        }
                     }
+                }
+                if (longestCommonPrefix == null) {
+                    longestCommonPrefix = commandLine;
+                } else if (longestCommonPrefix.indexOf('(', commandLine.length()) != -1) {
+                    longestCommonPrefix = longestCommonPrefix.substring(0,
+                            longestCommonPrefix.indexOf('(', commandLine.length()));
+                }
 
-                    // Calculate the maximum length of the completions for string formatting
+                // Calculate the maximum length of the completions for string formatting
+                int length = 0;
+                for (String completion : compList) {
                     length = Math.max(length, completion.length());
                 }
-                if (longestCommonPrefix == null)
-                    longestCommonPrefix = commandLine;
-                
+
                 final String fLongestCommonPrefix = longestCommonPrefix;
                 final int maxLength = length;
-
-                // Find common substring
                 Runnable r = new Runnable() {
                     public void run() {
-                        String currentCommand = getCommandLine();
-
-                        // disconnect the console so we can write content into it
-                        startDisconnected();
-
                         // Get the viewer width + format the auto-completion output appropriately
                         int consoleWidth = viewer.getConsoleWidthInCharacters();
                         int formatLength = maxLength + 4;
                         int completionsPerLine = consoleWidth / formatLength;
-                        if (completionsPerLine <= 0)
+                        if (completionsPerLine <= 0) {
                             completionsPerLine = 1;
+                        }
 
                         String formatString = "%-" + formatLength + "s";
-
+                        StringBuilder sb = new StringBuilder("\n");
                         int i = 0;
                         for (String completion : compList) {
                             sb.append(String.format(formatString, completion));
@@ -604,18 +612,26 @@ public class ScriptConsoleDocumentListener implements IDocumentListener, IStream
                         }
                         sb.append("\n");
 
-                        // Add our completions to the console
-                        addToConsoleView(sb.toString(), true);
+                        String currentCommand = getCommandLine();
+                        try {
+                            // disconnect the console so we can write content into it
+                            startDisconnected();
 
-                        // Re-add >>> 
-                        appendInvitation(false);
-                        stopDisconnected();
+                            // Add our completions to the console
+                            addToConsoleView(sb.toString(), true);
+
+                            // Re-add >>> 
+                            appendInvitation(false);
+                        } finally {
+                            stopDisconnected();
+                        }
 
                         // Auto-complete the command up to the longest common prefix (if it hasn't changed since we were last here)
-                        if (!currentCommand.equals(commandLine) || fLongestCommonPrefix.isEmpty())
+                        if (!currentCommand.equals(commandLine) || fLongestCommonPrefix.isEmpty()) {
                             addToConsoleView(currentCommand, true);
-                        else
+                        } else {
                             addToConsoleView(fLongestCommonPrefix, true);
+                        }
                     }
                 };
                 RunInUiThread.async(r);
@@ -624,7 +640,7 @@ public class ScriptConsoleDocumentListener implements IDocumentListener, IStream
             }
         };
         j.setPriority(Job.INTERACTIVE);
-        j.setRule(new TabCompletionSingletonRule());        
+        j.setRule(new TabCompletionSingletonRule());
         j.setSystem(true);
         j.schedule();
     }
@@ -766,23 +782,24 @@ public class ScriptConsoleDocumentListener implements IDocumentListener, IStream
     private class PromptContext {
         public boolean removedPrompt;
         // offset from the end of the document.
-        public int     cursorOffset;
-        public String   userInput;
+        public int cursorOffset;
+        public String userInput;
 
         public PromptContext(boolean removedPrompt, int cursorOffset, String userInput) {
             this.removedPrompt = removedPrompt;
-            this.cursorOffset  = cursorOffset;
-            this.userInput     = userInput;
+            this.cursorOffset = cursorOffset;
+            this.userInput = userInput;
         }
     }
 
     protected PromptContext removeUserInput() {
-        if (!promptReady)
+        if (!promptReady) {
             return new PromptContext(false, -1, "");
+        }
 
         PromptContext pc = new PromptContext(true, -1, "");
         try {
-            int lastLine = doc.getNumberOfLines()-1;
+            int lastLine = doc.getNumberOfLines() - 1;
             int lastLineLength = doc.getLineLength(lastLine);
             int end = doc.getLength();
             int start = end - lastLineLength;

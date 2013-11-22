@@ -151,11 +151,6 @@ public class PydevDebugConsoleCommunication implements IScriptConsoleCommunicati
     }
 
     public ICompletionProposal[] getCompletions(String text, String actTok, int offset) throws Exception {
-        return getCompletions(text, actTok, offset, false);
-    }
-
-    public ICompletionProposal[] getCompletions(String text, String actTok, int offset, boolean ipythonOnly)
-            throws Exception {
         ICompletionProposal[] receivedCompletions = {};
         if (waitingForInput) {
             return new ICompletionProposal[0];
@@ -167,7 +162,7 @@ public class PydevDebugConsoleCommunication implements IScriptConsoleCommunicati
         }
 
         final EvaluateDebugConsoleExpression evaluateDebugConsoleExpression = new EvaluateDebugConsoleExpression(frame);
-        String result = evaluateDebugConsoleExpression.getCompletions(actTok, offset, ipythonOnly);
+        String result = evaluateDebugConsoleExpression.getCompletions(actTok, offset);
         if (result.length() > 0) {
             List<Object[]> fromServer = XMLUtils.convertXMLcompletionsFromConsole(result);
             List<ICompletionProposal> ret = new ArrayList<ICompletionProposal>();

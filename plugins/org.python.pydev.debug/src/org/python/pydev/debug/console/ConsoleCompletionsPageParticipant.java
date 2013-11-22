@@ -119,13 +119,6 @@ public class ConsoleCompletionsPageParticipant implements IConsolePageParticipan
         }
 
         /**
-         * Gets the completions at the passed offset.
-         */
-        public ICompletionProposal[] getCompletions(String text, String actTok, int offset, boolean ipythonOnly) throws Exception {
-            return getCompletions(text, actTok, offset);
-        }
-
-        /**
          * Keeps in a loop for 3 seconds or until the completions are found. If no completions are found in that time,
          * returns an empty array.
          */

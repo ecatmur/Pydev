@@ -343,7 +343,7 @@ class PyDevFrontEnd:
     def complete(self, string):
         return self.ipython.complete(None, line=string)
 
-    def getCompletions(self, text, act_tok, ipython_only):
+    def getCompletions(self, text, act_tok):
         # Get completions from IPython and from PyDev and merge the results
         # IPython only gives context free list of completions, while PyDev
         # gives detailed information about completions.
@@ -352,12 +352,9 @@ class PyDevFrontEnd:
             TYPE_IPYTHON_MAGIC = '12'
             _line, ipython_completions = self.complete(text)
 
-            if ipython_only:
-                ret = []
-            else:
-                from _pydev_completer import Completer
-                completer = Completer(self.getNamespace(), None)
-                ret = completer.complete(act_tok)
+            from _pydev_completer import Completer
+            completer = Completer(self.getNamespace(), None)
+            ret = completer.complete(act_tok)
             append = ret.append
             ip = self.ipython
             pydev_completions = set([f[0] for f in ret])
