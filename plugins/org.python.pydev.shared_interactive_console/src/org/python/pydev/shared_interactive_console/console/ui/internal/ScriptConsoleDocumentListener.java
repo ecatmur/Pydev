@@ -547,17 +547,21 @@ public class ScriptConsoleDocumentListener implements IDocumentListener, IStream
                             .startsWith("%");
                     Document doc = new Document(commandLine.substring((magicCommand && magicCompletion) ? 1 : 0));
                     completion.apply(doc);
-                    compList.add(doc.get().substring((magicCommand && !magicCompletion) ? 1 : 0));
+                    String out = doc.get().substring((magicCommand && !magicCompletion) ? 1 : 0);
+                    if (out.startsWith("_", out.lastIndexOf('.') + 1)
+                            && !commandLine.startsWith("_", commandLine.lastIndexOf('.') + 1)) {
+                        continue;
+                    }
+                    if (out.indexOf('(', commandLine.length()) != -1) {
+                        out = out.substring(0, out.indexOf('(', commandLine.length()));
+                    }
+                    compList.add(out);
                 }
 
                 // Discover the longest possible completion so we can zip up to it
                 String longestCommonPrefix = null;
                 for (String completion : compList) {
                     if (!completion.startsWith(commandLine)) {
-                        continue;
-                    }
-                    if (completion.startsWith("_", completion.lastIndexOf('.') + 1)
-                            && !commandLine.startsWith("_", commandLine.lastIndexOf('.') + 1)) {
                         continue;
                     }
                     // Calculate the longest common prefix so we can auto-complete at least up to there.
@@ -578,9 +582,6 @@ public class ScriptConsoleDocumentListener implements IDocumentListener, IStream
                 }
                 if (longestCommonPrefix == null) {
                     longestCommonPrefix = commandLine;
-                } else if (longestCommonPrefix.indexOf('(', commandLine.length()) != -1) {
-                    longestCommonPrefix = longestCommonPrefix.substring(0,
-                            longestCommonPrefix.indexOf('(', commandLine.length()));
                 }
 
                 // Calculate the maximum length of the completions for string formatting
