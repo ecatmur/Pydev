@@ -30,6 +30,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.python.pydev.shared_core.callbacks.ICallback;
 import org.python.pydev.shared_core.log.Log;
 import org.python.pydev.shared_core.string.FastStringBuffer;
+import org.python.pydev.shared_core.string.StringUtils;
 import org.python.pydev.shared_core.string.TextSelectionUtils;
 import org.python.pydev.shared_core.structure.Tuple;
 import org.python.pydev.shared_core.utils.DocCmd;
@@ -58,6 +59,8 @@ public class ScriptConsoleDocumentListener implements IDocumentListener, IStream
     private ScriptConsoleHistory history;
 
     private int offset;
+
+    private int historyFullLine;
 
     private volatile boolean promptReady;
 
@@ -209,6 +212,8 @@ public class ScriptConsoleDocumentListener implements IDocumentListener, IStream
 
         this.offset = 0;
 
+        this.historyFullLine = 0;
+
         this.doc = null;
 
         this.consoleLineTrackers = consoleLineTrackers;
@@ -244,6 +249,9 @@ public class ScriptConsoleDocumentListener implements IDocumentListener, IStream
                 offset = getLastLineLength();
             } catch (BadLocationException e) {
                 Log.log(e);
+            }
+            if (!result.more) {
+                historyFullLine = history.getAsList().size();
             }
         }
         appendInvitation(false);
@@ -448,7 +456,9 @@ public class ScriptConsoleDocumentListener implements IDocumentListener, IStream
                         try {
                             processResult(arg);
                             if (finalAddedNewLine) {
-                                IDocument historyDoc = history.getAsDoc();
+                                List<String> historyList = history.getAsList();
+                                IDocument historyDoc = new Document(StringUtils.join("\n",
+                                        historyList.subList(historyFullLine, historyList.size())) + "\n");
                                 int currHistoryLen = historyDoc.getLength();
                                 if (currHistoryLen > 0) {
                                     DocCmd docCmd = new DocCmd(currHistoryLen - 1, 0, finalDelim);
