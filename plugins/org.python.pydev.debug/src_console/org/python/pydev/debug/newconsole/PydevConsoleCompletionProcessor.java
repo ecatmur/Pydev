@@ -23,6 +23,7 @@ import org.python.pydev.shared_interactive_console.console.IScriptConsoleShell;
 import org.python.pydev.shared_interactive_console.console.ui.IScriptConsoleViewer;
 import org.python.pydev.shared_ui.content_assist.AbstractCompletionProcessorWithCycling;
 
+
 /**
  * Gathers completions for the pydev console.
  * 
