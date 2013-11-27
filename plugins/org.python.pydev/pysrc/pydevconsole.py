@@ -259,10 +259,9 @@ if __name__ == '__main__':
             except Queue.Empty:
                 pass
             else:
-                if callable is not None:
-                    try:
-                        interpreter.callExec(callable)
-                    finally:
-                        client_server.PromptReady()
+                try:
+                    interpreter.callExec(callable)
+                finally:
+                    client_server.PromptReady()
         except KeyboardInterrupt:
             sys.stderr.write('\n'.join(traceback.format_exception_only(*sys.exc_info()[:2])))

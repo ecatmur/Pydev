@@ -95,12 +95,8 @@ class Test(unittest.TestCase):
         server.addExec('')
         server.addExec('foo = Foo()')
         server.addExec('a = %s()' % raw_input_name)
-        #server.addExec('print (a)')
-        #server.addExec('if 1 > 2:')
-        #server.addExec('    pass')
-        #server.addExec('else:')
-        #server.addExec('    print \'else\'')
-
+        server.addExec('print (a)')
+        
 #=======================================================================================================================
 # main        
 #=======================================================================================================================

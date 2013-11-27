@@ -98,22 +98,17 @@ public class ScriptConsoleDocumentListenerTest extends TestCase {
         //Things happen in a thread now, so, we have to wait for it to happen...
         for (int i = 0; i < 50; i++) {
             //if we get at the expected condition, break our for.
-            if (org.python.pydev.shared_core.string.StringUtils.format(">>> class A:%s>>>     ",
-                    listener.getDelimeter()).equals(doc.get())) {
+            if (org.python.pydev.shared_core.string.StringUtils.format(">>> class A:%s>>>     ", listener.getDelimeter()).equals(doc.get())) {
                 break;
             }
             synchronized (this) {
                 wait(250);
             }
         }
-        assertEquals(
-                org.python.pydev.shared_core.string.StringUtils.format(">>> class A:%s>>>     ",
-                        listener.getDelimeter()), doc.get());
+        assertEquals(org.python.pydev.shared_core.string.StringUtils.format(">>> class A:%s>>>     ", listener.getDelimeter()), doc.get());
         doc.replace(doc.getLength(), 0, "def m1");
         doc.replace(doc.getLength(), 0, "(");
-        assertEquals(
-                org.python.pydev.shared_core.string.StringUtils.format(">>> class A:%s>>>     def m1(self):",
-                        listener.getDelimeter()), doc.get());
+        assertEquals(org.python.pydev.shared_core.string.StringUtils.format(">>> class A:%s>>>     def m1(self):", listener.getDelimeter()), doc.get());
 
         listener.clear(false);
         assertEquals(">>> ", doc.get());

@@ -50,7 +50,6 @@ public class ScriptConsolePrompt {
         return mode;
     }
 
-    @Override
     public String toString() {
         if (needInput) {
             return "";

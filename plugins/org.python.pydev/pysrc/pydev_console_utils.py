@@ -169,6 +169,8 @@ class BaseInterpreterInterface:
             import traceback;traceback.print_exc()
         
     def addExec(self, line):
+        #f_opened = open('c:/temp/a.txt', 'a')
+        #f_opened.write(line+'\n')
         more = self.doAddExec(line)
         #it's always false at this point
         need_input = False
