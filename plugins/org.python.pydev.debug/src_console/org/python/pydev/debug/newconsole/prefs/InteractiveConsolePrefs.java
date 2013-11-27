@@ -66,9 +66,6 @@ public class InteractiveConsolePrefs extends FieldEditorPreferencePage implement
         addField(new BooleanFieldEditor(PydevConsoleConstants.INTERACTIVE_CONSOLE_TAB_COMPLETION,
                 "Enable tab completion in interactive console?", BooleanFieldEditor.SEPARATE_LABEL, p));
 
-        addField(new BooleanFieldEditor(PydevConsoleConstants.INTERACTIVE_CONSOLE_CONNECT_VARIABLE_VIEW,
-                "Connect console to Variables Debug View?", BooleanFieldEditor.SEPARATE_LABEL, p));
-
         addField(new IntegerFieldEditor(
                 ScriptConsoleUIConstants.INTERACTIVE_CONSOLE_PERSISTENT_HISTORY_MAXIMUM_ENTRIES,
                 "Maximum number of lines to\nstore in global history\n(0 for unlimited):", p) {
@@ -136,12 +133,6 @@ public class InteractiveConsolePrefs extends FieldEditorPreferencePage implement
         } else {
             return PydevConsoleConstants.DEFAULT_INTERACTIVE_CONSOLE_TAB_COMPLETION;
         }
-    }
-
-    public static boolean getConsoleConnectVariableView() {
-        PydevDebugPlugin plugin = PydevDebugPlugin.getDefault();
-        return plugin.getPreferenceStore().getBoolean(
-                PydevConsoleConstants.INTERACTIVE_CONSOLE_FOCUS_ON_SEND_COMMAND);
     }
 
     public static boolean getConsoleConnectDebugSession() {
