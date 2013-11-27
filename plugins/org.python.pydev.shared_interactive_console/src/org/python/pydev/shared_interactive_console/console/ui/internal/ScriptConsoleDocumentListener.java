@@ -484,28 +484,12 @@ public class ScriptConsoleDocumentListener implements IDocumentListener, IStream
             }
         };
 
-        final ICallback<Object, Tuple<String, String>> onContentsReceived = new ICallback<Object, Tuple<String, String>>() {
-
-            public Object call(final Tuple<String, String> result) {
-                Runnable runnable = new Runnable() {
-
-                    public void run() {
-                        if (result != null) {
-                            revealEndOfDocument();
-                        }
-                    }
-                };
-                RunInUiThread.async(runnable);
-                return null;
-            }
-
-        };
         //Handle the command in a thread that doesn't block the U/I.
         new Thread() {
             @Override
             public void run() {
                 promptReady = false;
-                handler.handleCommand(commandLine, onResponseReceived, onContentsReceived);
+                handler.handleCommand(commandLine, onResponseReceived);
             }
         }.start();
     }

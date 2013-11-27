@@ -11,7 +11,6 @@ package org.python.pydev.shared_interactive_console.console;
 
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.python.pydev.shared_core.callbacks.ICallback;
-import org.python.pydev.shared_core.structure.Tuple;
 import org.python.pydev.shared_interactive_console.console.ui.internal.IStreamMonitor;
 
 /**
@@ -29,8 +28,7 @@ public interface IScriptConsoleCommunication extends IStreamMonitor {
      * @return the response from the interpreter.
      * @throws Exception
      */
-    void execInterpreter(String command, ICallback<Object, InterpreterResponse> onResponseReceived,
-            ICallback<Object, Tuple<String, String>> onContentsReceived);
+    void execInterpreter(String command, ICallback<Object, InterpreterResponse> onResponseReceived);
 
     /**
      * Creates the completions to be applied in the interpreter.
@@ -66,10 +64,9 @@ public interface IScriptConsoleCommunication extends IStreamMonitor {
     public void linkWithDebugSelection(boolean isLinkedWithDebug);
 
     /**
-     * Send the signal to the underlying process
-     * @param signal
+     * Interrupt the console process
      * @throws Exception
      */
-    void interrupt(int signal) throws Exception;
+    void interrupt() throws Exception;
 
 }

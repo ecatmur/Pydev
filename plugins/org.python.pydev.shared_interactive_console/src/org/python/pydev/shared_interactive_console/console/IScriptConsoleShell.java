@@ -50,8 +50,8 @@ public interface IScriptConsoleShell {
     void close() throws Exception;
 
     /**
-     * Sends a signal to the process running in the shell
+     * Interrupt the process running in the shell
      * @throws Exception
      */
-    void interrupt(int signal) throws Exception;
+    void interrupt() throws Exception;
 }

@@ -10,7 +10,6 @@
 package org.python.pydev.shared_interactive_console.console;
 
 import org.python.pydev.shared_core.callbacks.ICallback;
-import org.python.pydev.shared_core.structure.Tuple;
 import org.python.pydev.shared_interactive_console.console.ui.internal.IStreamMonitor;
 
 public interface IScriptConsoleInterpreter extends IScriptConsoleShell, IConsoleRequest, IStreamMonitor {
@@ -21,8 +20,7 @@ public interface IScriptConsoleInterpreter extends IScriptConsoleShell, IConsole
      * @return the response from the interpreter.
      * @throws Exception if something wrong happened while doing the request.
      */
-    void exec(String command, ICallback<Object, InterpreterResponse> onResponseReceived,
-            ICallback<Object, Tuple<String, String>> onContentsReceived);
+    void exec(String command, ICallback<Object, InterpreterResponse> onResponseReceived);
 
     Object getInterpreterInfo();
 

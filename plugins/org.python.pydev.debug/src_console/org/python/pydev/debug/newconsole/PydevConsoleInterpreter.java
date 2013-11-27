@@ -38,7 +38,6 @@ import org.python.pydev.editor.codecompletion.PyLinkedModeCompletionProposal;
 import org.python.pydev.editor.codecompletion.templates.PyTemplateCompletionProcessor;
 import org.python.pydev.editor.simpleassist.ISimpleAssistParticipant2;
 import org.python.pydev.shared_core.callbacks.ICallback;
-import org.python.pydev.shared_core.structure.Tuple;
 import org.python.pydev.shared_interactive_console.console.IScriptConsoleCommunication;
 import org.python.pydev.shared_interactive_console.console.IScriptConsoleInterpreter;
 import org.python.pydev.shared_interactive_console.console.InterpreterResponse;
@@ -87,9 +86,8 @@ public class PydevConsoleInterpreter implements IScriptConsoleInterpreter {
      * (non-Javadoc)
      * @see com.aptana.interactive_console.console.IScriptConsoleInterpreter#exec(java.lang.String)
      */
-    public void exec(String command, final ICallback<Object, InterpreterResponse> onResponseReceived,
-            final ICallback<Object, Tuple<String, String>> onContentsReceived) {
-        consoleCommunication.execInterpreter(command, onResponseReceived, onContentsReceived);
+    public void exec(String command, final ICallback<Object, InterpreterResponse> onResponseReceived) {
+        consoleCommunication.execInterpreter(command, onResponseReceived);
     }
 
     /**
@@ -253,8 +251,8 @@ public class PydevConsoleInterpreter implements IScriptConsoleInterpreter {
         this.closeRunnables = null;
     }
 
-    public void interrupt(int signal) throws Exception {
-        consoleCommunication.interrupt(signal);
+    public void interrupt() throws Exception {
+        consoleCommunication.interrupt();
     }
 
     /*

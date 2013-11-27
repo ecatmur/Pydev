@@ -82,17 +82,4 @@ public class ScriptConsoleManager {
         console.linkWithDebugSelection(isChecked);
     }
 
-    /**
-     * Interrupts the execution of the given console.
-     *
-     * @param console the console to be interrupted.
-     */
-    public void interrupt(ScriptConsole console) {
-       /*This could/should be an enum in it's own module should we desire to
-        *  send other signals to a subshell process.
-        */
-        int SIGINT = 2; 
-        console.interrupt(SIGINT);
-    }
-
 }

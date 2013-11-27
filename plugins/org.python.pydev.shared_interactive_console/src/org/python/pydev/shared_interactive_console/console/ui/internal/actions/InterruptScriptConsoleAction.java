@@ -13,7 +13,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.python.pydev.shared_interactive_console.InteractiveConsolePlugin;
 import org.python.pydev.shared_interactive_console.console.ui.ScriptConsole;
-import org.python.pydev.shared_interactive_console.console.ui.ScriptConsoleManager;
 import org.python.pydev.shared_interactive_console.console.ui.ScriptConsoleUIConstants;
 
 /**
@@ -32,7 +31,7 @@ public class InterruptScriptConsoleAction extends Action {
 
     @Override
     public void run() {
-        ScriptConsoleManager.getInstance().interrupt(console);
+        console.interrupt();
     }
 
     public void update() {
