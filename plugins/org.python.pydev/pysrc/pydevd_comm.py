@@ -50,7 +50,7 @@ each command has a format:
     122      CMD_SET_PY_EXCEPTION
     124      CMD_SET_PROPERTY_TRACE
     127      CMD_RUN_CUSTOM_OPERATION
-
+    128      CMD_GET_BREAKPOINT_EXCEPTION
 500 series diagnostics/ok
     501      VERSION                  either      Version string (1.0)        Currently just used at startup
     502      RETURN                   either      Depends on caller    -
@@ -114,6 +114,7 @@ CMD_SET_PROPERTY_TRACE = 124
 # Pydev debug console commands
 CMD_EVALUATE_CONSOLE_EXPRESSION = 126
 CMD_RUN_CUSTOM_OPERATION = 127
+CMD_GET_BREAKPOINT_EXCEPTION = 128
 CMD_VERSION = 501
 CMD_RETURN = 502
 CMD_ERROR = 901
@@ -145,6 +146,7 @@ ID_TO_MEANING = {
     '124':'CMD_SET_PROPERTY_TRACE',
     '126':'CMD_EVALUATE_CONSOLE_EXPRESSION',
     '127':'CMD_RUN_CUSTOM_OPERATION',
+    '128':'CMD_GET_BREAKPOINT_EXCEPTION',
     '501':'CMD_VERSION',
     '502':'CMD_RETURN',
     '901':'CMD_ERROR',
@@ -260,11 +262,12 @@ class ReaderThread(PyDBDaemonThread):
                 except:
                     GlobalDebuggerHolder.globalDbg.FinishDebuggingSession()
                     break  #Finished communication.
-                
+
                 #Note: the java backend is always expected to pass utf-8 encoded strings. We now work with unicode
                 #internally and thus, we may need to convert to the actual encoding where needed (i.e.: filenames
                 #on python 2 may need to be converted to the filesystem encoding).
-                r = r.decode('utf-8')
+                if hasattr(r, 'decode'):
+                    r = r.decode('utf-8')
 
                 buffer += r
                 if DebugInfoHolder.DEBUG_RECORD_SOCKET_READS:
@@ -446,6 +449,13 @@ class NetCommandFactory:
         cmdText = "<xml>" + self.threadToXML(thread) + "</xml>"
         return NetCommand(CMD_THREAD_CREATE, 0, cmdText)
 
+
+    def makeCustomFrameCreatedMessage(self, frameId, frameDescription):
+        frameDescription = pydevd_vars.makeValidXmlValue(frameDescription)
+        cmdText = '<xml><thread name="%s" id="%s"/></xml>' % (frameDescription, frameId)
+        return NetCommand(CMD_THREAD_CREATE, 0, cmdText)
+
+
     def makeListThreadsMessage(self, seq):
         """ returns thread listing as XML """
         try:
@@ -589,6 +599,12 @@ class NetCommandFactory:
         except Exception:
             return self.makeErrorMessage(seq, GetExceptionTracebackStr())
 
+    def makeSendBreakpointExceptionMessage(self, seq, payload):
+        try:
+            return NetCommand(CMD_GET_BREAKPOINT_EXCEPTION, seq, payload)
+        except Exception:
+            return self.makeErrorMessage(seq, GetExceptionTracebackStr())
+        
     def makeSendConsoleMessage(self, seq, payload):
         try:
             return NetCommand(CMD_EVALUATE_CONSOLE_EXPRESSION, seq, payload)
@@ -616,10 +632,11 @@ class InternalThreadCommand:
     get posted to PyDB.cmdQueue.
     """
 
+
     def canBeExecutedBy(self, thread_id):
         '''By default, it must be in the same thread to be executed
         '''
-        return self.thread_id == thread_id
+        return self.thread_id == thread_id or self.thread_id.endswith('|' + thread_id)
 
     def doIt(self, dbg):
         raise NotImplementedError("you have to override doIt")
@@ -845,6 +862,41 @@ class InternalGetCompletions(InternalThreadCommand):
             cmd = dbg.cmdFactory.makeErrorMessage(self.sequence, "Error evaluating expression " + exc)
             dbg.writer.addCommand(cmd)
 
+#=======================================================================================================================
+# InternalGetBreakpointException
+#=======================================================================================================================
+class InternalGetBreakpointException(InternalThreadCommand):
+    """ Send details of exception raised while evaluating conditional breakpoint """
+    def __init__(self, thread_id, exc_type, stacktrace):
+        self.sequence = 0
+        self.thread_id = thread_id
+        self.stacktrace = stacktrace
+        self.exc_type = exc_type
+
+    def doIt(self, dbg):
+        try:
+            callstack = "<xml>"
+
+            makeValid = pydevd_vars.makeValidXmlValue
+
+            for filename, line, methodname, methodobj in self.stacktrace:
+                if file_system_encoding.lower() != "utf-8" and hasattr(filename, "decode"):
+                    # filename is a byte string encoded using the file system encoding
+                    # convert it to utf8
+                    filename = filename.decode(file_system_encoding).encode("utf-8")
+                
+                callstack += '<frame thread_id = "%s" file="%s" line="%s" name="%s" obj="%s" />' \
+                                    % (self.thread_id, makeValid(filename), line, makeValid(methodname), makeValid(methodobj))
+            callstack += "</xml>"
+
+            cmd = dbg.cmdFactory.makeSendBreakpointExceptionMessage(self.sequence, self.exc_type + "\t" + callstack)
+            dbg.writer.addCommand(cmd)
+        except:
+            exc = GetExceptionTracebackStr()
+            sys.stderr.write('%s\n' % (exc,))
+            cmd = dbg.cmdFactory.makeErrorMessage(self.sequence, "Error Sending Exception" + exc)
+            dbg.writer.addCommand(cmd)
+
 
 #=======================================================================================================================
 # InternalEvaluateConsoleExpression
@@ -943,7 +995,8 @@ def PydevdFindThreadById(thread_id):
         # there was a deadlock here when I did not remove the tracing function when thread was dead
         threads = threading.enumerate()
         for i in threads:
-            if thread_id == GetThreadId(i):
+            tid = GetThreadId(i)
+            if thread_id == tid or thread_id.endswith('|' + tid):
                 return i
 
         sys.stderr.write("Could not find thread %s\n" % thread_id)
